@@ -1,7 +1,7 @@
 package flap
 
 import (
-	"flap/db"
+	"github.com/richardmorrey/flap/pkg/flap/db"
 	"crypto/sha1"
 	"encoding/binary"
 	"bytes"

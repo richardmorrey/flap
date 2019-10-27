@@ -1,8 +1,8 @@
 package model 
 
 import (
-	"flap"
-	"flap/db"
+	"github.com/richardmorrey/flap/pkg/flap"
+	"github.com/richardmorrey/flap/pkg/flap/db"
 	"path/filepath"
 	"encoding/csv"
 	"encoding/json"

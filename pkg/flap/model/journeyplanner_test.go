@@ -2,8 +2,7 @@ package model
 
 import (
 	"testing"
-	"flap"
-	//"reflect"
+	"github.com/richardmorrey/flap/pkg/flap"
 )
 
 func TestNewJourneyPlannerNil(t *testing.T) {

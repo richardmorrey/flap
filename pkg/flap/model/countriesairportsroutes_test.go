@@ -3,8 +3,8 @@ package model
 import (
 	"testing"
 	"os"
-	"flap/db"
-	"flap"
+	"github.com/richardmorrey/flap/pkg/flap/db"
+	"github.com/richardmorrey/flap/pkg/flap"
 	"reflect"
 	//"fmt"
 )

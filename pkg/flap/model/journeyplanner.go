@@ -1,7 +1,7 @@
 package model
 
 import (
-	"flap"
+	"github.com/richardmorrey/flap/pkg/flap"
 	"errors"
 	"math/rand"
 	"math"

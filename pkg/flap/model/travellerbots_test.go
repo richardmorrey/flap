@@ -3,7 +3,7 @@ package model
 import (
 	"testing"
 	"reflect"
-	"flap"
+	"github.com/richardmorrey/flap/pkg/flap"
 )
 
 func buildCountryWeights(nEntries int) *CountryWeights{

@@ -3,7 +3,7 @@ package flap
 import (
 	"testing"
 	"os"
-	"flap/db"
+	"github.com/richardmorrey/flap/pkg/flap/db"
 	"reflect"
 )
 

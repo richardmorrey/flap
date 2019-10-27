@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"os"
-	"flap/db"
+	"github.com/richardmorrey/flap/pkg/flap/db"
 )
 
 var AIRPORTSTESTFOLDER="airportstest"
