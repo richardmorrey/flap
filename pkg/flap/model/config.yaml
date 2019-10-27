@@ -1,0 +1,33 @@
+flapparams:
+  triplength: 365
+  flightsintrip: 50
+  flightinterval: 1
+  #dailytotal: 0
+  #mingrounded: 0
+modelparams:
+  workingfolder: /home/spencerthehalfwit/working
+  datafolder: /home/spencerthehalfwit/flapdata
+  trialdays: 100
+  daystorun: 1000
+  totaltravellers: 1000
+  botspecs:
+  - planprobability: 0.02
+    weight: 1
+  - planprobability: 0.002
+    weight: 9
+  triplengths:
+  - 1
+  - 2
+  - 3
+  - 5
+  - 7
+  - 7
+  - 7
+  - 7
+  - 14
+  - 14
+  - 14
+  - 14
+  - 28
+  startday: 0
+  dailytotalfactor: 0.999
