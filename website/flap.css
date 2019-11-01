@@ -4,8 +4,9 @@
 }
 
 body {
-	  margin: 0;
-		    font-family: Arial, Helvetica, sans-serif;
+	  margin: auto;
+	  width: 50%;
+          font-family: Arial, Helvetica, sans-serif;
 }
 
 /* Style the top navigation bar */
@@ -39,7 +40,9 @@ body {
 /* Style the banner */
 .banner {
 	  background-color: #ddd;
-		    padding: 10px;
+		    padding: 20px;
+		line-height: 0.8;
+
 			      
 }
 
@@ -54,6 +57,18 @@ h1.normalchar {
 /* Style the content */
 .content {
 	  background-color: #f1f1f1;
-		    padding: 10px;
+		padding: 20px;
+		text-align: justify;
+		line-height: 1.8;
+
 }
 
+/* Element to hold a chart.js chart */
+.chart-holder {
+	  background-color: #f1f1f1;
+		position: absolute;
+		top: 8px;
+		left: 8px;
+		right: 8px;
+		bottom: 8px;
+}

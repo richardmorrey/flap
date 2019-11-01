@@ -33,13 +33,31 @@
 			each day.
 			<br>Brief summary: it works.
 			<h2>Goal 1. Reducing global air travel</h2>
-
+			<div id=chart-holder><canvas id="goal1chart"></canvas></div>
+			<p>This chart shows how the Daily Total and the total daily distance travelled varies over time. It shows that air travel is
+			reduced by TBD % over 5 years.
 			<h2>Goal 2. Frequent flyers flying able to fly more than infrequent flyers </h2>
-
+			<div id=chart-holder><canvas id="goal2chart"></canvas></div>
+			<p>This chart shows how the total daily distance travelled by frequent and infrequent travellers compare over time. It shows
+			that frequent traveller flying is reduced whilst infrequent traveller flying remains steady, but also that despite this 
+			frequent flyers are still travelling significantly more than infrequent flyers at the end of the 5 year period.
 			<h2>Goal 3. Infrequent flyers suffering minimum disruption </h2>
-			
+			<div id=chart-holder><canvas id="goal3chart"></canvas></div>
+			<p>This chart shows how many check-ins are rejected by FLAP on average for frequent and infrequent travellers. It shows that
+			that frequent flyers are significantly impacted whilst infrequent flyers are not.
 			<h2>Caveats and areas for improvement</h2>
+			The model used is basic and, whilst it does simulate global air traffic on geniune routes between genuine airports it differs
+			from real-world flighing behaviour in many ways, including:
+			<ul>
+				<li>All trips simulated are simple return flights.</li>
+				<li>No attempt is made to simulate seasonal variations in flying patterns.</li>
+				<li>Each simulated traveller has a home country but no home location within that country to influence choice of departure location.</li>
+				<li>No attempt is made to simulate variation in passport details due to lost or stolen passports and dual passport holders.</li>
+			</ul>
+			I don't believe any of these negate the findings on this page but nevertheless some will be addressed in future iterations.
 		</div>
 
 	</body>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.js"></script>
+	<script src="./modelcharts.js"></script>
 </html>
