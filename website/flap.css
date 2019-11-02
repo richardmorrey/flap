@@ -13,6 +13,7 @@ body {
 .topnav {
 	  overflow: hidden;
 		    background-color: #333;
+
 }
 
 /* Style the topnav links */
@@ -25,14 +26,15 @@ body {
 							    text-decoration: none;
 }
 
+
 /* Change color on hover */
 .topnav a:hover {
-	  background-color: #ddd;
+	  background-color: #f1f1f1;
 		    color: black;
 }
 
 /* Selected link */
-.topnavcurrent {
+.topnavcurrent a {
 	  	background-color: #ddd;
 		    color: black;
 }
@@ -44,6 +46,10 @@ body {
 		line-height: 0.8;
 
 			      
+}
+/* Style the tagline */
+.tagline {
+	font-style: oblique;      
 }
 
 /* Title formatting */

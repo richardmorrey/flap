@@ -11,17 +11,44 @@
 		<div class="topnav">
 			  <a href="home.html">Home</a>
 			  <a href="modelling.html">Modelling</a>
-			  <a href="experience.html">Traveller Experience</a>
+			  <span class="topnavcurrent"><a href="experience.html">Traveller Experience</a></span>
 			  <a href="resources.html">Resources</a>
 			  <a href="about.html">About</a>
 		</div>
 
 		<div class="banner">
 			<h1 class="normalchar"><span class="boldchar">FL</span>ying is <span class="boldchar">A P</span>rivilege</h1>
+			<span class="tagline">...if you don't believe me try flapping your arms</span>
 		</div>
 
 		<div class="content">
-			  <p>Coming soon</p>
+			<h4>Clearance Promises</h4>
+			<p>With the basic implementation of FLAP as largely discussed on this site and as currently modelled, there is no means of
+				of being sure, om completion of one trip, when you will be allowed to start the next. This is because the amount
+				credited to each "grounded" Traveller, that is each Traveller with a distance balance in deficit, varies over time
+				according to the size of the Daily Total and the number of grounded Travellers.  
+			</p>
+			<p>"Clearance Promises" are a simple extension to provide such certainty. They enable Travellers (in practice more likely
+				air lines on behalf of Travellers), to submit flight details for a trip to FLAP at the point when they are booked
+				rather than at check-in. In return FLAP creates a "Clearance Promise" for the Traveller: a fixed date after the 
+				completion of the trip when the Traveller can fly again, regardless of their distance balance.
+			</p>
+
+			<p>The key to Clearance Promises is the devising of an algorithm that calculates accurate clearance dates - dates
+				that are on average consistent with when the distance balance returns to credit. This will be a core goal
+				of the next iteration of the implementation.
+			</p>
+			
+			<h4>In Practice</h4>
+			<p>With Clearance Promises in place most Travellers will be entirely insulated from the details of how FLAP works. 
+				Their experience will experience instead will simply be via a calendar, very similar to a calendar presented
+				on-line for the booking of holiday accomodation, with each day colour coded according to its currrent FLAP
+				state:
+					<li>Travelling - on a trip</li>
+					<li>Cleared -  free to travel</li>
+					<li>Grounded - not allowed to travel</li>
+				Below is a mock-up from of how this might look using Google Calendar.
+			</p>
 		</div>
 
 	</body>
