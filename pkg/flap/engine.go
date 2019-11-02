@@ -1,7 +1,7 @@
 package flap
 
 import (
-	"github.com/richardmorrey/flap/pkg/flap/db"
+	"github.com/richardmorrey/flap/pkg/db"
 	"encoding/binary"
 	"bytes"
 	"math"
@@ -200,23 +200,30 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 	for it.Next() {
 
 		// Retrieve traveller
+		changed:=false
 		traveller := it.Value()
 
 		// Update trip history
-		distanceYesterday,_ := traveller.tripHistory.Update(&self.Administrator.params,now) 
-		if distanceYesterday > 0 {
-			totalDistanceYesterday += distanceYesterday
-			totalTravellersYesterday++
+		distanceYesterday,err := traveller.tripHistory.Update(&self.Administrator.params,now) 
+		if err == nil {
+			if distanceYesterday > 0 {
+				totalDistanceYesterday += distanceYesterday
+				totalTravellersYesterday++
+			}
+			changed = true
 		}
 
 		// Backfill if grounded
 		if !traveller.Cleared(now) {
 			traveller.balance += share
 			newGrounded++
+			changed = true
 		}
 
-		// Save changes
-		self.Travellers.PutTraveller(traveller)
+		// Save changes if necessary
+		if changed {
+			self.Travellers.PutTraveller(traveller)
+		}
 	}
 
 	// Update total grounded

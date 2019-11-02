@@ -2,7 +2,7 @@ package main
  
 import (
 	"fmt"
-	"github.com/richardmorrey/flap/pkg/flap/model"
+	"github.com/richardmorrey/flap/pkg/model"
 	"flag"
 	"os"
 	"strconv"

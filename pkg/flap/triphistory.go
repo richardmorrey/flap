@@ -39,6 +39,7 @@ var EEMPTYTRIPHISTORY = errors.New("Empty trip history")
 var ELATESTFLIGHTNOTTRIPEND = errors.New("Latest flight is not the end of a trip")
 var EEPOCHNOTSTARTOFDAY = errors.New("Epoch time not the start of a UTC day")
 var EFLIGHTNOTFOUND = errors.New("Flight not found")
+var ENOCHANGEREQUIRED	= errors.New("No update to trip history required")
 
 const (
 	etFlight flightType  = iota
@@ -348,7 +349,7 @@ func (self *TripHistory) Update(params *FlapParams,now EpochTime) (Kilometres,er
 	// ... if there are no changes since last update
 	// and we are at trip end there is nothing to do... 
 	if self.oldestChange ==0 && (self.entries[0].et== etTripEnd || self.entries[0].et== etTravellerTripEnd) {
-		return 0, nil
+		return 0, ENOCHANGEREQUIRED
 	}
 	// ... always do entireity of latest trip otherwise ...
 	j,err := self.startOfTrip(self.oldestChange)

@@ -563,8 +563,8 @@ func TestUpdateOneTrip(t *testing.T) {
 		t.Error("Update failed to end trip",th)
 	}
 	_,err = th.Update(&params,SecondsInDay*5)
-	if (err != nil) {
-		t.Error("Update failed", err)
+	if (err != ENOCHANGEREQUIRED) {
+		t.Error("Update didnt realise no update required", err)
 	}
 	if !compareFlights(&th,&th2) {
 		t.Error("Update failed to retain trip end a day later",th)
