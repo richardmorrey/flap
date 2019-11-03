@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+  <Document>
+    <name>Flight Paths</name>
+    <Style id="fps">
+      <LineStyle>
+        <color>7f0000ff</color>
+        <width>10</width>
+      </LineStyle>
+    </Style>
+    <Placemark>
+      <name>EGLL-OMAA</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1971-08-24T04:33:13+01:00</when>
+        <when>1971-08-24T10:50:07+01:00</when>
+        <gx:coord>-0.461941 51.4706 30000</gx:coord>
+        <gx:coord>54.651100158691406 24.433000564575195 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OMAA-EGLL</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1971-08-17T11:29:23+01:00</when>
+        <when>1971-08-17T17:46:17+01:00</when>
+        <gx:coord>54.651100158691406 24.433000564575195 30000</gx:coord>
+        <gx:coord>-0.461941 51.4706 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OKBK-OMDW</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1971-07-05T01:23:38+01:00</when>
+        <when>1971-07-05T02:22:18+01:00</when>
+        <gx:coord>47.96889877319336 29.226600646972656 30000</gx:coord>
+        <gx:coord>55.161389 24.896356 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OMDW-OKBK</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1971-06-28T11:31:18+01:00</when>
+        <when>1971-06-28T12:29:58+01:00</when>
+        <gx:coord>55.161389 24.896356 30000</gx:coord>
+        <gx:coord>47.96889877319336 29.226600646972656 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OOMS-OMAA</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1971-06-10T04:29:03+01:00</when>
+        <when>1971-06-10T04:55:00+01:00</when>
+        <gx:coord>58.284400939941406 23.593299865722656 30000</gx:coord>
+        <gx:coord>54.651100158691406 24.433000564575195 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OMAA-OOMS</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1971-06-03T11:21:27+01:00</when>
+        <when>1971-06-03T11:47:24+01:00</when>
+        <gx:coord>54.651100158691406 24.433000564575195 30000</gx:coord>
+        <gx:coord>58.284400939941406 23.593299865722656 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VNKT-OMDB</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1971-02-28T03:07:26+01:00</when>
+        <when>1971-02-28T06:31:44+01:00</when>
+        <gx:coord>85.3591 27.6966 30000</gx:coord>
+        <gx:coord>55.3643989563 25.2527999878 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OMDB-VNKT</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1971-02-21T10:48:26+01:00</when>
+        <when>1971-02-21T14:12:44+01:00</when>
+        <gx:coord>55.3643989563 25.2527999878 30000</gx:coord>
+        <gx:coord>85.3591 27.6966 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EIDW-OMDB</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1970-09-25T17:10:56+01:00</when>
+        <when>1970-09-25T23:55:18+01:00</when>
+        <gx:coord>-6.27007 53.421299 30000</gx:coord>
+        <gx:coord>55.3643989563 25.2527999878 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OMDB-EIDW</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1970-09-11T06:00:36+01:00</when>
+        <when>1970-09-11T12:44:58+01:00</when>
+        <gx:coord>55.3643989563 25.2527999878 30000</gx:coord>
+        <gx:coord>-6.27007 53.421299 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OBBI-OMDB</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1970-05-31T03:39:58+01:00</when>
+        <when>1970-05-31T04:13:13+01:00</when>
+        <gx:coord>50.63359832763672 26.27079963684082 30000</gx:coord>
+        <gx:coord>55.3643989563 25.2527999878 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OMDB-OBBI</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1970-05-29T18:17:30+01:00</when>
+        <when>1970-05-29T18:50:45+01:00</when>
+        <gx:coord>55.3643989563 25.2527999878 30000</gx:coord>
+        <gx:coord>50.63359832763672 26.27079963684082 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LOWW-OMDB</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1970-04-14T23:14:29+01:00</when>
+        <when>1970-04-15T04:03:00+01:00</when>
+        <gx:coord>16.569700241089 48.110298156738 30000</gx:coord>
+        <gx:coord>55.3643989563 25.2527999878 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OMDB-LOWW</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1970-03-31T08:30:24+01:00</when>
+        <when>1970-03-31T13:18:55+01:00</when>
+        <gx:coord>55.3643989563 25.2527999878 30000</gx:coord>
+        <gx:coord>16.569700241089 48.110298156738 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EHAM-OMAA</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1970-03-11T03:15:24+01:00</when>
+        <when>1970-03-11T09:10:06+01:00</when>
+        <gx:coord>4.76389 52.308601 30000</gx:coord>
+        <gx:coord>54.651100158691406 24.433000564575195 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OMAA-EHAM</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1970-03-04T10:26:09+01:00</when>
+        <when>1970-03-04T16:20:51+01:00</when>
+        <gx:coord>54.651100158691406 24.433000564575195 30000</gx:coord>
+        <gx:coord>4.76389 52.308601 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VOCI-OMSJ</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1970-02-11T10:58:51+01:00</when>
+        <when>1970-02-11T14:08:23+01:00</when>
+        <gx:coord>76.401901 10.152 30000</gx:coord>
+        <gx:coord>55.5172004699707 25.32859992980957 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OMSJ-VOCI</name>
+      <styleUrl>#fps</styleUrl>
+      <gx:Track>
+        <when>1970-02-04T18:18:47+01:00</when>
+        <when>1970-02-04T21:28:19+01:00</when>
+        <gx:coord>55.5172004699707 25.32859992980957 30000</gx:coord>
+        <gx:coord>76.401901 10.152 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+  </Document>
+</kml>

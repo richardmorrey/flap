@@ -55,7 +55,11 @@ Reports trip history and other details for specified bot traveller after the
 last execution of run. <botspec> is a value between 0 and the number of botspec
 entries in config.yaml. <botindex> 0-indexed number defining the specific bot
 within that band. The number of travellers in each band is derived from
-the weights across all the specs and the value of "totalTravellers".`)
+the weights across all the specs and the value of "totalTravellers".
+
+kml <botspec> <index>
+Works like show but returns kml for import into Google Earth instead of JSON.
+`)
 	os.Exit(0)
 }
 
@@ -93,13 +97,29 @@ func main() {
 				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
 			} else {
 				defer engine.Release()
-				json, err := engine.ShowTraveller(spec,index)
+				_,json,_,err := engine.ShowTraveller(spec,index)
 				if err != nil {
 					fmt.Printf("\nFailed to find traveller with error '%s'\n",err)
 				} else {
 					fmt.Printf("\n%s\n",json)
 				}
 			}
+		case "kml":
+			spec,_ := strconv.ParseUint(flag.Arg(1), 10, 64)
+			index,_ := strconv.ParseUint(flag.Arg(2), 10, 64)
+		 	engine,err := model.NewEngine(*configfile)
+			if err != nil {
+				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
+			} else {
+				defer engine.Release()
+				_,_,kml, err := engine.ShowTraveller(spec,index)
+				if err != nil {
+					fmt.Printf("\nFailed to find traveller with error '%s'\n",err)
+				} else {
+					fmt.Printf("\n%s\n",kml)
+				}
+			}
+
 		case "help":
 		default:
 			ShowHelp()

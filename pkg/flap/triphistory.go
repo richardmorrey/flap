@@ -6,8 +6,10 @@ import (
 	"math"
 	"sort"
 	"encoding/json"
-	//"fmt"
 	"time"
+	"github.com/twpayne/go-kml"
+	"bytes"
+	"image/color"
 )
 
 type Kilometres int64
@@ -442,7 +444,7 @@ type jsonTrip struct {
 	Journeys []jsonJourney
 }
 
-// Renders current trip history as readable JSON
+// AsKJSON renders current trip history as readable JSON
 func (self *TripHistory) AsJSON() string {
 	trips := make([]jsonTrip,0)
 	var currentTrip *jsonTrip
@@ -478,7 +480,43 @@ func (self *TripHistory) AsJSON() string {
 	return string(jsonData)
 }
 
-//midTrip returns true if the trip history indicates the Traveller is in a middle of a trip - i.e.
+// AsKML renders the current trip history as KML file for import into Google Earth 
+func (self* TripHistory) AsKML(airports *Airports) string {
+
+	d := kml.Document(kml.Name("Flight Paths"),
+        			kml.SharedStyle("fps",
+	                	kml.LineStyle(
+			                kml.Color(color.RGBA{R: 255, G: 0, B: 0, A: 127}),
+				        kml.Width(10),
+					),
+				))
+
+	for i:=0; self.entries[i].start !=0 && i < MaxFlights; i++ {
+		
+		// Get airport locations
+		from,_ := airports.GetAirport(self.entries[i].from)
+		to,_ := airports.GetAirport(self.entries[i].to)
+
+		// Build tracker:
+		gt := kml.GxTrack()
+		gt.Add(kml.When(self.entries[i].start.ToTime()))
+		gt.Add(kml.When(self.entries[i].end.ToTime()))
+		gt.Add(kml.GxCoord(kml.Coordinate{Lon: from.Loc.Lon, Lat: from.Loc.Lat, Alt: 30000}))
+		gt.Add(kml.GxCoord(kml.Coordinate{Lon: to.Loc.Lon, Lat: to.Loc.Lat, Alt: 30000}))
+		
+		// Create placemark
+		d.Add(kml.Placemark(
+			       kml.Name(from.Code.ToString()+"-"+to.Code.ToString()),
+			       kml.StyleURL("#fps"),
+		       	       gt))
+		
+	}
+	var buf bytes.Buffer
+	kml.GxKML(d).WriteIndent(&buf, "", "  ")
+	return buf.String()
+}
+
+// MidTrip returns true if the trip history indicates the Traveller is in a middle of a trip - i.e.
 //the latest flight is not a trip end event - or the traveller has never travelled.
 func (self *TripHistory) MidTrip() bool {
 	if self.entries[0].start == 0 {
@@ -489,3 +527,5 @@ func (self *TripHistory) MidTrip() bool {
 	}
 	return false
 }
+
+

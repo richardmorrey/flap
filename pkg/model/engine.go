@@ -255,54 +255,58 @@ func (self *Engine) Run() error {
 	return nil
 }
 
-// ShowTraveller reports the trip history for the specificied traveller bot in JSON format
-func (self *Engine) ShowTraveller(band uint64,bot uint64) (string,error){
+// ShowTraveller reports the trip history for the specificied traveller bot in JSON and KML format
+func (self *Engine) ShowTraveller(band uint64,bot uint64) (flap.Passport,string,string,error){
 
 	// Load country weights (need to establish issuing country of passport)
+	var p flap.Passport
 	var countryWeights CountryWeights
 	err := countryWeights.load(self.ModelParams.WorkingFolder)
 	if err != nil {
-		return "",glog(err)
+		return p,"","",glog(err)
 	}
 
 	// Create travellerbots struct
 	travellerBots := NewTravellerBots(&countryWeights)
 	if travellerBots == nil {
-		return "",glog(EFAILEDTOCREATETRAVELLERBOTS)
+		return p,"","",glog(EFAILEDTOCREATETRAVELLERBOTS)
 	}
 	err = travellerBots.Build(&(self.ModelParams))
 	if (err != nil) {
-		return "",glog(err)
+		return p,"","",glog(err)
 	}
 
 	// Valid args
 	if band >= uint64(len(travellerBots.bots)) {
-		return "",glog(ENOSUCHTRAVELLER)
+		return p,"","",glog(ENOSUCHTRAVELLER)
 	}
 	if bot >= uint64(travellerBots.bots[band].numInstances) {
-		return "",glog(ENOSUCHTRAVELLER)
+		return p,"","",glog(ENOSUCHTRAVELLER)
 	}
 
 	//  Initialize flap
 	fe := flap.NewEngine(self.db)
 	err = fe.Administrator.SetParams(self.FlapParams)
 	if (err != nil) {
-		return "",glog(err)
+		return p,"","",glog(err)
+	}
+	err =fe.Airports.LoadAirports(filepath.Join(self.ModelParams.DataFolder,"airports.dat"))
+	if (err != nil) {
+		return p,"","",glog(err)
 	}
 
 	// Resolve given spec to a passport and look up in the travellers db
-	p,err := travellerBots.getPassport(botId{bandIndex(band),botIndex(bot)})
+	p,err = travellerBots.getPassport(botId{bandIndex(band),botIndex(bot)})
 	if err != nil {
-		return  "",glog(err)
+		return  p,"","",glog(err)
 	}
-	fmt.Printf("\nSearching for Passport Number:%s, Issuer:%s\n", string(p.Number[:]),string(p.Issuer[:]))
 	t,err := fe.Travellers.GetTraveller(p)
 	if err != nil {
-		return "", glog(err)
+		return p,"", "",glog(err)
 	}
 
 	// Return the traveller as JSON
-	return t.AsJSON(), nil
+	return p,t.AsJSON(),t.AsKML(fe.Airports),nil
 }
 
 // reportDay reports daily total set for the day as well as total distance

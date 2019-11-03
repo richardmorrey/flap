@@ -62,6 +62,12 @@ func (self *Traveller) AsJSON() string {
 	return self.tripHistory.AsJSON()
 }
 
+// Wrapper for TripHistory.AsKML
+func (self *Traveller) AsKML(a *Airports) string {
+	return self.tripHistory.AsKML(a)
+}
+
+
 // submitFlight adds given flight to trip history and subtracts
 // its distance from the balance if traveller is cleared for travel
 // and debit is true. If traveller is not cleared for travel
