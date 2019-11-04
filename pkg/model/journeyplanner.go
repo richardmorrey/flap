@@ -134,7 +134,7 @@ func (self *journeyPlanner) buildFlight(jf *journeyFlight, startOfDay flap.Epoch
 // Attempts to submit all flights in all journeys for the current day.
 // If the journey is outbound and the submission succeeds then the inbound
 // journey is planned
-func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, startOfDay flap.EpochTime, debit bool) error {
+func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, startOfDay flap.EpochTime, fp *flightPaths, debit bool) error {
 	
 	// Check for plan for today
 	if self.days[0] == nil {
@@ -158,8 +158,9 @@ func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, sta
 			return glog(err)
 		}
 		err = fe.SubmitFlights(p,flights[:],start,debit)
-		// If successful plan return journey
+		// If successful  ...
 		if err == nil {
+			// ... plan journey ...
 			tb.GetBot(j.bot).stats.Submitted(distance)
 			if j.jt==jtOutbound {
 				err = self.planInbound(&j,end,startOfDay)
@@ -167,10 +168,10 @@ func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, sta
 					return glog(err)
 				}
 			}
-			//fmt.Printf("%d_%d flying from %s to %s, distance %d\n", j.bot.band,j.bot.index,string(j.flight.from[:]),string(j.flight.to[:]),int(distance))
+			// ... and report
+			fp.addFlight(j.flight.from,j.flight.to,start,end,fe.Airports,j.bot.band)
 		} else {
 			tb.GetBot(j.bot).stats.Refused()
-		// If successful plan return journey
 		}
 	}
 

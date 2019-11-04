@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"path/filepath"
 	"os"
+	"strings"
 )
 
 var ECOULDNTFINDWEIGHT= errors.New("Couldnt find country weight for bot")
@@ -18,8 +19,6 @@ type travellerBot struct {
 	numInstances   botIndex
 	flyProb	       Probability
 	stats	       botStats
-	statsFolder    string
-	fh		*os.File
 }
 
 type botId struct {
@@ -65,32 +64,27 @@ func (self  *botStats) Refused() {
 }
 
 // Report writes a single CSV row with stats
-func (self *travellerBot) ReportDay(day flap.Days, bb bandIndex) {
+func (self *travellerBot) ReportDay(rdd flap.Days) string {
 	
-	// Open file if not open
-	if self.fh == nil{
-		fn := filepath.Join(self.statsFolder,fmt.Sprintf("bot_band_%d.csv",bb))
-		self.fh,_ = os.Create(fn)
-		if self.fh != nil {
-			self.fh.WriteString("Day,Taken,Refused,Distance,TakenPP,RefusedPP,DistancePP\n")
-		}
-	}
-
-	// Write line
-	if self.fh != nil {
-		line := fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d\n",day,self.stats.taken,self.stats.refused,self.stats.distance,self.stats.taken/uint64(self.numInstances),self.stats.refused/uint64(self.numInstances),self.stats.distance/flap.Kilometres(self.numInstances))
-		self.fh.WriteString(line)
-	}
+	// Format stats
+	line := fmt.Sprintf("%d,%d,%d,",
+		self.stats.taken/uint64(self.numInstances),
+		self.stats.refused/uint64(self.numInstances),
+		self.stats.distance/flap.Kilometres(self.numInstances))
 
 	// Reset counters
 	self.stats.taken = 0
 	self.stats.refused = 0
 	self.stats.distance = 0
+
+	return line
 }
 
 type TravellerBots struct {
 	bots	[]travellerBot
 	countryWeights *CountryWeights
+	fh		*os.File
+	statsFolder    string
 }
 
 func NewTravellerBots(cw *CountryWeights) *TravellerBots {
@@ -106,9 +100,32 @@ func (self *TravellerBots) GetBot(id botId) *travellerBot {
 
 // ReportStats reports daily stats for each bot band into
 // an appropriately named csv file in the working folder
-func (self *TravellerBots) ReportDay(day flap.Days) {
-	for bb := bandIndex(0); bb < bandIndex(len(self.bots)); bb++ {
-		self.bots[bb].ReportDay(day,bb)
+func (self *TravellerBots) ReportDay(day flap.Days, rdd flap.Days) {
+
+	if day %  rdd == 0 {
+
+		// Open file if not open
+		if self.fh == nil{
+			fn := filepath.Join(self.statsFolder,"bands.csv")
+			self.fh,_ = os.Create(fn)
+			if self.fh != nil {
+				line:="Day"
+				for bb := bandIndex(0); bb < bandIndex(len(self.bots)); bb++ {
+					line += fmt.Sprintf(",tpp_%d,rpp_%d,dpp_%d",bb,bb,bb) 
+				}
+				line +="\n"
+				self.fh.WriteString(line)
+			}
+		}
+
+		// Write line
+		line := ""
+		for bb := bandIndex(0); bb < bandIndex(len(self.bots)); bb++ {
+			line += self.bots[bb].ReportDay(rdd)
+		}
+		line=strings.TrimRight(line,",")
+		line+="\n"
+		self.fh.WriteString(line)
 	}
 }
 
@@ -119,6 +136,7 @@ func (self *TravellerBots) Build(modelParams *ModelParams) error {
 	if (len(modelParams.BotSpecs) == 0) {
 		return flap.EINVALIDARGUMENT
 	}
+	self.statsFolder=modelParams.WorkingFolder
 
 	// Calculate total bot weight
 	var weightTotal  weight
@@ -132,7 +150,7 @@ func (self *TravellerBots) Build(modelParams *ModelParams) error {
 		return glog(err)
 	}
 	for _, botspec := range modelParams.BotSpecs {
-		bot := travellerBot{statsFolder:modelParams.WorkingFolder}
+		var bot travellerBot
 		bot.numInstances= botIndex((float64(botspec.Weight)/float64(weightTotal))*float64(modelParams.TotalTravellers))
 		if (bot.numInstances > 0) {
 			bot.countryStep= float64(topWeight)/float64(bot.numInstances)

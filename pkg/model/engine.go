@@ -40,11 +40,19 @@ type ModelParams struct {
 	TripLengths		[]flap.Days
 	StartDay		flap.EpochTime
 	DailyTotalFactor	float64
+	ReportDayDelta		flap.Days
 }
 
 type plannedFlight struct {
 	from			flap.ICAOCode
 	to			flap.ICAOCode
+}
+
+type summaryStats struct {
+	dailyTotal	float64	
+	travelled	float64
+	travellers	float64
+	grounded	float64
 }
 
 type Engine struct {
@@ -53,6 +61,7 @@ type Engine struct {
 	plannedFlights			[]plannedFlight
 	db				*db.LevelDB
 	fh				*os.File
+	stats				summaryStats
 }
 
 var glogger *log.Logger
@@ -68,14 +77,6 @@ func NewEngine(configFilePath string) (*Engine,error) {
 	
 	e:= new(Engine)
 
-	// Set a simple config
-/* e.FlapParams = flap.FlapParams{TripLength:365,FlightsInTrip:50,FlightInterval:1,DailyTotal:0,MinGrounded:0}
-	e.ModelParams = ModelParams{WorkingFolder:"/home/spencerthehalfwit/working",DataFolder:"/home/spencerthehalfwit/flapdata", DaysToRun:1000, TotalTravellers:1000,TrialDays:100,DailyTotalFactor:0.999}
-	e.ModelParams.BotSpecs = []BotSpec{{0.02,1},{0.002,9}}
-	e.ModelParams.TripLengths = []flap.Days{1,2,3,5,7,7,7,7,14,14,14,14,28}
-	buff,err:=yaml.Marshal(e)
-    	err = ioutil.WriteFile("config.yaml", buff, 0644)
-*/
 	// Load config file
 	buff, err := ioutil.ReadFile(configFilePath)
 	if err != nil {
@@ -84,6 +85,9 @@ func NewEngine(configFilePath string) (*Engine,error) {
 	err = yaml.Unmarshal(buff, &e)
 	if err != nil {
 		return nil,glog(err)
+	}
+	if e.ModelParams.ReportDayDelta == 0 {
+		e.ModelParams.ReportDayDelta = 1
 	}
 
 	// Initialize logger
@@ -201,6 +205,7 @@ func (self *Engine) Run() error {
 	}
 	maxTripLength,_ := jp.minmaxTripLength()
 	currentDay := self.ModelParams.StartDay
+	flightPaths := newFlightPaths(currentDay)
 	for i:=flap.Days(1); i <= self.ModelParams.DaysToRun; i++ {
 		
 		fmt.Printf("\rDay %d: Planning Flights",i)
@@ -210,7 +215,7 @@ func (self *Engine) Run() error {
 		}
 
 		fmt.Printf("\rDay %d: Submitting Flights",i)
-		err = jp.submitFlights(travellerBots,fe,currentDay,i>self.ModelParams.TrialDays)
+		err = jp.submitFlights(travellerBots,fe,currentDay,flightPaths,i>self.ModelParams.TrialDays)
 		if err != nil && err != ENOJOURNEYSPLANNED {
 			return glog(err)
 		}
@@ -223,8 +228,11 @@ func (self *Engine) Run() error {
 		}
 		
 		// Report daily stats
-		travellerBots.ReportDay(i)
+		travellerBots.ReportDay(i,self.ModelParams.ReportDayDelta)
 		self.reportDay(i,self.FlapParams.DailyTotal,t,d,g)
+		if i % self.ModelParams.ReportDayDelta == 0 {
+			flightPaths= reportFlightPaths(flightPaths,currentDay,self.ModelParams.WorkingFolder) 
+		}
 
 		// Calculate/set new daily total
 		if (i<= self.ModelParams.TrialDays) {
@@ -312,22 +320,37 @@ func (self *Engine) ShowTraveller(band uint64,bot uint64) (flap.Passport,string,
 // reportDay reports daily total set for the day as well as total distance
 // travelled and total travellers travelling
 func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, t uint64,d flap.Kilometres,g uint64) {
+	
+	// Update stats
+	self.stats.dailyTotal += float64(dt)/float64(self.ModelParams.ReportDayDelta)
+	self.stats.travellers += float64(t)/float64(self.ModelParams.ReportDayDelta)
+	self.stats.travelled += float64(d)/float64(self.ModelParams.ReportDayDelta)
+	self.stats.grounded += float64(g)/float64(self.ModelParams.ReportDayDelta) 
 
-	// Open file
-	if self.fh == nil{
-		fn := filepath.Join(self.ModelParams.WorkingFolder,"summary.csv")
-		self.fh,_ = os.Create(fn)
-		if self.fh != nil {
-			self.fh.WriteString("Day,DailyTotal,Travelled,Travellers,Grounded\n")
+	// Output line if needed
+	if day % self.ModelParams.ReportDayDelta == 0 {
+
+		// Open file
+		if self.fh == nil{
+			fn := filepath.Join(self.ModelParams.WorkingFolder,"summary.csv")
+			self.fh,_ = os.Create(fn)
+			if self.fh != nil {
+				self.fh.WriteString("Day,DailyTotal,Travelled,Travellers,Grounded\n")
+			}
 		}
-	}
 
-	// Write line
-	if day <= self.ModelParams.TrialDays {
-		dt =0 
-	}
-	if self.fh != nil {
-		line := fmt.Sprintf("%d,%d,%d,%d,%d\n",day,dt,d,t,g)
-		self.fh.WriteString(line)
+		// Write line
+		if day <= self.ModelParams.TrialDays {
+			dt =0 
+		}
+		if self.fh != nil {
+			line := fmt.Sprintf("%d,%d,%d,%d,%d\n",day,
+				flap.Kilometres(self.stats.dailyTotal),flap.Kilometres(self.stats.travelled),
+				uint64(self.stats.travellers),uint64(self.stats.grounded))
+			self.fh.WriteString(line)
+		}
+
+		// Wipe stats
+		self.stats = summaryStats{0,0,0,0}
 	}
 }
