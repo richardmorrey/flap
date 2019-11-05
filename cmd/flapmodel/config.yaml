@@ -7,7 +7,7 @@ modelparams:
   datafolder: /home/spencerthehalfwit/flapdata
   dtalgo: average
   trialdays: 100
-  daystorun: 1000
+  daystorun: 2000
   totaltravellers: 1000
   botspecs:
   - planprobability: 0.02
@@ -29,4 +29,5 @@ modelparams:
   - 14
   - 28
   startday: 0
-  dailytotalfactor: 0.999
+  dailytotalfactor: 0.9995
+  reportdaydelta: 100

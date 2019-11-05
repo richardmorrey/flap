@@ -32,17 +32,17 @@
 			The first 100 days of the simulation were run in "log-only mode", with the average total daily distance travelled during
 			this period being taken as the initial Daily Total for Day 101. From Day 102 onwards the Daily Total is reduced by 0.1% 
 			each day.
-			<br>Brief summary: it works.
-			<h2>Goal 1. Reducing global air travel</h2>
+			<br><br>Brief summary: it works!
+			<h2>Goal 1 -  Reduce global air travel</h2>
 			<div id=chart-holder><canvas id="goal1chart"></canvas></div>
 			<p>This chart shows how the Daily Total and the total daily distance travelled varies over time. It shows that air travel is
 			reduced by TBD % over 5 years.
-			<h2>Goal 2. Frequent flyers flying able to fly more than infrequent flyers </h2>
+			<h2>Goal 2 -  Frequent flyers can still fly more</h2>
 			<div id=chart-holder><canvas id="goal2chart"></canvas></div>
 			<p>This chart shows how the total daily distance travelled by frequent and infrequent travellers compare over time. It shows
 			that frequent traveller flying is reduced whilst infrequent traveller flying remains steady, but also that despite this 
 			frequent flyers are still travelling significantly more than infrequent flyers at the end of the 5 year period.
-			<h2>Goal 3. Infrequent flyers suffering minimum disruption </h2>
+			<h2>Goal 3- Minimum disruption for infrequent flyers</h2>
 			<div id=chart-holder><canvas id="goal3chart"></canvas></div>
 			<p>This chart shows how many check-ins are rejected by FLAP on average for frequent and infrequent travellers. It shows that
 			that frequent flyers are significantly impacted whilst infrequent flyers are not.
@@ -54,11 +54,14 @@
 				<li>No attempt is made to simulate seasonal variations in flying patterns.</li>
 				<li>Each simulated traveller has a home country but no home location within that country to influence choice of departure location.</li>
 				<li>No attempt is made to simulate variation in passport details due to lost or stolen passports and dual passport holders.</li>
+				<li>No attempt to simulate changes in traveller behaviour over time</li>
 			</ul>
-			I don't believe any of these negate the findings on this page but nevertheless some will be addressed in future iterations.
+			I don't believe any of these negate the findings on this page but nevertheless some will be addressed in future iterations. 
+			A second white paper providing more detail on the modelling process and its results is also planned.
 		</div>
 
 	</body>
+	<script src="https://momentjs.com/downloads/moment.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.js"></script>
 	<script src="./modelcharts.js"></script>
 </html>
