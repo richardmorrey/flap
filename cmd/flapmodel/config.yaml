@@ -10,9 +10,9 @@ modelparams:
   daystorun: 2000
   totaltravellers: 1000
   botspecs:
-  - planprobability: 0.02
+  - planprobability: 0.01
     weight: 1
-  - planprobability: 0.002
+  - planprobability: 0.001
     weight: 9
   triplengths:
   - 1
