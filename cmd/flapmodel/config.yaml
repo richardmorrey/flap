@@ -11,9 +11,9 @@ modelparams:
   totaltravellers: 1000
   botspecs:
   - planprobability: 0.01
-    weight: 1
-  - planprobability: 0.001
-    weight: 9
+    weight: 15
+  - planprobability: 0.002
+    weight: 85
   triplengths:
   - 1
   - 2
