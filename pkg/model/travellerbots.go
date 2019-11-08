@@ -67,9 +67,8 @@ func (self  *botStats) Refused() {
 func (self *travellerBot) ReportDay(rdd flap.Days) string {
 	
 	// Format stats
-	line := fmt.Sprintf("%f,%f,%f,",
-		float64(self.stats.taken)/float64(self.numInstances),
-		float64(self.stats.refused)/float64(self.numInstances),
+	line := fmt.Sprintf("%f,%f,",
+		(float64(self.stats.refused)/float64(self.stats.taken+self.stats.refused))*100,
 		float64(self.stats.distance)/float64(flap.Kilometres(self.numInstances)))
 
 	// Reset counters
@@ -111,7 +110,7 @@ func (self *TravellerBots) ReportDay(day flap.Days, rdd flap.Days) {
 			if self.fh != nil {
 				line:="Day"
 				for bb := bandIndex(0); bb < bandIndex(len(self.bots)); bb++ {
-					line += fmt.Sprintf(",tpp_%d,rpp_%d,dpp_%d",bb,bb,bb) 
+					line += fmt.Sprintf(",cancelledpercent_%d,distance_%d",bb,bb) 
 				}
 				line +="\n"
 				self.fh.WriteString(line)

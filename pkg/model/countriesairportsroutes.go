@@ -213,10 +213,14 @@ func (self *CountriesAirportsRoutes) Build(dataFolder string, workingFolder stri
 			cs.airportsCount++
 		}
 
-		// Add route
-		cs.airport.Routes = append(cs.airport.Routes,route.Route)
-		cs.airport.add(route.Weight)
-		cs.routesCount++
+		// Add route, ensuring we dont include circular ones
+		if route.To != cs.airport.Code {
+			cs.airport.Routes = append(cs.airport.Routes,route.Route)
+			cs.airport.add(route.Weight)
+			cs.routesCount++
+		} else {
+			fmt.Printf("\nSkipping circular route %s to %s\n", route.To.ToString(),cs.airport.Code.ToString())
+		}
 	}
 
 	// Save last country

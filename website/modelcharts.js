@@ -88,7 +88,7 @@ var goal1 = new Chart(ctx, {
 						        },
 				          scaleLabel: {
 						          display: true,
-						          labelString: "Distance (Kilometres)",
+						          labelString: "Distance Per Day (km)",
 						          fontColor: "black"
 						        }
 				        }]
@@ -105,46 +105,64 @@ var goal2 = new Chart(ctx, {
 		 datasets: [{
 				label: 'Frequent Flyers',
 				data: [
-					0.417778,
-					0.348889,
-					0.397778,
-					0.38,
-					0.367778,
-					0.372222,
-					0.373333,
-					0.354444,
-					0.397778,
-					0.371111,
-					0.392222,
-					0.354444,
-					0.32,
-					0.368889,
-					0.352222,
-					0.305556,
-					0.296667,
-					0.318889,
-					0.295556,
-					0.297778
+					6676.16,
+					6051.84,
+					5864.89,
+					4312.1,
+					3890.79,
+					3957.75,
+					3226.31,
+					2986.61,
+					2378.99,
+					1678.96,
+					2661.65,
+					1940.08,
+					1642.78,
+					951.92,
+					828.33,
+					1222.98,
+					1622.33,
+					1029.04,
+					822.59,
+					922.33
 					],
-				borderColor: "rgba(200,0,0,0.6)",
-				backgroundColor: "rgba(200,0,0,0.6)",
-				fill:false
+				backgroundColor: "rgba(255,165,0,0.5)",
+			 	borderColor: "rgba(255,165,0,1)",
+			 	borderWidth:1
 			   },
 			   {
-				label: 'Infrequent Travellers',
+				label: 'Infrequent Flyers',
 				data: [
+					594.937778,
+					851.996667,
+					817.966667,
+					754.246667,
+					847.561111,
+					727.304444,
+					668.293333,
+					815.804444,
+					775.311111,
+					678.823333,
+					577.228889,
+					597.56,
+					615.186667,
+					607.738889,
+					478.133333,
+					634.127778,
+					523.807778,
+					469.633333,
+					632.584444,
+					392.498889
 					],
-				  borderColor: "rgba(255,153,0,0.6)",
-				  backgroundColor: "rgba(255,153,0,0.6)",
-				  fill:false
-				}]
+				  backgroundColor: "rgba(255,255,0,0.5)",
+			          borderColor: "rgba(255,255,0,1)",
+				  borderWidth: 1
+	}]
 			  },
 	options: {
-		legend: {
-			labels: {usePointStyle:true}
-		},
 		scales: {
 			xAxes: [{
+				      offset:true,
 				      type: "time",
 				      time: {
 					              unit: 'day',
@@ -153,16 +171,16 @@ var goal2 = new Chart(ctx, {
 					              displayFormats: {
 							                day: 'YYYY-MM-DD'
 							              }
-					            }
+					            },
+				      gridLines: {
+					      display:false
+				      }
+
 				    }],
 			    yAxes: [{
-				          gridLines: {
-						          color: "black",
-						          borderDash: [2, 5],
-						        },
 				          scaleLabel: {
 						          display: true,
-						          labelString: "Distance (Kilometres)",
+						          labelString: "Distance Per 100 Days (km)",
 						          fontColor: "black"
 						        }
 				        }]
@@ -172,21 +190,61 @@ var goal2 = new Chart(ctx, {
 );
 var ctx = document.getElementById('goal3chart').getContext('2d');
 var goal3 = new Chart(ctx, {
-	  type: 'bar',
+	  type: 'line',
 	  data: {
 	  	labels: [day(100),day(200),day(300),day(400),day(500),day(600),day(700),day(800),day(900),day(1000),day(1100),day(1200),day(1300),day(1400),day(1500),day(1600),day(1700),day(1800),day(1900),day(2000)],
 		
 		 datasets: [{
-				label: 'Daily Total',
+				label: 'Frequent Flyers',
 				data: [
+					0,
+					0.37594,
+					0.83682,
+					0.350877,
+					0.921659,
+					1.190476,
+					7.30897,
+					5.714286,
+					15.384615,
+					21.338912,
+					23.004695,
+					28.365385,
+					33.179724,
+					37.681159,
+					42.79476,
+					48.514851,
+					45.5,
+					54.929577,
+					52.717391,
+					66.875
 					],
 				borderColor: "rgba(200,0,0,0.6)",
 				backgroundColor: "rgba(200,0,0,0.6)",
 				fill:false
 			   },
 			   {
-				label: 'Distance Travelled',
+				label: 'Infrequent Flyers',
 				data: [
+					0,
+					0.320513,
+					0.314465,
+					0.294985,
+					0.289017,
+					0.928793,
+					0.900901,
+					3.459119,
+					2.605863,
+					4.807692,
+					5.18732,
+					5.993691,
+					10.469314,
+					11.428571,
+					12,
+					13.05638,
+					16.044776,
+					17.518248,
+					21.785714,
+					20.472441
 					],
 				  borderColor: "rgba(255,153,0,0.6)",
 				  backgroundColor: "rgba(255,153,0,0.6)",
@@ -207,7 +265,10 @@ var goal3 = new Chart(ctx, {
 					              displayFormats: {
 							                day: 'YYYY-MM-DD'
 							              }
-					            }
+					            },
+				      gridLines: {
+					      display: false
+				      }
 				    }],
 			    yAxes: [{
 				          gridLines: {
@@ -216,7 +277,7 @@ var goal3 = new Chart(ctx, {
 						        },
 				          scaleLabel: {
 						          display: true,
-						          labelString: "Distance (Kilometres)",
+						          labelString: "Trips Rejected (%)",
 						          fontColor: "black"
 						        }
 				        }]
