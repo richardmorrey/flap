@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Flying is A Privilege</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="flap.css">
+		<script src="https://cesium.com/downloads/cesiumjs/releases/1.63.1/Build/Cesium/Cesium.js"></script>
+		<link href="https://cesium.com/downloads/cesiumjs/releases/1.63.1/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+	</head>
+
+	</head>
+	<body>
+
+		<div class="topnav">
+			  <a href="home.html">Home</a>
+			  <a href="modelling.html">Modelling</a>
+			  <span class="topnavcurrent"><a href="explore.html">Explore</a></span>
+			  <a href="experience.html">Traveller Experience</a>
+			  <a href="resources.html">Resources</a>
+			  <a href="about.html">About</a>
+		</div>
+
+		<div class="banner">
+			<h1 class="normalchar"><span class="boldchar">FL</span>ying is <span class="boldchar">A P</span>rivilege</h1>
+			<span class="tagline">...if you don't believe me try flapping your arms</span>
+		</div>
+
+		<div class="content">
+			<p>Click links below to show paths of all flights taken during the 100 day period of the model specified. Note
+			you can zoom in and out as well as experiment with the layout using the controls in the top left</p>
+			<div id="chart-holder">
+		 		<div id="cesiumContainer"></div>
+				</div>
+			</div>
+			<script src="./explorepaths.js"></script>
+			<br>
+			<p>
+			<button onclick="showPaths(53769)">1-100</button>
+			</p>
+		</div>
+	</body>
+</html>

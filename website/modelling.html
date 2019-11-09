@@ -5,8 +5,6 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="stylesheet" type="text/css" href="flap.css">
-		<script src="https://cesium.com/downloads/cesiumjs/releases/1.63.1/Build/Cesium/Cesium.js"></script>
-		<link href="https://cesium.com/downloads/cesiumjs/releases/1.63.1/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
 	</head>
 	<body>
 
@@ -38,13 +36,9 @@
 			<h2>Goal 1 -  Global air travel is reduced</h2>
 			<div id=chart-holder><canvas id="goal1chart"></canvas></div>
 			<p>This chart shows how the Daily Total and the total daily distance travelled varies over time. It shows that air travel is
-			reduced by TBD % over 5 years.
+			reduced by TBD % over 5 years. You can see a visualization of all the flights contribution to each data point on this graph
+			<a href="./explore.html">here.</a>
 
-			 <div id="cesiumContainer" style="width: 700px; height:400px"></div>
-			 <script>
-    				Cesium.Ion.defaultAccessToken = 'your_access_token';
-        			var viewer = new Cesium.Viewer('cesiumContainer');
-	  		</script>
 			<h2>Goal 2 -  Frequent flyers can still fly more</h2>
 			<div id=chart-holder><canvas id="goal2chart"></canvas></div>
 			<p>This chart shows how the total daily distance travelled by frequent and infrequent travellers compare over time. It shows

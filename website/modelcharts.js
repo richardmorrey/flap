@@ -32,9 +32,10 @@ var goal1 = new Chart(ctx, {
 					6086,
 					5761
 					],
-				borderColor: "rgba(200,0,0,0.6)",
+				borderColor: "rgba(200,0,0,1)",
 				backgroundColor: "rgba(200,0,0,0.6)",
-				fill:false
+				fill:false,
+			 	pointRadius:0
 			   },
 			   {
 				label: 'Distance Travelled',
@@ -60,8 +61,8 @@ var goal1 = new Chart(ctx, {
 					7348,
 					7871
 					],
-				  borderColor: "rgba(255,153,0,0.6)",
-				  backgroundColor: "rgba(255,153,0,0.6)",
+				  borderColor: "rgba(0,0,255,1)",
+				  backgroundColor: "rgba(0,0,255,0.6)",
 				  fill:false
 				}]
 			  },
@@ -82,10 +83,6 @@ var goal1 = new Chart(ctx, {
 					            }
 				    }],
 			    yAxes: [{
-				          gridLines: {
-						          color: "black",
-						          borderDash: [2, 5],
-						        },
 				          scaleLabel: {
 						          display: true,
 						          labelString: "Distance Per Day (km)",
@@ -218,9 +215,10 @@ var goal3 = new Chart(ctx, {
 					52.717391,
 					66.875
 					],
-				borderColor: "rgba(200,0,0,0.6)",
-				backgroundColor: "rgba(200,0,0,0.6)",
-				fill:false
+				backgroundColor: "rgba(255,165,0,0.5)",
+			 	borderColor: "rgba(255,165,0,1)",
+				fill:false,
+			 	pointRadius:0
 			   },
 			   {
 				label: 'Infrequent Flyers',
@@ -246,9 +244,10 @@ var goal3 = new Chart(ctx, {
 					21.785714,
 					20.472441
 					],
-				  borderColor: "rgba(255,153,0,0.6)",
-				  backgroundColor: "rgba(255,153,0,0.6)",
-				  fill:false
+				  backgroundColor: "rgba(255,255,0,0.5)",
+			          borderColor: "rgba(255,255,0,1)",
+				  fill:false,
+				  pointRadius:0
 				}]
 			  },
 	options: {
@@ -266,15 +265,8 @@ var goal3 = new Chart(ctx, {
 							                day: 'YYYY-MM-DD'
 							              }
 					            },
-				      gridLines: {
-					      display: false
-				      }
-				    }],
+				}],
 			    yAxes: [{
-				          gridLines: {
-						          color: "black",
-						          borderDash: [2, 5],
-						        },
 				          scaleLabel: {
 						          display: true,
 						          labelString: "Trips Rejected (%)",
