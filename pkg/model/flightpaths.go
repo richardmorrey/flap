@@ -24,31 +24,31 @@ func newFlightPaths(start flap.EpochTime) *flightPaths {
         			kml.SharedStyle("0",
 	                	kml.LineStyle(
 			                kml.Color(color.RGBA{R: 255, G: 165, B: 0, A: 127}),
-				        kml.Width(10),
+				        kml.Width(2),
 					),
 				),
 				kml.SharedStyle("1",
 	                	kml.LineStyle(
 			                kml.Color(color.RGBA{R: 255, G: 255, B: 0, A: 127}),
-				        kml.Width(10),
+				        kml.Width(2),
 					),
 				),
 				kml.SharedStyle("2",
 	                	kml.LineStyle(
 			                kml.Color(color.RGBA{R: 255, G: 0, B: 0, A: 127}),
-				        kml.Width(10),
+				        kml.Width(2),
 					),
 				),
 				kml.SharedStyle("3",
 	                	kml.LineStyle(
 			                kml.Color(color.RGBA{R: 255, G: 255, B: 0, A: 127}),
-				        kml.Width(10),
+				        kml.Width(2),
 					),
 				),
 				kml.SharedStyle("4",
 				kml.LineStyle(
 			                kml.Color(color.RGBA{R: 255, G: 0, B: 255, A: 127}),
-				        kml.Width(10),
+				        kml.Width(2),
 					),
 				))
 	fp.start=start

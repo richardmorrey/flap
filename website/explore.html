@@ -28,16 +28,34 @@
 
 		<div class="content">
 			<p>Click links below to show paths of all flights taken during the 100 day period of the model specified. Note
-			you can zoom in and out as well as experiment with the layout using the controls in the top left</p>
+			you can zoom in and out as well as experiment with the layout using the controls in the top left.</p>
+			<center><select onchange="selectDayRange(event)">
+				<option value="1">Day 1 - Day 100</option>
+				<option value="2">Day 101 - Day 200</option>
+				<option value="3">Day 201 - Day 300</option>
+				<option value="4">Day 301 - Day 400</option>
+				<option value="5">Day 401 - Day 500</option>
+				<option value="6">Day 501 - Day 600</option>
+				<option value="7">Day 601 - Day 700</option>
+				<option value="8">Day 701 - Day 800</option>
+				<option value="9">Day 801 - Day 900</option>
+				<option value="10">Day 901 - Day 1000</option>
+				<option value="11">Day 1001 - Day 1100</option>
+				<option value="12">Day 1101 - Day 1200</option>
+				<option value="13">Day 1201 - Day 300</option>
+				<option value="14">Day 1301 - Day 1400</option>
+				<option value="15">Day 1401 - Day 1500</option>
+				<option value="16">Day 1500 - Day 1600</option>
+				<option value="17">Day 1601 - Day 1700</option>
+				<option value="18">Day 1701 - Day 1800</option>
+				<option value="19">Day 1801 - Day 1900</option>
+				<option value="20">Day 1901 - Day 2000</option>
+				</select></center><br>
 			<div id="chart-holder">
 		 		<div id="cesiumContainer"></div>
 				</div>
 			</div>
 			<script src="./explorepaths.js"></script>
-			<br>
-			<p>
-			<button onclick="showPaths(53769)">1-100</button>
-			</p>
 		</div>
 	</body>
 </html>

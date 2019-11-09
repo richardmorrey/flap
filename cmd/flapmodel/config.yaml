@@ -28,6 +28,6 @@ modelparams:
   - 14
   - 14
   - 28
-  startday: 0
+  startday: 1609459200
   dailytotalfactor: 0.9995
   reportdaydelta: 100
