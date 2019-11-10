@@ -1,5 +1,5 @@
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmNThhZDY0MC02OTRiLTRmNTgtOWM1Zi00OTU4MDc4MWQzYWQiLCJpZCI6MTgwOTIsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1NzMyNDU0Mjd9.26QdibL7r1cKsLG3tmT2qH8WoBWXPvcsmrACrAyxW_c';
-var viewer = new Cesium.Viewer('cesiumContainer',{animation:false,shouldAnimate:true,sceneMode:Cesium.SceneMode.SCENE2D});
+var viewer = new Cesium.Viewer('cesiumContainer',{animation:false,shouldAnimate:true,sceneMode:Cesium.SceneMode.SCENE3D});
 showPaths(53812);
 
 function showPaths(id)

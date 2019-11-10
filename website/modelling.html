@@ -23,33 +23,38 @@
 		</div>
 
 		<div class="content">
-			<h2>Overview</h2>
-			<p>Following is the story, in three graphs, of a modelling process in which FLAP was exercised with 2000 days of realistic
-			global traffic by 1 million travellers. For simplicity these 1 million travellers were split into two bands:
+			<h3><img src='fp.png'></img>Overview&nbsp;<img src='fp.png'></img></h3>
+			<p>Following is the story, in three charts, of the outcome of a modelling exercise simulating 2000 days of 
+			global air traffic by 1 million travellers. These 1 million travellers were split into:
 			<ul>
-				<li>100,000 frequent flyers, making on average TBD trips a year</li>
-				<li>900,000 infrequent flyers, making on average TBD trips a year</li> 	
+				<li>150,000 frequent flyers, making on average one trip every 100 days</li>
+				<li>850,000 infrequent flyers, making on average one trip every 500 days</li> 	
 			</ul>
-			The first 100 days of the simulation were run in "log-only mode", with the average total daily distance travelled during
-			this period being taken as the initial Daily Total for Day 101. From Day 102 onwards the Daily Total is reduced by 0.1% 
-			each day.
-			<br><br>Brief summary: it works!
-			<h2>Goal 1 -  Global air travel is reduced</h2>
+			, values that approximate to the balance between frequent and other flyers discussed
+			<a href="http://afreeride.org/">here</a> and
+			<a href="https://www.inequalityintransport.org.uk/exploring-transport-inequality/who-travels-air">here</a>.
+			</p>
+			<p>
+			The average total daily distance travelled during the first 100 days was taken as the initial "Daily Total", that was
+			enforced, and reduced by 0.05% each day, from Day 101 onwards.
+			<br><br>Brief summary of outcome: it works!
+			</p>
+			<h3><img src='fp.png'></img>Global air travel is reduced&nbsp;<img src='fp.png'></img></h3>
 			<div id=chart-holder><canvas id="goal1chart"></canvas></div>
 			<p>This chart shows how the Daily Total and the total daily distance travelled varies over time. It shows that air travel is
-			reduced by TBD % over 5 years. You can see a visualization of all the flights contribution to each data point on this graph
+			halved over the course of 5 years. You can see a visualization of flights contribution to each data point on this graph
 			<a href="./explore.html">here.</a>
 
-			<h2>Goal 2 -  Frequent flyers can still fly more</h2>
+			<h3><img src='fp.png'></img>Frequent flyers can still fly more&nbsp;<img src='fp.png'></img></h3>
 			<div id=chart-holder><canvas id="goal2chart"></canvas></div>
-			<p>This chart shows how the total daily distance travelled by frequent and infrequent travellers compare over time. It shows
-			that frequent traveller flying is reduced whilst infrequent traveller flying remains steady, but also that despite this 
-			frequent flyers are still travelling significantly more than infrequent flyers at the end of the 5 year period.
-			<h2>Goal 3- Infrequent flyers are impacted less</h2>
+			<p>This chart shows how the average distance travelled every 100 days by frequent and infrequent travellers compares over
+			time. It shows that frequent traveller flying is reduced whilst infrequent traveller flying remains steady, but also that
+			despite this frequent flyers are still travelling significantly more than infrequent flyers at the end of the 5 year period.
+			<h3><img src='fp.png'></img>Infrequent flyers are impacted less&nbsp;<img src='fp.png'></img></h3>
 			<div id=chart-holder><canvas id="goal3chart"></canvas></div>
 			<p>This chart shows the percentage of trips that are rejected by FLAP for frequent and infrequent travellers.
-			It shows that that frequent flyers are significantly impacted early on whilst infrequent flyers are not.
-			<h2>Caveats and areas for improvement</h2>
+			It shows that that infrequent flyers suffer far less disruption to their travel plans than frequent flyers.
+			<h3><img src='fp.png'></img>Caveats and areas for improvement&nbsp;<img src='fp.png'></img></h3>
 			The model used is basic and, whilst it does simulate global air traffic on geniune routes between genuine airports it diverges
 			from real-world flying patterns in many ways, including:
 			<ul>
@@ -59,8 +64,8 @@
 				<li>No attempt is made to simulate variation in passport details due to lost or stolen passports and dual passport holders.</li>
 				<li>No attempt to simulate changes in traveller behaviour over time</li>
 			</ul>
-			I don't believe any of these negate the findings on this page but nevertheless some will be addressed in future iterations. 
-			A second white paper providing more detail on the modelling process and its results is also planned.
+			I don't believe any of these negate the findings on this page but nevertheless some will be addressed in future iterations of
+		       the modelling tool. A second white paper focussed on the details of the modelling process and its results is also planned.
 		</div>
 
 	</body>
