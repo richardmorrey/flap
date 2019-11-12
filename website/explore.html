@@ -2,6 +2,7 @@
 <html lang="en">
 	<head>
 		<title>Flying is A Privilege</title>
+		<link rel="icon" href="fp.png">
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="stylesheet" type="text/css" href="flap.css">
@@ -27,13 +28,13 @@
 		</div>
 
 		<div class="content">
-			<h3><img src="fp.png">Flight Instructions&nbsp;<img src="fp.png"></img></h3>
+			<h3>Flight Instructions</h3>
 			<p>Select from below to show paths of all flights for a specific 100 day period from the execution of the model.
 			Each line shown is a flight following a geniuine commercial route. Orange lines show journeys taken by frequent
 			flyers. Yellow lines indicate journeys taken by infrequent flyers. The flights of only 1000 travellers are shown
 			to avoid browser meltdown! Note you can zoom in and out as well as experiment with the layout using the controls
 			in the top left.</p>
-			<h3><img src="fp.png">Prepare for Take Off!&nbsp;<img src="fp.png"></img></h3>
+			<h3>Prepare for Take Off!</h3>
 			<center><select onchange="selectDayRange(event)">
 				<option value="1">Day 1 - Day 100</option>
 				<option value="2">Day 101 - Day 200</option>
@@ -54,7 +55,6 @@
 				<option value="17">Day 1601 - Day 1700</option>
 				<option value="18">Day 1701 - Day 1800</option>
 				<option value="19">Day 1801 - Day 1900</option>
-				<option value="20">Day 1901 - Day 2000</option>
 				</select></center><br>
 			<div id="chart-holder">
 		 		<div id="cesiumContainer"></div>

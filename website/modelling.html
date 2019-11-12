@@ -5,6 +5,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="stylesheet" type="text/css" href="flap.css">
+		<link rel="icon" href="fp.png">
 	</head>
 	<body>
 
@@ -23,14 +24,14 @@
 		</div>
 
 		<div class="content">
-			<h3><img src='fp.png'></img>Overview&nbsp;<img src='fp.png'></img></h3>
+			<h3>Overview&nbsp;</h3>
 			<p>Following is the story, in three charts, of the outcome of a modelling exercise simulating 2000 days of 
 			global air traffic by 1 million travellers. These 1 million travellers were split into:
 			<ul>
 				<li>150,000 frequent flyers, making on average one trip every 100 days</li>
 				<li>850,000 infrequent flyers, making on average one trip every 500 days</li> 	
 			</ul>
-			, values that approximate to the balance between frequent and other flyers discussed
+			This approximates to the balance between frequent and other flyers discussed
 			<a href="http://afreeride.org/">here</a> and
 			<a href="https://www.inequalityintransport.org.uk/exploring-transport-inequality/who-travels-air">here</a>.
 			</p>
@@ -39,24 +40,24 @@
 			enforced, and reduced by 0.05% each day, from Day 101 onwards.
 			<br><br>Brief summary of outcome: it works!
 			</p>
-			<h3><img src='fp.png'></img>Global air travel is reduced&nbsp;<img src='fp.png'></img></h3>
+			<h3>Global air travel is reduced&nbsp;</h3>
 			<div id=chart-holder><canvas id="goal1chart"></canvas></div>
 			<p>This chart shows how the Daily Total and the total daily distance travelled varies over time. It shows that air travel is
 			halved over the course of 5 years. You can see a visualization of flights contribution to each data point on this graph
 			<a href="./explore.html">here.</a>
 
-			<h3><img src='fp.png'></img>Frequent flyers can still fly more&nbsp;<img src='fp.png'></img></h3>
+			<h3>Frequent flyers can still fly more&nbsp;</h3>
 			<div id=chart-holder><canvas id="goal2chart"></canvas></div>
 			<p>This chart shows how the average distance travelled every 100 days by frequent and infrequent travellers compares over
 			time. It shows that frequent traveller flying is reduced whilst infrequent traveller flying remains steady, but also that
 			despite this frequent flyers are still travelling significantly more than infrequent flyers at the end of the 5 year period.
-			<h3><img src='fp.png'></img>Infrequent flyers are impacted less&nbsp;<img src='fp.png'></img></h3>
+			<h3>Infrequent flyers are impacted less&nbsp;</h3>
 			<div id=chart-holder><canvas id="goal3chart"></canvas></div>
 			<p>This chart shows the percentage of trips that are rejected by FLAP for frequent and infrequent travellers.
 			It shows that that infrequent flyers suffer far less disruption to their travel plans than frequent flyers.
-			<h3><img src='fp.png'></img>Caveats and areas for improvement&nbsp;<img src='fp.png'></img></h3>
-			The model used is basic and, whilst it does simulate global air traffic on geniune routes between genuine airports it diverges
-			from real-world flying patterns in many ways, including:
+			<h3>Caveats and areas for improvement&nbsp;</h3>
+			The model used to generate these results is basic. Whilst it does simulate global air traffic on geniune routes between
+			genuine airports it diverges from real-world flying patterns in many ways, including:
 			<ul>
 				<li>All trips simulated are simple return flights.</li>
 				<li>No attempt is made to simulate seasonal variations in flying patterns.</li>
@@ -72,4 +73,4 @@
 	<script src="https://momentjs.com/downloads/moment.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.js"></script>
 	<script src="./modelcharts.js"></script>
-</html>
+</html>:c
