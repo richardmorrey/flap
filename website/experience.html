@@ -31,15 +31,15 @@
 		<div class="content">
 
 			<h3>Clearance Promises&nbsp;</h3>
-			<p>With the basic implementation of FLAP as largely discussed on this site and as currently modelled, there is no means of
-				of being sure, om completion of one trip, when you will be allowed to start the next. This is because the amount
+			<p>With the basic implementation of FLAP as largely discussed on this site and as currently modelled, there is no means for
+			   a Traveller to be sure, on completion of one trip, when they will be allowed to start the next. This is because the amount
 				credited to each "grounded" Traveller, that is each Traveller with a distance balance in deficit, varies over time
 				according to the size of the Daily Total and the number of grounded Travellers.  
 			</p>
 			<p>"Clearance Promises" are a simple extension to provide such certainty. They enable Travellers (in practice more likely
-				air lines on behalf of Travellers), to submit flight details for a trip to FLAP at the point when they are booked
+				airlines on behalf of Travellers), to submit flight details for a trip to FLAP at the point when they are booked
 				rather than at check-in. In return FLAP creates a "Clearance Promise" for the Traveller: a fixed date after the 
-				completion of the trip when the Traveller can fly again, regardless of their distance balance.
+				completion of the trip when the Traveller will be allowed to fly again, regardless of their distance balance.
 			</p>
 
 			<h3>In Practice&nbsp;</h3>
@@ -52,13 +52,11 @@
 				<iframe src="https://calendar.google.com/calendar/embed?height=600&amp;wkst=1&amp;bgcolor=%23ffffff&amp;ctz=Europe%2FLondon&amp;src=Nm11ajdhOWdzaXFkbzBlZmZjMzNybG1ma2tAZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ&amp;src=NW1sYzZzdWxuMXB0aG9sdjRmZGcxNDJvczRAZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ&amp;color=%235A6986&amp;color=%23711616&amp;showTitle=0&amp;showNav=0&amp;showPrint=0&amp;showTabs=0&amp;showCalendars=0&amp;showTz=0&amp;dates=20210101/20210131" style="border-width:0" frameborder="0" scrolling="no"></iframe>
 			</div>
 			Here the blue days show a return trip from London to Rome for a long weekend over the New Year. Immediately after the red
-			days show when the Traveller is grounded and unable to travel. The Traveller is free to attempt to book more trips on clear
-			days although, obviously, if that trip or its Clearance Promise overlaps with another trip already booked the booking is 
-			rejected.
+			days show when the Traveller is grounded and unable to travel. More trips can be booked only if the days taken for the trip to 			       complete and their Clearance Promise date to be reached are clear.
 			<h3>Implementation&nbsp;</h3>
 			<p>The key to Clearance Promises is the devising of an algorithm that calculates accurate clearance dates - dates
 				that are on average consistent with when the distance balance returns to credit. This will be a core goal
-				of the next iteration of the implementation.
+				of the next iteration of the FLAP implementation.
 			</p>
 		</div>
 	</body>
