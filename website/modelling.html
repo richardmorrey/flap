@@ -6,17 +6,24 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="stylesheet" type="text/css" href="flap.css">
 		<link rel="icon" href="fp.png">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	
 	</head>
 	<body>
 
-		<div class="topnav">
+		<div class="topnav"i id="mytopnav">
 			  <a href="home.html">Home</a>
 			  <span class="topnavcurrent"><a href="modelling.html">Modelling</a></span>
 			  <a href="explore.html">Explore</a>
 			  <a href="experience.html">Traveller Experience</a>
 			  <a href="resources.html">Resources</a>
 			  <a href="about.html">About</a>
+			  <a href="javascript:void(0);" class="icon" onclick="switchMenu()">
+				       <i class="fa fa-bars"></i>
+			  </a>
+
 		</div>
+		<script src="./topnav.js"></script>
 
 		<div class="banner">
 			<h1 class="normalchar"><span class="boldchar">FL</span>ying is <span class="boldchar">A P</span>rivilege</h1>
@@ -25,37 +32,36 @@
 
 		<div class="content">
 			<h3>Overview&nbsp;</h3>
-			<p>Following is the story, in three charts, of the outcome of a modelling exercise simulating 2000 days of 
-			global air traffic by 1 million travellers. These 1 million travellers were split into:
+			<p>Following is a summary of the findings of a modelling exercise simulating 2000 days of 
+			global air traffic by 1 million travellers. These 1 million travellers were split into two
+			bands to repesent the real-world balance between frequent and infrequent flyers discussed
+			<a href="http://afreeride.org/">here</a> and
+			<a href="https://www.inequalityintransport.org.uk/exploring-transport-inequality/who-travels-air">here</a>:
 			<ul>
 				<li>150,000 frequent flyers, making on average one trip every 100 days</li>
 				<li>850,000 infrequent flyers, making on average one trip every 500 days</li> 	
 			</ul>
-			This approximates to the balance between frequent and other flyers discussed
-			<a href="http://afreeride.org/">here</a> and
-			<a href="https://www.inequalityintransport.org.uk/exploring-transport-inequality/who-travels-air">here</a>.
 			</p>
 			<p>
 			The average total daily distance travelled during the first 100 days was taken as the initial "Daily Total", that was
 			enforced, and reduced by 0.05% each day, from Day 101 onwards.
-			<br><br>Brief summary of outcome: it works!
 			</p>
-			<h3>Global air travel is reduced&nbsp;</h3>
+			<h3>Global air travel is reduced</h3>
 			<div id=chart-holder><canvas id="goal1chart"></canvas></div>
-			<p>This chart shows how the Daily Total and the total daily distance travelled varies over time. It shows that air travel is
+			<p>This chart shows how the Daily Total and the total daily distance travelled varies over time. Air travel is
 			halved over the course of 5 years. You can see a visualization of flights contribution to each data point on this graph
 			<a href="./explore.html">here.</a>
 
-			<h3>Frequent flyers can still fly more&nbsp;</h3>
+			<h3>Frequent flyers can still fly more</h3>
 			<div id=chart-holder><canvas id="goal2chart"></canvas></div>
 			<p>This chart shows how the average distance travelled every 100 days by frequent and infrequent travellers compares over
-			time. It shows that frequent traveller flying is reduced whilst infrequent traveller flying remains steady, but also that
-			despite this frequent flyers are still travelling significantly more than infrequent flyers at the end of the 5 year period.
-			<h3>Infrequent flyers are impacted less&nbsp;</h3>
+			time. Frequent traveller flying is reduced whilst infrequent traveller flying remains steady, but
+			despite this frequent flyers fly more throughout the 2000 day period.
+			<h3>Infrequent flyers are impacted less</h3>
 			<div id=chart-holder><canvas id="goal3chart"></canvas></div>
 			<p>This chart shows the percentage of trips that are rejected by FLAP for frequent and infrequent travellers.
-			It shows that that infrequent flyers suffer far less disruption to their travel plans than frequent flyers.
-			<h3>Caveats and areas for improvement&nbsp;</h3>
+			Infrequent flyers suffer far less disruption to their travel plans than frequent flyers.
+			<h3>Caveats and areas for improvement</h3>
 			The model used to generate these results is basic. Whilst it does simulate global air traffic on geniune routes between
 			genuine airports it diverges from real-world flying patterns in many ways, including:
 			<ul>
@@ -65,12 +71,12 @@
 				<li>No attempt is made to simulate variation in passport details due to lost or stolen passports and dual passport holders.</li>
 				<li>No attempt to simulate changes in traveller behaviour over time</li>
 			</ul>
-			I don't believe any of these negate the findings on this page but nevertheless some will be addressed in future iterations of
-		       the modelling tool. A second white paper focussed on the details of the modelling process and its results is also planned.
+			I don't believe any of these negate the findings on this page but nevertheless I plan to address some in future iterations of
+		       the modelling tool. I am also planning s second white paper focussed on the details of the modelling process and its results.
 		</div>
 
 	</body>
 	<script src="https://momentjs.com/downloads/moment.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.js"></script>
 	<script src="./modelcharts.js"></script>
-</html>:c
+</html>

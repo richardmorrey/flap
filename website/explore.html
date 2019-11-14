@@ -8,19 +8,25 @@
 		<link rel="stylesheet" type="text/css" href="flap.css">
 		<script src="https://cesium.com/downloads/cesiumjs/releases/1.63.1/Build/Cesium/Cesium.js"></script>
 		<link href="https://cesium.com/downloads/cesiumjs/releases/1.63.1/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	
 	</head>
 
 	</head>
 	<body>
 
-		<div class="topnav">
+		<div class="topnav" id="mytopnav">
 			  <a href="home.html">Home</a>
 			  <a href="modelling.html">Modelling</a>
 			  <span class="topnavcurrent"><a href="explore.html">Explore</a></span>
 			  <a href="experience.html">Traveller Experience</a>
 			  <a href="resources.html">Resources</a>
 			  <a href="about.html">About</a>
-		</div>
+		  	  <a href="javascript:void(0);" class="icon" onclick="switchMenu()">
+				       <i class="fa fa-bars"></i>
+			  </a>
+	        </div>
+		<script src="./topnav.js"></script>
 
 		<div class="banner">
 			<h1 class="normalchar"><span class="boldchar">FL</span>ying is <span class="boldchar">A P</span>rivilege</h1>

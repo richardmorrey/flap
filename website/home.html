@@ -6,16 +6,20 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="stylesheet" type="text/css" href="flap.css">
 		<link rel="icon" href="fp.png">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 	</head>
 	<body>
-
-		<div class="topnav">
+		<script src="./topnav.js"></script>
+		<div class="topnav" id="mytopnav">
 			  <span class="topnavcurrent"><a href="home.html">Home</a></span>
 			  <a href="modelling.html">Modelling</a>
 			  <a href="explore.html">Explore</a>
 			  <a href="experience.html">Traveller Experience</a>
 			  <a href="resources.html">Resources</a>
 			  <a href="about.html">About</a>
+			  <a href="javascript:void(0);" class="icon" onclick="switchMenu()">
+				       <i class="fa fa-bars"></i>
+			  </a>
 		</div>
 
 		<div class="banner">
@@ -31,11 +35,11 @@
 			<p>Sadly not. Take a look at Figures 8.1 (p606) and 8.3 (p608) in <a href="https://www.ipcc.ch/site/assets/uploads/2018/02/ipcc_wg3_ar5_chapter8.pdf">ICC 2018 Report Chapter 8</a> to get a better idea of air travel's significant and rapidly increasing contribution to global CO<sub>2</sub> emissions.  
 		       	<a href="https://www.theguardian.com/commentisfree/2019/jun/18/heathrow-expansion-mockery-zero
 			-emissions"> This short article</a> by United Kingdom Green Party MP Caroline Lucas explains why reduction is
-			the only viable solution. Finally
-			<a href="https://www.theguardian.com/environment/georgemonbiot/2009/mar/04/travel-and-transport-biofuels">this article</a>,
+			the only viable solution. 
+			<a href="https://www.theguardian.com/environment/georgemonbiot/2009/mar/04/travel-and-transport-biofuels">This article</a>
 			by George Monbiot, also short, explains why biofuels in particular are such a very bad idea.</p>
 			<h3>Blimey I haven't got time to read all that stuff. Just tell me about FLAP so I can get on with my day.&nbsp;</h3>
-			<p>Sure. It is pretty simple really - a scheme/on-line computer system for directly managing the total distance travelled by
+			<p>Sure. It is a scheme and computer system for directly managing the total distance travelled by
 			air each day. It works as follows:
 			<ul>
 				<li>Every time someone (a "Traveller") checks in for a flight the airline reports the details of the flight to FLAP.
@@ -59,32 +63,30 @@
 				<li>No financial penalty or incentive is involved - a key benefit over frequent flyer tax schemes
 					like <a href="http://afreeride.org/">A Free Ride</a></li>
 				<li>All travellers adhere to the same rules regardless of how often they travel.</li>
-				<li>Variation in the distance each person travelled is allowed, unlike in a traditional rationing scheme.</li> 
+				<li>Enables continuing variation in the distance each person is able to travell</li> 
 			</ul></p>
-			<h3>All I see is a few bullet points in a dull colour scheme. How can you be so sure how it would pan out in practice?&nbsp;</h3>
-			<p>Because I "wasted" more of my time implementing it, implementing a global air traffic model to exercise it, and
+			<h3>Well all I see is a few bullet points in a dull colour scheme. How can you be so sure how this thing would pan out in practice?</h3>
+			<p>Because I have wasted more of my time implementing it, implementing a global air traffic model to exercise it, and
 				analysing the results. The system and model code are <a href="https://github.com/richardmorrey/flap">
 				available on Github</a>. Go to <a href="./modelling.html">Modelling</a> for a summary of the findings.
 			<h3>Hang on minute. I have to fly frequently for my work and family reasons and &lt;insert-arbitrary-justification-here&gt;.
 				These results prove your scheme is unfairly targetting people like me.&nbsp;</h3>
-			<p>I completely accept that the personal and professional situation of some mean they feel obliged to fly more often,
-				and as discussed and shown, FLAP is pretty accomodating in this respect. However the bottom line is
-				<a href="http://afreeride.org/about/">70% of flights are taken by 15% of travellers</a>, so air travel can only be
-				signficiantly reduced through a change in behaviour of that 15%. This is not unfair targetting but objective
-				fact. Another way of looking at this is that global air travel has tripled in the past twenty years. If you
-				returned to the amount of flying you did in 2000, would that really be such a privation?</p>
+			<p>The personal and professional situation of some mean they feel obliged to fly more often, and I hope you can see that
+			the FLAP rules don't target any particular category of traveller. However the fact is
+			   <a href="http://afreeride.org/about/">70% of flights are taken by 15% of travellers</a>, meaning air travel can only be
+			   signficiantly reduced through a change in behaviour of that 15%. This is not unfair targetting but basic arithmetic.</p>
 			<h3>Look stop now. This just won't work. You can't realistically expect airlines to report every single check-in across
 				the whole world. Even if you could thousands of people will end up stranded in airports far from
 				home. And how on earth can I make firm travel plans when I could be turned away at check-in at any point.
 				And what about blah, and blah, and blah blah blah?&nbsp;</h3>
-			<p>Well I "wasted" even more of my time writing <a href="./doc/flapwhitepaper.pdf">this white paper</a> considering these
+			<p>Well I wasted even more of my time writing <a href="./doc/flapwhitepaper.pdf">this white paper</a> considering these
 				and many other aspects, which you are welcome to read, but specifically:
 				<ul>
 					<li>I know airlines can report all check-ins back to a central system
 						because <a href="https://en.wikipedia.org/wiki/Advance_Passenger_Information_System">
-						they are already doing it.</a></li>
+						they are already doing it!</a></li>
 					<li>FLAP only refuses check-ins at the start of a "Trip", and its definition of what constitutes a Trip
-					 	is extremely flexible. Someone would have to stretch this definition to its extreme limit to be
+					 	is flexible. Someone would have to push this definition to its extreme limit before being
 						at any risk of becoming stranded.	
 					</li>
 					<li>Yes there clearly needs to be more certainty for the traveller to make this a practical scheme. For
