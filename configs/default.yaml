@@ -1,0 +1,62 @@
+# Core FLAP Parameters
+flapparams:
+  # Maximum length of a Trip, in days
+  triplength: 365
+  # Maximum number of flights in a Trip
+  flightsintrip: 50
+  # Maximum gap between flights in a single Journey, in days
+  flightinterval: 1
+# Parameters controlling flapmodel
+modelparams:
+  # Folder to hold working databases and all output files
+  workingfolder: ./working
+  # Folder to place input data files
+  datafolder: ./data
+  # Algortim for calculating start Daily Total from the distance
+  # travelled on each of the trial days. Can be "average" or "max"
+  dtalgo: average
+  # The number of trial days to run the model for initially. During
+  # these days flights are logged but no  deductions are made from
+  # distance balances.
+  trialdays: 100
+  # Total days for which to run the model, including trial days.
+  daystorun: 2000
+  # Total number of travellers to simulate
+  totaltravellers: 1000
+  # Defininition of one or more "bands" of travellers, with
+  # different travel probabilities. Each band has values as follows
+  # planprobability - Probability of traveller starting a trip each day
+  # weight - Defines number of travellers in band, calculated as 
+  #          totaltravllers*weight/sum(weights)
+  botspecs:
+  - planprobability: 0.01
+    weight: 15
+  - planprobability: 0.002
+    weight: 85
+  # List of possible lengths for trips in days. For each trip an entry
+  # is chosen at random from the list. To make a length more frequent
+  # add it multiple times.
+  triplengths:
+  - 1
+  - 2
+  - 3
+  - 5
+  - 7
+  - 7
+  - 7
+  - 7
+  - 14
+  - 14
+  - 14
+  - 14
+  - 28
+  # The date of the first day in the run, in Epoch Time seconds - see
+  # https://en.wikipedia.org/wiki/Unix_time
+  startday: 1609459200
+  # Factor to multiply the Daily Total by each day. Does not apply
+  # during trial days.
+  dailytotalfactor: 0.9995
+  # Delta to report for. A row is written to summary.csv and bands.csv
+  # every reportdaydelta days. A KML file including all flights taken
+  # is written out every reportdaydelta days.
+  reportdaydelta: 100

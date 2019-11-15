@@ -1,0 +1,18 @@
+flapparams:
+  triplength: 365
+  flightsintrip: 50
+  flightinterval: 1
+modelparams:
+  workingfolder: ./working
+  datafolder: ./data
+  dtalgo: average
+  trialdays: 10
+  daystorun: 100
+  totaltravellers: 1
+  botspecs:
+  - planprobability: 1.0
+    weight: 1
+  triplengths:
+  - 1
+  startday: 0
+  dailytotalfactor: 0.99
