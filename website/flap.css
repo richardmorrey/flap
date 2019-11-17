@@ -6,7 +6,6 @@
 body {
 	  margin: auto;
 	  width: 50%;
-	  min-width: 300px;
           font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -44,7 +43,7 @@ body {
 	  display: none;
 }
 
-@media screen and (max-width: 1000px) {
+@media screen and (max-width: 800px) {
 	 .topnav a:not(:first-child) {display: none;}
 	 .topnav a.icon {
 		   float: right;
@@ -52,7 +51,7 @@ body {
 	}
 }
 
-@media screen and (max-width: 1000px) {
+@media screen and (max-width: 800px) {
 	.topnav.responsive {position: relative;}
 	.topnav.responsive .icon {
 		position: absolute;
@@ -63,6 +62,14 @@ body {
 		float: none;
 		display: block;
 		text-align: left;
+	}
+}
+
+@media screen and (max-width: 800px) {
+	body {
+		width:100%;
+		margin: auto;
+          	font-family: Arial, Helvetica, sans-serif;
 	}
 }
 
@@ -121,4 +128,16 @@ h1.normalchar {
 			        width: 100%;
 			}
 
-img {height:1em;}
+img {
+	margin-top: 20px;
+	width:80%;
+	height:auto;
+ 	display: block;
+   	margin-left: auto;
+    	margin-right: auto;
+}
+
+.fadein {
+	animation:fading 10s 1}
+	@keyframes fading{0%{opacity:0}100%{opacity:1};
+}
