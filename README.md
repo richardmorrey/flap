@@ -1,7 +1,7 @@
 # FLying is A Privelege
 
 ## Overview
-FLAP is a non-judgemental system/process for reducing global air travel in order to help save the planet. This reposiory includes an implementation of the core FLAP algorithm together with a modelling tool to exercise it and other information about FLAP. For a gentle introduction please go to http://www.flapyourarms.org . 
+FLAP is a non-judgemental system/process for reducing global air travel in order to help save the planet. This repository includes an implementation of the core FLAP algorithm together with a modelling tool to exercise it and other information about FLAP. For a gentle introduction please go to http://www.flapyourarms.org . 
 
 ## Getting Started
 The best way to get started with FLAP is to install and run the modelling tool, flapmodel, on Linux. Follow these steps.
@@ -35,6 +35,7 @@ The best way to get started with FLAP is to install and run the modelling tool, 
 		./flapmodel --configfile=../../configs/default.yaml run
 
 6. Explore the results:
+
 		ls working/*.csv
 
 Use "flapmodel --help" and view comments in "pkg/configs/default.yaml" to explore ways of varying the model.
@@ -43,7 +44,7 @@ Note you do not need to rebuild the model for every run.
 
 ## Getting Around
 
-This section summarize what you will find in each top level folder of the FLAP GIT respository.
+This section summarizes what you will find in each top level folder of the FLAP GIT respository.
 
 ### doc/
 Contains flapwhitepaper.pdf, a white paper that explains the FLAP idea in detail.
@@ -62,7 +63,7 @@ Ths is a package containing database implementations for use by pkg/flap encapsu
 Note this package has good working test coverage. Use "go test" to invoke.
 
 ### pkg/model/
-This is a package for modelling FLAP behaviour by exercising pkg/flap with realistic data for thousands/millions of travellers. It is driven by gegenuine data about world airports and the routes between them as curated by openflights.org. For example usage see cmd/flapmodel/main.go 
+This is a package for modelling FLAP behaviour by exercising pkg/flap with realistic data for thousands/millions of travellers. It is driven by genuine data about world airports and the routes between them as curated by openflights.org. For example usage see cmd/flapmodel/main.go 
 
 Note this package has limited but useful and valid test coverage. Use "go test" to invoke.
 
