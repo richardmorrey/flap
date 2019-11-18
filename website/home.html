@@ -42,16 +42,14 @@
 			<p>Sure. It is a scheme and computer system for directly managing the total distance travelled by
 			air each day. It works as follows:
 			<ul>
-				<li>Every time someone (a "Traveller") checks in for a flight the airline reports the details of the flight to FLAP.
-				       	Airlines are legally obliged to do this.</li>
-				<li>FLAP uses this information to maintain a "distance account", similar to a bank account but of distance rather
-					than money, for every Traveller. The distance of every flight taken is withdrawn from the
-					relevant account.</li>
-				<li>A single value, the "Daily Total", specifies the total distance that can be travelled by air daily.</li>
-				<li>At the end of each day FLAP credits all distance accounts in deficit with an equal share of the Daily Total.</li>
-				<li>If a Traveller with a negative distance balance attempts to start a new trip FLAP instructs the airline to
-					refuse the check-in. Airlines are legally obliged to comply.</li>
+				<li>FLAP maintains a distance account, analogous to a bank account, for every "Traveller". Each account has a balance
+				in kilometres, which starts at zero.</li>
+				<li>Airlines withdraw the distance of each flight from the Traveller's distance account at check-in.</li>
+				<li>The "Daily Total" defines the total distance allowed on a single day. Every day FLAP credits the account for
+				each overdrawn Traveller with an equal share of the Daily Total.</li>
+				<li>Overdrawn Travellers are not allowed to start a new trip, if necessary by the airline refusing check-in.</li>
 			</ul>
+			Thus distance travelled by air is controlled by the value of the Daily Total, which can be decreased over time.
 			<p>
 			<h3>Is that it? My &lt;insert-single-digit-number-here&gt; year old could have come up with that.&nbsp;</h3>
 			<p>It was much more complicated to begin with. I kept removing bits until it didn't work any
