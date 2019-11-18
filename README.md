@@ -7,7 +7,7 @@ FLAP is a non-judgemental system/process for reducing global air travel in order
 The best way to get started with FLAP is to install and run the modelling tool, flapmodel, on Linux. Follow these steps.
 
 1. Install and set up a Golang development environment (see https://golang.org/doc/install ) and go to the golang source folder you have set up:
-		cd $GOPATH/src	
+		> cd $GOPATH/src	
 
 2. Install and build flap:
 		go get "github.com/richardmorrey/flap/cmd/flapmodel"
