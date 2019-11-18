@@ -9,10 +9,22 @@
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 	</head>
 	<body>
-			<div class="fadein">
-				<center><h1>Flying is a Privelege</h1></center>
-				<a href="./home.html"><img src="fp.png"></img></a>
-			<center><h3>If you don't believe me try flapping your arms.</h3></center>
+			<div class="fadein" id="splash" onclick="dissolve()">	
+				<center><h1 class="normalchar"><span class="boldchar">FL</span>ying is <span class="boldchar">A P</span>rivilege</h1></center>
+				<img src="fp.png" title="Click me"></img>
+			<center><h3>a non-judgemental approach to air travel reduction</h3></center>
 			</div>
+
+			<script>
+				function sleep(ms) {
+	  				return new Promise(resolve => setTimeout(resolve, ms));
+				}
+
+				async function dissolve() {
+					document.getElementById("splash").style.animation = "fadingout 2s 1"
+					await sleep(1500);
+					window.location.href="./home.html"
+				}
+			</script>
 	</body>
 </html>

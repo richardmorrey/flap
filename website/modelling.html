@@ -27,7 +27,7 @@
 
 		<div class="banner">
 			<h1 class="normalchar"><span class="boldchar">FL</span>ying is <span class="boldchar">A P</span>rivilege</h1>
-			<span class="tagline">...if you don't believe me try flapping your arms</span>
+			<span class="tagline">if you don't believe me try flapping your arms</span>
 		</div>
 
 		<div class="content">
@@ -46,6 +46,8 @@
 			The initial "Daily Total" was calcualted as the average total daily distance travelled during the first 100 days.
 			This was then enforced, and reduced by 0.05% each day, from Day 101 onwards.
 			</p>
+			<p>The source code for the FLAP implementation and modelling tooli used is available
+				<a href="https://github.com/richardmorrey/flap">here</a>to download and use.</p>
 			<h3>Global air travel is reduced</h3>
 			<div id=chart-holder><canvas id="goal1chart"></canvas></div>
 			<p>This chart shows how the Daily Total and the total daily distance travelled varies over time. Air travel is
@@ -61,7 +63,7 @@
 			<div id=chart-holder><canvas id="goal3chart"></canvas></div>
 			<p>This chart shows the percentage of trips that are rejected by FLAP for frequent and infrequent travellers.
 			Infrequent flyers suffer far less disruption to their travel plans than frequent flyers.
-			<h3>Caveats and areas for improvement</h3>
+			<h3>Opportunities for improvement</h3>
 			The model used to generate these results is basic. Whilst it does simulate global air traffic on geniune routes between
 			genuine airports it diverges from real-world flying patterns in many ways, including:
 			<ul>
