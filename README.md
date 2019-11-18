@@ -50,15 +50,18 @@ This section summarizes what you will find in each top level folder of the FLAP 
 Contains flapwhitepaper.pdf, a white paper that explains the FLAP idea in detail.
 
 ### pkg/flap/
-This a full implementation of the functionality as defined in Sections 2-3 of the white paper and implemented consistent with Section 4. The three core processes defined in Section 4 can be involved via two public functions 
+This a full implementation of the functionality as defined in Sections 2-3 of the white paper and implemented consistent with Section 4. 
+
+The three core processes defined in Section 4 can be involved via two public functions 
 	Engine.SubmitFlights - Flight data processing.
 	Engine.UpdateAndBackfill - Trip completion enforcement and backfilling.		       		
+
 In a full deployment the first of these would be driven by REST interfaces invoked by airline systems. For example usage see pkg/model/engine.go.
 
 Note this package has good working test coverage. Use "go test" to invoke.
 
 ### pkg/flap/db/
-Ths is a package containing database implementations for use by pkg/flap encapsulated behind simple key/value-store stule interfaces. As of now there is only support for a single database technology - leveldb. This is suitable for modelling purposes only.
+Ths is a package containing database implementations for use by pkg/flap encapsulated behind simple key/value-store style interfaces. As of now there is only support for a single database technology - leveldb - which is suitable for modelling purposes only.
 
 Note this package has good working test coverage. Use "go test" to invoke.
 
@@ -68,10 +71,10 @@ This is a package for modelling FLAP behaviour by exercising pkg/flap with reali
 Note this package has limited but useful and valid test coverage. Use "go test" to invoke.
 
 ### cmd/flapmodel/
-This is a modelling tool for build and running different models using pkg/model and pkg/flap. It is the best starting point for anyone - please someone ;) - interested in FLAP. It has command-line help and a fully documented default configuration file: cmd/flapmodel/config.yaml.
+This is a modelling tool for build and running different models using pkg/model and pkg/flap. It is the best starting point for anyone interested in FLAP. See Getting Started.
 
 ### configs/
-Contained example and documented configuration files to use with flapmodel.
+Contained example and documented configuration files to use with flapmodel. See Getting Started.
 
 ### website/
-This contains all the website content with more material including a summary of key modelling findings: http://www.flapyourarms.org .
+This contains all the website content published to http://www.flapyourarms.org .
