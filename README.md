@@ -60,7 +60,7 @@ In a full deployment the first of these would be driven by REST interfaces invok
 
 Note this package has good working test coverage. Use "go test" to invoke.
 
-### pkg/flap/db/
+### pkg/db/
 Ths is a package containing database implementations for use by pkg/flap encapsulated behind simple key/value-store style interfaces. As of now there is only support for a single database technology - leveldb - which is suitable for modelling purposes only.
 
 Note this package has good working test coverage. Use "go test" to invoke.
