@@ -29,10 +29,28 @@
 		</div>
 
 		<div class="content">
-
-			<h3>Clearance Promises&nbsp;</h3>
-			<p>With the basic implementation of FLAP as largely discussed on this site and as currently modelled, there is no means for
-			   a Traveller to be sure, on completion of one trip, when they will be allowed to start the next. This is because the amount
+			<h3>Trips</h3>
+			As far as FLAP is concerned a Trip is simply a sequence of consecutive flights by a single Traveller with a maximum length
+			of 1 year from the start of the first flight to the end of the last. Trips improve usability in the following ways:
+			<ul>
+			<li>Travellers who are part way through a Trip can not be "grounded" - prevented from checking in.
+			</li>
+			<li>FLAP automatically enforces the start of a Trip and the end of a Trip following the most common pattern - a return trip 
+			       made up of an outward journey of one or more flights followed by an inward journey of one or more flights. Thus
+			       all Travellers taking journeys of this type are automatically protected against being stranded.
+			</li>
+			<li>FLAP allows Travellers to close and reopen (lengthen) their own Trips. This means they can manage edge-case mid-trip
+				scenarios such as health emergencies and extreme travel disruption to avoid being stranded. It also enables them to
+				take an arbitrary seqeuence of up to 50 flights within a one year period, regardless of their distance
+				balance, by keeping the FLAP Trip open.	
+			</li>
+			</ul>
+			Note that this flexibility does not affect the effectiveness of the system because Trips have to end, when the limits
+			of 50 flights or 1 year are reached, and at that point the Traveller has to wait for their balance to return to credit
+			before they can fly again.
+			<h3>Clearance Promises</h3>
+			<p>Even with this flexible approach to Trips a significant issue with FLAP usability remains. There is no means for
+			   a Traveller to be sure, on completion of one Trip, when they will be allowed to start the next. This is because the amount
 				credited to each "grounded" Traveller, that is each Traveller with a distance balance in deficit, varies over time
 				according to the size of the Daily Total and the number of grounded Travellers.  
 			</p>
@@ -42,7 +60,7 @@
 				completion of the trip when the Traveller will be allowed to fly again, regardless of their distance balance.
 			</p>
 
-			<h3>In Practice&nbsp;</h3>
+			<h3>In Practice</h3>
 			<p>With Clearance Promises in place most Travellers will be entirely insulated from the details of how FLAP works. 
 				Their experience will instead simply of a calendar, very similar to a calendar presented
 				on-line for the booking of holiday accomodation, with each day colour coded according to its currrent FLAP
@@ -56,7 +74,7 @@
 			the  days turn clear again.</p>
 		        <p>The Traveller is free to book more trips but only where the days taken for the trip itself and for the associated Clearance
 			Promise date to be reached are all clear.</p>
-			<h3>Implementation&nbsp;</h3>
+			<h3>Implementation</h3>
 			<p>The key to Clearance Promises is the devising of an algorithm that calculates accurate clearance dates - dates
 				that are on average consistent with when the distance balance returns to credit. This will be a core goal
 				of the next iteration of the FLAP implementation.
