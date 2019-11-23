@@ -53,8 +53,8 @@ Contains flapwhitepaper.pdf, a white paper that explains the FLAP idea in detail
 This a full implementation of the functionality as defined in Sections 2-3 of the white paper and implemented consistent with Section 4. 
 
 The three core processes defined in Section 4 can be involved via two public functions 
-#### Engine.SubmitFlights - Flight data processing.
-#### Engine.UpdateAndBackfill - Trip completion enforcement and backfilling.		       		
+- Engine.SubmitFlights - Flight data processing.
+- Engine.UpdateAndBackfill - Trip completion enforcement and backfilling.		       		
 
 In a full deployment the first of these would be driven by REST interfaces invoked by airline systems. For example usage see pkg/model/engine.go.
 
