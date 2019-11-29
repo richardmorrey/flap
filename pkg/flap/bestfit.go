@@ -1,11 +1,11 @@
 package flap 
 
 import (
-	//"errors"
+	"errors"
 	"math"
-	//"sort"
-	//"time"
 )
+
+var ENOVALIDPREDICTION = errors.New("No valid prediction")
 
 type epochDays Days
 func (self* epochDays) toEpochTime() EpochTime {
@@ -75,15 +75,70 @@ func (self *bestFit) calculateLine() {
 
 // predict estimates the date when the backfill of the given distance
 // will complete with the given start date. Effectively sees the provided
-// distance as an area under the y=x+mc graph - and works out and derives
-// the unknown variable-- the length of the triangle -- from that. In other
-// words solves below for endDay.
-// balance = ((endDay-startDay) * ystartDay)/2
-// or
-// endDay = ((2*balance)/ystartDay) + startDay
-func (self *bestFit) predict(balance Kilometres,startDay epochDays) epochDays {
-	
-	yStartDay := (self.m * float64(startDay)) + self.c
-	return epochDays( math.Ceil(((2*float64(balance))/yStartDay)) + float64(startDay)) + self.day1
+// distance as an area under the y=mx+c graph, and works out the unknown
+// variable - the end day - using simple calculus and the quadratic formula.
+// In detail:
+// 1) The integral of mx+c is (m/2)(x^2) + cx
+// 2) The balance to be backfilled is integral(end) - integral(start)
+// 3) Start is known (day after end of trip) so integral(start) can be calculated
+// 4) We can then derive the following quadratric equation that can be solved for 
+//    end using the quadratic formuka.
+//    (m/2)(end^2) -  (c*end) + (balance-integral(start))
+// 5) The quadratic formula provides two values. We choose the lowest one that
+//    is greater then start and has a positive y value as the prediction. If
+//    neither fit those criteria we return error that prediction cannot be made
+func (self *bestFit) predict(balance Kilometres,start epochDays) (epochDays,error) {
+
+	// Calulate integral of start
+	is := self.integral(start)
+
+	// Solve quadratic
+	ends,_ := qr((self.m/2)*self.c,-c,balance-is)
+
+	// Choose an answer and return
+	choice := MAXFLOAT
+	for _,candidate := range ends {
+		if candidate > float64(start) && candidate < choice {
+			if self.calcy(candidate) > 0 {
+				choice=candidate
+			}
+		}
+	}
+	if choice == MAXFLOAT {
+		return 0,nil
+	} else {
+		return epochDays(choice), ENOVALIDPREDICTION
+	}
+}
+func (self *bestFit) integral(d epochDay) float64
+{
+	// Use day midpoint
+	dm=float64(d)+0.5
+	return ((self.m*2)*dm*dm) + self.c*dm
 }
 
+// From http://www.rosettacode.org/wiki/Roots_of_a_quadratic_function#Go
+func qr(a, b, c float64) ([]float64, []complex128) {
+   d := b*b-4*a*c
+   switch {
+   case d == 0:
+       // single root
+       return []float64{-b/(2*a)}, nil
+   case d > 0:
+       // two real roots
+       if b < 0 {
+           d = math.Sqrt(d)-b
+       } else {
+           d = -math.Sqrt(d)-b
+       }
+       return []float64{d/(2*a), (2*c)/d}, nil
+   case d < 0:
+       // two complex roots
+       den := 1/(2*a)
+       t1 := complex(-b*den, 0)
+       t2 := complex(0, math.Sqrt(-d)*den)
+       return nil, []complex128{t1+t2, t1-t2}
+   }
+   // otherwise d overflowed or a coefficient was NAN
+   return nil, nil
+}
