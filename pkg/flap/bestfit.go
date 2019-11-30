@@ -6,6 +6,7 @@ import (
 )
 
 var ENOVALIDPREDICTION = errors.New("No valid prediction")
+var ENOTENOUGHDATAPOINTS = errors.New("No data points")
 
 type epochDays Days
 func (self* epochDays) toEpochTime() EpochTime {
@@ -53,7 +54,12 @@ func (self *bestFit) add(share Kilometres) {
 // line best fitting the scatter plot of backfill shares using
 // simple linear best fit. For a good expanation of the algorithm see:
 // https://www.statisticshowto.datasciencecentral.com/probability-and-statistics/regression-analysis/find-a-linear-regression-equation/
-func (self *bestFit) calculateLine() {
+func (self *bestFit) calculateLine() error {
+
+	// Check for data
+	if len(self.ys) < 2 {
+		return ENOTENOUGHDATAPOINTS
+	}
 	
 	// Calculate sums
 	var ySum float64
@@ -71,6 +77,12 @@ func (self *bestFit) calculateLine() {
 	// Calculate gradient and offset
 	self.c = ((ySum*xxSum) - (xSum*xySum)) / ((n*xxSum) - (xSum*xSum))
 	self.m = ((n*xySum) - (xSum*ySum)) /  ((n*xxSum) - (xSum*xSum))
+	return nil
+}
+
+// calcY returns y value of current best fit line for given x value
+func (self *bestFit) calcY(x float64) float64 {
+	return x*self.m + self.c
 }
 
 // predict estimates the date when the backfill of the given distance
@@ -93,33 +105,32 @@ func (self *bestFit) predict(balance Kilometres,start epochDays) (epochDays,erro
 	is := self.integral(start)
 
 	// Solve quadratic
-	ends,_ := qr((self.m/2)*self.c,-c,balance-is)
+	ends,_ := qr((self.m/2)*self.c,-self.c,float64(balance)-is)
 
 	// Choose an answer and return
-	choice := MAXFLOAT
+	choice := math.MaxFloat64
 	for _,candidate := range ends {
 		if candidate > float64(start) && candidate < choice {
-			if self.calcy(candidate) > 0 {
+			if self.calcY(candidate) > 0.0 {
 				choice=candidate
 			}
 		}
 	}
-	if choice == MAXFLOAT {
-		return 0,nil
+	if choice == math.MaxFloat64 {
+		return epochDays(choice),ENOVALIDPREDICTION
 	} else {
-		return epochDays(choice), ENOVALIDPREDICTION
+		return epochDays(math.Ceil(choice)), nil
 	}
 }
-func (self *bestFit) integral(d epochDay) float64
-{
+func (self *bestFit) integral(d epochDays) float64 {
 	// Use day midpoint
-	dm=float64(d)+0.5
+	dm := float64(d)+0.5
 	return ((self.m*2)*dm*dm) + self.c*dm
 }
 
 // From http://www.rosettacode.org/wiki/Roots_of_a_quadratic_function#Go
 func qr(a, b, c float64) ([]float64, []complex128) {
-   d := b*b-4*a*c
+	d := b*b-4*a*c
    switch {
    case d == 0:
        // single root
