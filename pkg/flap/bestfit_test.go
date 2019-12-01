@@ -3,18 +3,46 @@ package flap
 import (
 	"testing"
 	"math"
+	"reflect"
 )
 
+func TestZeroXOrigin(t *testing.T) {
+	bf,err := newBestFit(SecondsInDay-1,10)
+	if err != EXORIGINZERO {
+		t.Error("Accepting a zeroxorigin")
+	}
+	if bf != nil {
+		t.Error("Returning a bestfit instance with a zero xorigin")
+	}
+}
+
 func TestEmptyLine(t *testing.T) {
-	bf := newBestFit(0)
+	bf,_ := newBestFit(SecondsInDay,10)
 	err := bf.calculateLine()
 	if err != ENOTENOUGHDATAPOINTS {
 		t.Error("Calculated a line with no points")
 	}
 }
 
+func TestZeroMaxpoints(t *testing.T) {
+	_,err := newBestFit(SecondsInDay,1)
+	if err != EMAXPOINTSBELOWTWO {
+		t.Error("Allowing a maxpoints value of less than 2")
+	}
+}
+
+func TestMaxpoints(t* testing.T) {
+	bf,_ := newBestFit(SecondsInDay,2)
+	bf.add(1)
+	bf.add(2)
+	bf.add(3)
+	if !reflect.DeepEqual(bf.ys,[]Kilometres{2,3}) {
+		t.Error("maxpoints not being enforced",bf.ys)
+	}
+}
+
 func TestOnePointLine(t *testing.T) {
-	bf := newBestFit(0)
+	bf,_ := newBestFit(SecondsInDay,10)
 	bf.add(0)
 	err := bf.calculateLine()
 	if err != ENOTENOUGHDATAPOINTS {
@@ -23,7 +51,7 @@ func TestOnePointLine(t *testing.T) {
 }
 
 func TestHorzontalLine(t *testing.T) {
-	bf := newBestFit(0)
+	bf,_ := newBestFit(SecondsInDay,10)
 	bf.add(10)
 	bf.add(10)
 	err := bf.calculateLine()
@@ -39,7 +67,7 @@ func TestHorzontalLine(t *testing.T) {
 }
 
 func TestLongHorizontal(t *testing.T) {
-	bf := newBestFit(0)
+	bf,_ := newBestFit(SecondsInDay,10)
 	for x:=1; x<1000;x++ {
 		bf.add(999)
 	}
@@ -56,9 +84,9 @@ func TestLongHorizontal(t *testing.T) {
 }
 
 func TestAscending(t *testing.T) {
-	bf := newBestFit(0)
-	for x:=Kilometres(37); x<1000;x+=5 {
-		bf.add(x)
+	bf,_ := newBestFit(SecondsInDay,1000)
+	for y:=Kilometres(37); y<1000;y+=5 {
+		bf.add(y)
 	}
 	err := bf.calculateLine()
 	if err != nil{
@@ -67,13 +95,13 @@ func TestAscending(t *testing.T) {
 	if bf.m !=5 {
 		t.Error("Calculated incorrect gradient for ascending line", bf.m)
 	}
-	if bf.c != 37 {
+	if bf.c != 32 {
 		t.Error("Calcualted incorrect constant for ascending line", bf.c)
 	}
 }
 
 func TestDescending(t *testing.T) {
-	bf := newBestFit(0)
+	bf,_ := newBestFit(SecondsInDay,1000)
 	for x:=Kilometres(567); x>0;x-=5 {
 		bf.add(x)
 	}
@@ -84,7 +112,7 @@ func TestDescending(t *testing.T) {
 	if bf.m !=-5 {
 		t.Error("Calculated incorrect gradient for descending line", bf.m)
 	}
-	if bf.c != 567 {
+	if bf.c != 572 {
 		t.Error("Calculated incorrect constant for descending line", bf.c)
 	}
 }
@@ -101,9 +129,9 @@ func to3DecimalPlaces(x float64) float64 {
 func TestWobbly(t *testing.T) {
 
 	// Create line with following x and y
-	//0,1,2,3,4,5,6,7,8,9
-	//510,440,410,340,310,240,210,140,110,40,10
-	bf := newBestFit(0)
+	//1,2,3,4,5,6,7,8,9,10
+	//510,440,410,340,310,240,210,140,110,40
+	bf,_ := newBestFit(SecondsInDay,10)
 	for x:=Kilometres(500); x>0;x-=50 {
 		if x % 100 ==0 {
 			bf.add(x+10)
@@ -120,8 +148,74 @@ func TestWobbly(t *testing.T) {
 	if to3DecimalPlaces(bf.m) !=-50.606 {
 		t.Error("Calculated incorrect gradient for wobbly line", bf.m)
 	}
-	if to3DecimalPlaces(bf.c) != 502.727 {
+	if to3DecimalPlaces(bf.c) != 553.333 {
 		t.Error("Calculated incorrect constant for wobbly line", bf.c)
 	}
 }
+
+func TestPredictFlat(t *testing.T) {
+	bf,_ := newBestFit(SecondsInDay,10)
+	bf.m=0
+	bf.c=10
+	clear,err := bf.predict(100,1)
+	if err !=  nil {
+		t.Error("prediced returned error for flat line",err)
+	}
+	if clear != 11 {
+		t.Error("predicted returned wrong prediction for flat line", clear)
+	}
+	
+	clear,err = bf.predict(200,1)
+	if err !=  nil {
+		t.Error("prediced returned error for flat line",err)
+	}
+	if clear != 21 {
+		t.Error("predicted returned wrong prediction for flat line", clear)
+	}
+}
+
+func TestPredictSlope(t *testing.T) {
+	bf,_ := newBestFit(SecondsInDay,10)
+	bf.m=-1
+	bf.c=4
+	clear,err := bf.predict(4,1)
+	if err !=  nil {
+		t.Error("prediced returned error for sloping line",err)
+	}
+	if clear != 3 {
+		t.Error("predicted returned wrong prediction for sloping line", clear)
+	}
+	clear,err = bf.predict(5,1)
+	if err ==  nil {
+		t.Error("predicted end date for line sloping below zero",clear)
+	}
+}
+
+func TestPredictLongSlope(t *testing.T) {
+	bf,_ := newBestFit(SecondsInDay,10)
+	bf.m=-0.01
+	bf.c=100
+	clear,err := bf.predict(1000,1)
+	if err !=  nil {
+		t.Error("prediced returned error for sloping line",err)
+	}
+	if clear != 12 {
+		t.Error("predicted returned wrong prediction for sloping line", clear)
+	}
+	clear,err = bf.predict(1000,1000)
+	if err !=  nil {
+		t.Error("prediced returned error for sloping line",err)
+	}
+	if clear != 1012 {
+		t.Error("predicted returned wrong prediction for sloping line", clear)
+	}
+	clear,err = bf.predict(1000,5000)
+	if err !=  nil {
+		t.Error("prediced returned error for sloping line",err)
+	}
+	if clear != 5021 {
+		t.Error("predicted returned wrong prediction for sloping line", clear)
+	}
+}
+
 

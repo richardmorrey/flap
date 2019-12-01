@@ -3,10 +3,13 @@ package flap
 import (
 	"errors"
 	"math"
+	//"fmt"
 )
 
 var ENOVALIDPREDICTION = errors.New("No valid prediction")
 var ENOTENOUGHDATAPOINTS = errors.New("No data points")
+var EXORIGINZERO = errors.New("Xorigin can't be zero")
+var EMAXPOINTSBELOWTWO = errors.New("maxpoints must be two or more")
 
 type epochDays Days
 func (self* epochDays) toEpochTime() EpochTime {
@@ -30,22 +33,43 @@ type bestFit struct {
 	ys	  	[]Kilometres
 	m		float64
 	c		float64
-	day1		epochDays
+	xorigin		epochDays
+	maxpoints	int
 }
 
 // newBestFit constructs a new bestFit struct initialized with
 // the current epoch time so that predictions can be returned
 // in absolute time
-func newBestFit(now EpochTime) *bestFit {
+func newBestFit(now EpochTime,maxpoints int) (*bestFit,error) {
+
+	// Enforce an xorigin greater than zero so we dont
+	// need to worry about negative integrals
+	var xorigin epochDays
+	xorigin.fromEpochTime(now)
+	if xorigin == 0 {
+		return nil,EXORIGINZERO
+	}
+
+	// Validate maxpoints
+	if maxpoints < 2 {
+		return nil, EMAXPOINTSBELOWTWO
+	}
+
+	// Create object
 	bf := new(bestFit)
-	bf.day1.fromEpochTime(now)
-	return bf
+	bf.xorigin = xorigin
+	bf.maxpoints=maxpoints
+	bf.c = -1 // indicates uninitializated state as line cant have -ve values
+	return bf,nil
 }
 
 // add adds a datapoint to the plot used for predictions. Must
 // be called each day with the distance share credit to each
 // account for backfilling that day.
 func (self *bestFit) add(share Kilometres) {
+	if len(self.ys) == self.maxpoints {
+		self.ys= self.ys[1:]
+	}
 	self.ys = append(self.ys,share)
 	self.calculateLine()
 }
@@ -67,10 +91,11 @@ func (self *bestFit) calculateLine() error {
 	var xxSum float64
 	var xySum float64 
 	for x,y := range self.ys {
+		realx:= float64(x)+float64(self.xorigin)
 		ySum += float64(y)
-		xSum += float64(x)
-		xxSum += float64(x)*float64(x)
-		xySum += float64(x)*float64(y)
+		xSum += realx
+		xxSum += realx*realx
+		xySum += realx*float64(y)
 	}
 	n := float64(len(self.ys))
 
@@ -95,21 +120,29 @@ func (self *bestFit) calcY(x float64) float64 {
 // 3) Start is known (day after end of trip) so integral(start) can be calculated
 // 4) We can then derive the following quadratric equation that can be solved for 
 //    end using the quadratic formuka.
-//    (m/2)(end^2) -  (c*end) + (balance-integral(start))
+//    (m/2)(end^2) +  (c*end) - (balance+integral(start))
 // 5) The quadratic formula provides two values. We choose the lowest one that
 //    is greater then start and has a positive y value as the prediction. If
 //    neither fit those criteria we return error that prediction cannot be made
 func (self *bestFit) predict(balance Kilometres,start epochDays) (epochDays,error) {
 
+	// Check for valid state
+	if self.c < 0 {
+		return epochDays(math.MaxInt64),ENOVALIDPREDICTION
+	}
+
 	// Calulate integral of start
-	is := self.integral(start)
+	is := self.integral(float64(start))
 
 	// Solve quadratic
-	ends,_ := qr((self.m/2)*self.c,-self.c,float64(balance)-is)
+	//fmt.Printf("a=%f,b=%f,c=%f\n",(self.m/2)*self.c,self.c,-(float64(balance)+is))
+	ends,_ := qr(self.m/2,self.c,-(float64(balance)+is))
+	//fmt.Printf("ends: %v\n", ends)
 
 	// Choose an answer and return
 	choice := math.MaxFloat64
 	for _,candidate := range ends {
+		//fmt.Printf("considering %f with integral %f\n",candidate, self.integral(candidate))
 		if candidate > float64(start) && candidate < choice {
 			if self.calcY(candidate) > 0.0 {
 				choice=candidate
@@ -122,10 +155,8 @@ func (self *bestFit) predict(balance Kilometres,start epochDays) (epochDays,erro
 		return epochDays(math.Ceil(choice)), nil
 	}
 }
-func (self *bestFit) integral(d epochDays) float64 {
-	// Use day midpoint
-	dm := float64(d)+0.5
-	return ((self.m*2)*dm*dm) + self.c*dm
+func (self *bestFit) integral(d float64) float64 {
+	return ((self.m/2)*d*d) + self.c*d
 }
 
 // From http://www.rosettacode.org/wiki/Roots_of_a_quadratic_function#Go
