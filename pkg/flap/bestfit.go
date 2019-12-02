@@ -15,10 +15,6 @@ type epochDays Days
 func (self* epochDays) toEpochTime() EpochTime {
 	return EpochTime(*self)*SecondsInDay
 }
-func (self * epochDays) fromEpochTime(et EpochTime) epochDays {
-	*self = epochDays(et/SecondsInDay)
-	return *self
-}
 
 type predictor interface
 {
@@ -44,8 +40,7 @@ func newBestFit(now EpochTime,maxpoints int) (*bestFit,error) {
 
 	// Enforce an xorigin greater than zero so we dont
 	// need to worry about negative integrals
-	var xorigin epochDays
-	xorigin.fromEpochTime(now)
+	var xorigin = now.toEpochDays(true)
 	if xorigin == 0 {
 		return nil,EXORIGINZERO
 	}

@@ -55,6 +55,14 @@ func (self *EpochTime) ToTime() time.Time {
 	return time.Unix(int64(*self), 0)
 }
 
+func (self *EpochTime) toEpochDays(roundup bool) epochDays {
+	if roundup {
+		return epochDays((*self + (SecondsInDay-EpochTime(1))) / SecondsInDay)
+	} else {
+		return epochDays(*self / SecondsInDay)
+	}
+}
+
 type Flight struct {
 	et flightType
 	start EpochTime
