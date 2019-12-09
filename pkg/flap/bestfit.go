@@ -40,7 +40,7 @@ func newBestFit(now EpochTime,maxpoints int) (*bestFit,error) {
 
 	// Enforce an xorigin greater than zero so we dont
 	// need to worry about negative integrals
-	var xorigin = now.toEpochDays(true)
+	var xorigin = now.toEpochDays(false)
 	if xorigin == 0 {
 		return nil,EXORIGINZERO
 	}

@@ -9,7 +9,7 @@ import (
 func TestZeroXOrigin(t *testing.T) {
 	bf,err := newBestFit(SecondsInDay-1,10)
 	if err != EXORIGINZERO {
-		t.Error("Accepting a zeroxorigin")
+		t.Error("Accepting a zero xorigin")
 	}
 	if bf != nil {
 		t.Error("Returning a bestfit instance with a zero xorigin")
