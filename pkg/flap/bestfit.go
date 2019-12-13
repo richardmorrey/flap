@@ -16,10 +16,12 @@ func (self* epochDays) toEpochTime() EpochTime {
 	return EpochTime(*self)*SecondsInDay
 }
 
+type predictVersion uint64
 type predictor interface
 {
 	add(Kilometres) (error)
 	predict(Kilometres,epochDays) (epochDays,error)
+	version() predictVersion
 }
 
 // bestFit predicts dates when a specified distance balance would
@@ -31,6 +33,7 @@ type bestFit struct {
 	c		float64
 	xorigin		epochDays
 	maxpoints	int
+	pv		predictVersion
 }
 
 // newBestFit constructs a new bestFit struct initialized with
@@ -56,6 +59,10 @@ func newBestFit(now EpochTime,maxpoints int) (*bestFit,error) {
 	bf.maxpoints=maxpoints
 	bf.c = -1 // indicates uninitializated state as line cant have -ve values
 	return bf,nil
+}
+
+func (self *bestFit) version() predictVersion {
+	return self.pv
 }
 
 // add adds a datapoint to the plot used for predictions. Must
@@ -95,8 +102,13 @@ func (self *bestFit) calculateLine() error {
 	n := float64(len(self.ys))
 
 	// Calculate gradient and offset
-	self.c = ((ySum*xxSum) - (xSum*xySum)) / ((n*xxSum) - (xSum*xSum))
-	self.m = ((n*xySum) - (xSum*ySum)) /  ((n*xxSum) - (xSum*xSum))
+	c := ((ySum*xxSum) - (xSum*xySum)) / ((n*xxSum) - (xSum*xSum))
+	m := ((n*xySum) - (xSum*ySum)) /  ((n*xxSum) - (xSum*xSum))
+	if (self.c != c || self.m != m) {
+		self.pv++
+		self.c=c
+		self.m=m
+	}
 	return nil
 }
 
