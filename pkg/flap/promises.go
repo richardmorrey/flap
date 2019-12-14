@@ -2,19 +2,18 @@ package flap
 
 import (
 	"errors"
-	//"math"
 	"sort"
-	//"time"
+	//"fmt"
 )
 
 var EPROMISETOOOLD		 = errors.New("Promise is too old to make")
 var ENOROOMFORMOREPROMISES 	 = errors.New("No room for more promises")
-var ECLEARANCEDATEHASCHANGED	 = errors.New("Clearance date has changed")
 var EOVERLAPSWITHNEXTPROMISE 	 = errors.New("Overlaps with next promise")
 var EOVERLAPSWITHPREVPROMISE	 = errors.New("Overlaps with previous promise")
 var EPROMISENOTFOUND		 = errors.New("Promise not found")
 var EPROMISEDOESNTMATCH		 = errors.New("Promise trip end or distance travelled doesnt match")
 var EEXCEEDEDMAXSTACKSIZE	 = errors.New("Exceeded max promise stack size")
+var EPROPOSALEXPIRED		 = errors.New("Proposal has expired")
 
 type Promise struct {
 	TripStart 	EpochTime
@@ -32,6 +31,7 @@ const MaxPromises=10
 
 type Promises struct {
 	entries			[MaxPromises]Promise
+	version			predictVersion
 }
 
 // Propose returns a proposal for a clearance promise date for a Trip with given
@@ -80,8 +80,8 @@ func (self *Promises) Propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	}
 
 	// Copy older entries down one - the oldest is dropped - and insert
-	copy(self.entries[i+1:], self.entries[i:])
-	self.entries[i] = p
+	copy(pp.entries[i+1:], pp.entries[i:])
+	pp.entries[i] = p
 
 	// Stack promises to ensure no overlap
 	err = pp.restack(i,predictor)
@@ -95,7 +95,11 @@ func (self *Promises) Propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 // Make enforces the given promise proposal by overwriting the current list of promises
 // with it, but only if the predictor is the same version uses to make the proposal.
 func (self *Promises) Make(pp *Promises, predictor predictor) error {
-	return ENOTIMPLEMENTED
+	if predictor.version() != pp.version {
+		return EPROPOSALEXPIRED
+	}
+	self.entries=pp.entries
+	return nil
 }
 
 // keep asks for a promise applying to completed trip with given details to be kept. If a matching

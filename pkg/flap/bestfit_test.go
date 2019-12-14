@@ -192,6 +192,14 @@ func TestBackfilledFlat(t *testing.T) {
 	if dist != 140 {
 		t.Error("backfilled, returned wrong prediction for flat line", dist)
 	}
+	dist,err = bf.backfilled(17,17)
+	if err !=  nil {
+		t.Error("backfilled returned error for flat line",err)
+	}
+	if dist != 0 {
+		t.Error("backfilled, returned wrong prediction for same start/end", dist)
+	}
+
 }	
 
 func TestPredictSlope(t *testing.T) {
@@ -255,4 +263,22 @@ func TestPredictLongSlope(t *testing.T) {
 	}
 }
 
-
+func TestVersion(t *testing.T) {
+	bf,_ := newBestFit(SecondsInDay,1000)
+	for x:=Kilometres(100); x>80;x-=5 {
+		bf.add(x)
+	}
+	pv := bf.version()
+	for x:=Kilometres(80); x>50;x-=5 {
+		bf.add(x)
+	}
+	if pv != bf.version() {
+		t.Error("version changed when m and c should have stayed the same")
+	}
+	for x:=Kilometres(50); x>0;x-=10 {
+		bf.add(x)
+	}
+	if bf.version() == pv {
+		t.Error("version didnt change when m and c should have changed",bf.version())
+	}
+}

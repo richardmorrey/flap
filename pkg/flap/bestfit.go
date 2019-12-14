@@ -12,8 +12,8 @@ var EXORIGINZERO = errors.New("Xorigin can't be zero")
 var EMAXPOINTSBELOWTWO = errors.New("maxpoints must be two or more")
 
 type epochDays Days
-func (self* epochDays) toEpochTime() EpochTime {
-	return EpochTime(*self)*SecondsInDay
+func (self epochDays) toEpochTime() EpochTime {
+	return EpochTime(self)*SecondsInDay
 }
 
 type predictVersion uint64
@@ -62,6 +62,9 @@ func newBestFit(now EpochTime,maxpoints int) (*bestFit,error) {
 	return bf,nil
 }
 
+
+// version returns number indicating current version of the best fit line.
+// number is incremented each time value of m or c changes.
 func (self *bestFit) version() predictVersion {
 	return self.pv
 }
