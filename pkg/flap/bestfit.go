@@ -22,6 +22,7 @@ type predictor interface
 	add(Kilometres) (error)
 	predict(Kilometres,epochDays) (epochDays,error)
 	version() predictVersion
+	backfilled(epochDays,epochDays) (Kilometres,error)
 }
 
 // bestFit predicts dates when a specified distance balance would
@@ -162,6 +163,22 @@ func (self *bestFit) predict(balance Kilometres,start epochDays) (epochDays,erro
 		return epochDays(math.Ceil(choice)), nil
 	}
 }
+
+// backfilled predicts distance that would be backfilled for a single traveller between
+// the two given days
+func (self* bestFit) backfilled(start epochDays,end epochDays) (Kilometres,error) {
+	d1 := float64(start)
+	if self.calcY(d1) < 0 {
+		return 0, ENOVALIDPREDICTION
+	}
+	d2 := float64(end)
+	if self.calcY(d2) < 0 {
+		return 0, ENOVALIDPREDICTION
+	}
+	return Kilometres(self.integral(d2)-self.integral(d1)),nil
+}
+
+// integral gives the integral for a given day
 func (self *bestFit) integral(d float64) float64 {
 	return ((self.m/2)*d*d) + self.c*d
 }

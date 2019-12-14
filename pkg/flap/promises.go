@@ -14,16 +14,14 @@ var EOVERLAPSWITHNEXTPROMISE 	 = errors.New("Overlaps with next promise")
 var EOVERLAPSWITHPREVPROMISE	 = errors.New("Overlaps with previous promise")
 var EPROMISENOTFOUND		 = errors.New("Promise not found")
 var EPROMISEDOESNTMATCH		 = errors.New("Promise trip end or distance travelled doesnt match")
+var EEXCEEDEDMAXSTACKSIZE	 = errors.New("Exceeded max promise stack size")
 
-
-// TBD. Once trip reopening is implemented this could be expanded to support "reopen" promises - which
-// act if a trip is reopened and the clearance date is a particular value - i.e. a  previous expected promise
-// has been made.
 type Promise struct {
 	TripStart 	EpochTime
 	TripEnd	  	EpochTime
 	Distance	Kilometres
 	Clearance	EpochTime
+	stackIndex	int8
 }
 
 func (self *Promise) older (p Promise) bool {
@@ -38,61 +36,66 @@ type Promises struct {
 
 // Propose returns a proposal for a clearance promise date for a Trip with given
 // start and end dates and schedule. The promise is not made at this point
-func (self *Promises) Propose(tripStart EpochTime, tripEnd EpochTime, distance Kilometres,predictor predictor) (Promise,error) {
+func (self *Promises) Propose(tripStart EpochTime,tripEnd EpochTime,distance Kilometres, now EpochTime, predictor predictor) (*Promises,error) {
 
 	// Check args
 	if predictor == nil {
-		return Promise{},EINVALIDARGUMENT
+		return nil,EINVALIDARGUMENT
 	}
 	if tripEnd <= tripStart {
-		return Promise{},EINVALIDARGUMENT
+		return nil,EINVALIDARGUMENT
 	}
 	if distance <= 0 {
-		return Promise{}, EINVALIDARGUMENT
+		return nil,EINVALIDARGUMENT
 	}
 
-	// Build promise
+	// Check that oldest promise can be dropped if we are full
+	if self.entries[MaxPromises-1].TripStart >= now {
+		return nil,ENOROOMFORMOREPROMISES
+	}
+
+	// Create a copy of the current promise to work on
+	var pp Promises
+	pp.entries = self.entries
+
+	// Calculate clearance date
 	var p Promise
 	clearance,err := predictor.predict(distance,tripEnd.toEpochDays(true))
 	if err == nil {
-		p = Promise{tripStart,tripEnd,distance,clearance.toEpochTime()}
-	}
-	return p,err
-}
-
-// Make enforces the given proposed promise by adding it to the list of promises, but
-// only if the predicted clearance date hasn't changed.
-func (self *Promises) Make(p Promise, now EpochTime, predictor predictor) error {
-
-	// Check that oldest promise can be dropped if we are full
-	if self.entries[0].TripStart >= now {
-		return ENOROOMFORMOREPROMISES
-	}
-
-	// Check clearance date still holds
-	clearance,err := predictor.predict(p.Distance,p.TripEnd.toEpochDays(true))
-	if err != nil || clearance.toEpochTime() != p.Clearance {
-		return ECLEARANCEDATEHASCHANGED
+		p = Promise{tripStart,tripEnd,distance,clearance.toEpochTime(),0}
 	}
 
 	// Find index to add promise
 	i := sort.Search(MaxPromises, func(i int) bool { return self.entries[i].older(p)})
 	if  i >= MaxPromises {
-		return EPROMISETOOOLD
+		return nil,EPROMISETOOOLD
 	}
 	
-	// Confirm that there is no overlap with promise before or after
-	if i < MaxPromises-1 && self.entries[i+1].Clearance >= p.TripStart {
-		return EOVERLAPSWITHPREVPROMISE
+	// Confirm that there is no trip overlap with promise before or after
+	if i < MaxPromises-1 && pp.entries[i+1].TripEnd >= p.TripStart {
+		return nil,EOVERLAPSWITHPREVPROMISE
 	}
-	if i > 0 && self.entries[i-1].TripStart <= p.Clearance {
-		return EOVERLAPSWITHNEXTPROMISE
+	if i > 0 && pp.entries[i-1].TripStart <= p.TripEnd {
+		return nil,EOVERLAPSWITHNEXTPROMISE
 	}
 
 	// Copy older entries down one - the oldest is dropped - and insert
 	copy(self.entries[i+1:], self.entries[i:])
 	self.entries[i] = p
-	return nil
+
+	// Stack promises to ensure no overlap
+	err = pp.restack(i,predictor)
+	if err == nil {
+		return &pp,nil
+	} else {
+		return nil,err
+	}
+}
+
+// Make enforces the given promise proposal by overwriting the current list of promises
+// with it, but only if the predictor is the same version uses to make the proposal.
+func (self *Promises) Make(pp *Promises, predictor predictor) error {
+	return ENOTIMPLEMENTED
 }
 
 // keep asks for a promise applying to completed trip with given details to be kept. If a matching
@@ -112,8 +115,74 @@ func (self* Promises) keep(tripStart EpochTime, tripEnd EpochTime, distance Kilo
 	return EpochTime(0), EPROMISEDOESNTMATCH
 }
 
-// Delete a promise with the given start and end date
-func (self* Promises) Delete(tripStart EpochTime, tripEnd EpochTime) error {
+// updateStackEntry updates stack entry i clearance date to allow the trip after to proceed and 
+// updates the clearance date of the trip after to account for the early clearance of stack entry
+// i
+func (self* Promises) updateStackEntry(i int, predictor predictor) error {
+	
+	// Validate args
+	if i==0 || i > MaxPromises-1 {
+		return EINVALIDARGUMENT
+	}
+	if predictor == nil {
+		return EINVALIDARGUMENT
+	}
+
+	// Set clearance date to start of day before next trip
+	cd := self.entries[i-1].TripStart.toEpochDays(false)
+	self.entries[i].Clearance = cd.toEpochTime() 
+	if self.entries[i].stackIndex == 0 {
+		self.entries[i].stackIndex = 1
+	}
+
+	// Update stack entry
+	if i < MaxPromises-1 && self.entries[i+1].stackIndex == MaxStackSize {
+		return EEXCEEDEDMAXSTACKSIZE
+	}
+	self.entries[i].stackIndex = self.entries[i+1].stackIndex+1
+
+	// Calculate clearance date for next promise, taking account of distance
+	// not cleared from the stacked promise
+	leftOvers,err := predictor.backfilled(self.entries[i].TripEnd.toEpochDays(true),self.entries[i].Clearance.toEpochDays(false))
+	if err != nil {
+		return err
+	}
+	clearance,err := predictor.predict(self.entries[i-1].Distance+leftOvers,self.entries[i-1].TripEnd.toEpochDays(true))
+	if err != nil {
+		return err
+	}
+	self.entries[i-1].Clearance=clearance.toEpochTime()
+	return nil
+}
+
+// restack
+const MaxStackSize = 3
+func (self* Promises) restack(i int, predictor predictor) error {
+	
+	// Check previous promise and extend stack if clearance date overlaps
+	if  i < MaxPromises -1 && self.entries[i+1].Clearance >= self.entries[i].TripStart {
+		err := self.updateStackEntry(i-1,predictor)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Check following promises, extending stack as needed to allow
+	// trips to happen
+	for j:=i; j>0 && self.entries[j+1].Clearance >= self.entries[j].TripStart; j-- {
+		
+		// Update
+		err := self.updateStackEntry(j,predictor)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Delete deletes a promise with the given trip start and end date. If the promise
+// is stacked then deleteStack can be used to force deletion of entire stack.
+func (self* Promises) Delete(tripStart EpochTime, tripEnd EpochTime,deleteStack bool) error {
 	return ENOTIMPLEMENTED
 }
 

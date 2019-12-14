@@ -22,22 +22,26 @@ func (self *testpredictor) version() predictVersion {
 	return 0 
 }
 
+func (self *testpredictor) backfilled(d1 epochDays,d2 epochDays) (Kilometres,error) {
+	return 0, ENOTIMPLEMENTED
+}
+
 func TestProposeInvalid(t *testing.T) {
 	var ps Promises
 	var tp testpredictor
-	_,err:= ps.Propose(0,1,1,nil)
+	_,err:= ps.Propose(0,1,1,0,nil)
 	if err == nil {
 		t.Error("Proposed a clearance with no predictor")
 	}
-	_,err= ps.Propose(1,1,1,&tp)
+	_,err= ps.Propose(1,1,1,0,&tp)
 	if err == nil {
 		t.Error("Proposed a clearance with no predictor")
 	}
-	_,err= ps.Propose(0,1,0,&tp)
+	_,err= ps.Propose(0,1,0,0,&tp)
 	if err == nil {
 		t.Error("Proposed a clearance with no predictor")
 	}
-	_,err= ps.Propose(0,1,1,&tp)
+	_,err= ps.Propose(0,1,1,0,&tp)
 	if err == EINVALIDARGUMENT {
 		t.Error("Propose rejected valid arguments")
 	}
