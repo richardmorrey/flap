@@ -174,6 +174,26 @@ func TestPredictFlat(t *testing.T) {
 	}
 }
 
+func TestBackfilledFlat(t *testing.T) {
+	bf,_ := newBestFit(SecondsInDay,10)
+	bf.m=0
+	bf.c=10
+	dist,err := bf.backfilled(1,2)
+	if err !=  nil {
+		t.Error("backfilled returned error for flat line",err)
+	}
+	if dist != 10 {
+		t.Error("backfilled, returned wrong prediction for flat line", dist)
+	}
+	dist,err = bf.backfilled(17,31)
+	if err !=  nil {
+		t.Error("backfilled returned error for flat line",err)
+	}
+	if dist != 140 {
+		t.Error("backfilled, returned wrong prediction for flat line", dist)
+	}
+}	
+
 func TestPredictSlope(t *testing.T) {
 	bf,_ := newBestFit(SecondsInDay,10)
 	bf.m=-1
@@ -188,6 +208,23 @@ func TestPredictSlope(t *testing.T) {
 	clear,err = bf.predict(5,1)
 	if err ==  nil {
 		t.Error("predicted end date for line sloping below zero",clear)
+	}
+}
+
+func TestBackfilledSlope(t *testing.T) {
+	bf,_ := newBestFit(SecondsInDay,10)
+	bf.m=-1
+	bf.c=4
+	d,err := bf.backfilled(1,3)
+	if err !=  nil {
+		t.Error("backfilled returned error for sloping line",err)
+	}
+	if d != 4 {
+		t.Error("backfilled returned wrong prediction for sloping line", d)
+	}
+	d,err = bf.backfilled(4,5)
+	if err ==  nil {
+		t.Error("predicted end date for line sloping below zero",d)
 	}
 }
 
