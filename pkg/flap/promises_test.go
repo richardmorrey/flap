@@ -10,6 +10,7 @@ type testpredictor struct {
 	clearRate epochDays
 	stackedLeft Kilometres
 	pv predictVersion
+	failed bool
 }
 
 func (self *testpredictor) add(dist Kilometres) error {
@@ -68,7 +69,7 @@ func TestFirstPromise(t *testing.T) {
 	var tp testpredictor
 	tp.clearRate=1
 	psold := ps
-	p := Promise{TripStart:epochDays(2).toEpochTime(),TripEnd:epochDays(3).toEpochTime(),Distance:3,Clearance:epochDays(17).toEpochTime()}
+	p := Promise{TripStart:epochDays(2).toEpochTime(),TripEnd:epochDays(3).toEpochTime(),Distance:3,Clearance:epochDays(6).toEpochTime()}
 	proposal,err := ps.Propose(p.TripStart,p.TripEnd,p.Distance,epochDays(1).toEpochTime(),&tp)
 	if err != nil {
 		t.Error("Failed to propose a simple promise",err)
@@ -163,7 +164,7 @@ func TestFitsNoOverlap1(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:1}
-	proposal,err := ps.Propose(epochDays(17).toEpochTime(),epochDays(17).toEpochTime()+1,3, epochDays(16).toEpochTime()+10,&tp)
+	proposal,err := ps.Propose(epochDays(17).toEpochTime(),epochDays(17).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
 	if err != nil {
 		t.Error("Propose rejected valid proposal", err, proposal)
 	}
@@ -183,9 +184,27 @@ func TestFitsNoOverlap3(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:1}
-	proposal,err := ps.Propose(epochDays(47).toEpochTime(),epochDays(47).toEpochTime()+1,3, epochDays(16).toEpochTime()+10,&tp)
+	proposal,err := ps.Propose(epochDays(47).toEpochTime(),epochDays(47).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
 	if err != nil {
 		t.Error("Propose rejected valid proposal", err, proposal)
+	}
+}
+
+func TestUpdateStackEntryInvalid(t *testing.T) {
+	var ps Promises
+	fillpromises(&ps)
+	tp := testpredictor{clearRate:1}
+	err := ps.updateStackEntry(0,&tp)
+	if err != EINVALIDARGUMENT {
+		t.Error("updateStackEntry accepted promise with no successors")
+	}
+	err = ps.updateStackEntry(MaxPromises,&tp)
+	if err != EINVALIDARGUMENT {
+		t.Error("updateStackEntry accepted out-of-range index")
+	}
+ 	err = ps.updateStackEntry(1,nil)
+	if err != EINVALIDARGUMENT {
+		t.Error("updateStackEntry accepted nil predictor")
 	}
 }
 
