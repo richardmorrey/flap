@@ -68,9 +68,11 @@ func (self *Promises) Propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 
 	// Calculate clearance date
 	var p Promise
-	clearance,err := predictor.predict(distance,tripEnd.toEpochDays(true))
+	clearance,err := predictor.predict(distance,tripEnd.toEpochDays(true)+1)
 	if err == nil {
 		p = Promise{tripStart,tripEnd,distance,clearance.toEpochTime(),0}
+	} else {
+		return nil,err
 	}
 
 	// Find index to add promise
@@ -158,11 +160,11 @@ func (self* Promises) updateStackEntry(i int, predictor predictor) error {
 
 	// Calculate clearance date for next promise, taking account of distance
 	// not cleared from promise i
-	leftOvers,err := predictor.backfilled(self.entries[i].TripEnd.toEpochDays(true),self.entries[i].Clearance.toEpochDays(false))
+	leftOvers,err := predictor.backfilled(self.entries[i].TripEnd.toEpochDays(true)+1,self.entries[i].Clearance.toEpochDays(false))
 	if err != nil {
 		return err
 	}
-	clearance,err := predictor.predict(self.entries[i-1].Distance+leftOvers,self.entries[i-1].TripEnd.toEpochDays(true))
+	clearance,err := predictor.predict(self.entries[i-1].Distance+leftOvers,self.entries[i-1].TripEnd.toEpochDays(true)+1)
 	if err != nil {
 		return err
 	}
