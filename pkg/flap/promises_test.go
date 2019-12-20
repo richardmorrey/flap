@@ -18,7 +18,7 @@ type predictArgs struct {
 
 type testpredictor struct {
 	clearRate epochDays
-	stackedLeft Kilometres
+	backfilledDist Kilometres
 	pv predictVersion
 	ba backfilledArgs
 	pa predictArgs
@@ -41,7 +41,7 @@ func (self *testpredictor) version() predictVersion {
 func (self *testpredictor) backfilled(d1 epochDays,d2 epochDays) (Kilometres,error) {
 	self.ba.d1=d1
 	self.ba.d2=d2
-	return self.stackedLeft,nil
+	return self.backfilledDist,nil
 }
 
 func TestProposeInvalid(t *testing.T) {
@@ -205,6 +205,26 @@ func TestFitsNoOverlap3(t *testing.T) {
 	}
 }
 
+func TestDoesntFit(t *testing.T) {
+	var ps Promises
+	fillpromises(&ps)
+	tp := testpredictor{clearRate:2}
+	proposal,err := ps.Propose(epochDays(47).toEpochTime(),epochDays(47).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
+	if err != EEXCEEDEDMAXSTACKSIZE  {
+		t.Error("Propose accepts stacked proposal that doesnt fit",proposal)
+	}
+}
+
+func TestFitsStacked(t *testing.T) {
+	var ps Promises
+	fillpromises(&ps)
+	tp := testpredictor{clearRate:2}
+	proposal,err := ps.Propose(epochDays(77).toEpochTime(),epochDays(77).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
+	if err != nil {
+		t.Error("Propose accepts stacked proposal that doesnt fit",proposal)
+	}
+}
+
 func TestUpdateStackEntryInvalid(t *testing.T) {
 	var ps Promises
 	tp := testpredictor{clearRate:1}
@@ -225,7 +245,7 @@ func TestUpdateStackEntryInvalid(t *testing.T) {
 
 func TestUpdateStackEntrySimple(t* testing.T) {
 	var ps Promises
-	tp := testpredictor{clearRate:1,stackedLeft:3}
+	tp := testpredictor{clearRate:1,backfilledDist:3}
 	ps.entries[1]=Promise{TripStart:epochDays(10).toEpochTime(),
 				      TripEnd:epochDays(15).toEpochTime(),
 				      Distance:10,
@@ -244,23 +264,190 @@ func TestUpdateStackEntrySimple(t* testing.T) {
 	if tp.ba.d2 !=  epochDays(20) {
 		t.Error("updateStackEntry used wrong d2 arg to predictor.backfilled",tp.ba.d1)
 	}
-	if tp.pa.dist !=  13 {
-		t.Error("updateStackEntry used wrong d1 arg to predictor.backfilled",tp.pa.dist)
+	if tp.pa.dist !=  17 {
+		t.Error("updateStackEntry used wrong dist arg to predictor.predict",tp.pa.dist)
 	}
 	if tp.pa.start !=  epochDays(26) {
-		t.Error("updateStackEntry used wrong d2 arg to predictor.backfilled",tp.pa.start)
+		t.Error("updateStackEntry used wrong d2 arg to predictor.predict",tp.pa.start)
 	}
 	if ps.entries[1].Clearance != epochDays(20).toEpochTime() {
 		t.Error("updateStackEntry set wrong clearance date for the stacked flight",ps.entries[1].Clearance)
 	}
-	if ps.entries[0].Clearance != epochDays(39).toEpochTime() {
-		t.Error("updatedStackEntry set wrong clearnace date for the following fihgt",ps.entries[0].Clearance)
+	if ps.entries[0].Clearance != epochDays(43).toEpochTime() {
+		t.Error("updatedStackEntry set wrong clearance date for the following flight",ps.entries[0].Clearance)
 	}
 	if ps.entries[1].index != 1 {
 		t.Error("updateStackEntry set wrong stack index for the stacked flight",ps.entries[1].index)
 	}
 	if ps.entries[0].index != 0 {
 		t.Error("updatedStackEntry set wrong stack index for the following flight",ps.entries[0].index)
+	}
+}
+
+func TestUpdateStackEntryContinued(t* testing.T) {
+	var ps Promises
+	tp := testpredictor{clearRate:1,backfilledDist:3}
+	ps.entries[2]=Promise{TripStart:epochDays(1).toEpochTime(),
+				      TripEnd:epochDays(5).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(10).toEpochTime(),
+				      index:2}
+	ps.entries[1]=Promise{TripStart:epochDays(10).toEpochTime(),
+				      TripEnd:epochDays(15).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(25).toEpochTime(),
+			      	      carriedOver:5}
+	ps.entries[0]=Promise{TripStart:epochDays(20).toEpochTime(),
+				      TripEnd:epochDays(25).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(35).toEpochTime()}
+	err := ps.updateStackEntry(1,&tp)
+	if err != nil {
+		t.Error("updateStackEntry returned error for simple case",err)
+	}
+	if ps.entries[2].index !=2  {
+		t.Error("updateStackEntry didnt maintain correct index for existing stack entry", ps.entries[2].index)
+	}
+	if ps.entries[1].index !=3  {
+		t.Error("updateStackEntry didnt set correct index for new stack entry", ps.entries[1].index)
+	}
+	if ps.entries[2].Clearance != epochDays(10).toEpochTime() {
+		t.Error("updateStackEntry didnt retain Clearance date for existing stack entry",ps.entries[2].Clearance)
+	}
+	if ps.entries[1].Clearance != epochDays(20).toEpochTime() {
+		t.Error("updateStackEntry didnt change Clearance date for existing stack entry",ps.entries[1].Clearance)
+	}
+	if ps.entries[0].Clearance != epochDays(48).toEpochTime() {
+		t.Error("updateStackEntry didnt set correct Clearance date for unstacked entry",ps.entries[0].Clearance)
+	}
+}
+
+func TestUpdateStackEntryFull(t* testing.T) {
+	var ps Promises
+	tp := testpredictor{clearRate:1,backfilledDist:3}
+	ps.entries[2]=Promise{TripStart:epochDays(10).toEpochTime(),
+				      TripEnd:epochDays(15).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(25).toEpochTime(),
+			      	      index:3}
+	ps.entries[1]=Promise{TripStart:epochDays(20).toEpochTime(),
+				      TripEnd:epochDays(25).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(35).toEpochTime()}
+	ps.entries[0]=Promise{TripStart:epochDays(20).toEpochTime(),
+				      TripEnd:epochDays(25).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(35).toEpochTime()}
+	err := ps.updateStackEntry(1,&tp)
+	if err != EEXCEEDEDMAXSTACKSIZE {
+		t.Error("updateStackEntry made stack too long",err)
+	}
+}
+
+func TestRestack(t *testing.T) {
+	var ps Promises
+	tp := testpredictor{clearRate:1,backfilledDist:4}
+	ps.entries[3]=Promise{TripStart:epochDays(1).toEpochTime(),
+				      TripEnd:epochDays(5).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(16).toEpochTime()}
+	ps.entries[2]=Promise{TripStart:epochDays(10).toEpochTime(),
+				      TripEnd:epochDays(15).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(26).toEpochTime()}
+	ps.entries[1]=Promise{TripStart:epochDays(20).toEpochTime(),
+				      TripEnd:epochDays(25).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(36).toEpochTime()}
+	ps.entries[0]=Promise{TripStart:epochDays(30).toEpochTime(),
+				      TripEnd:epochDays(36).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(46).toEpochTime()}
+	err := ps.restack(2,&tp)
+	if (err != nil) {
+		t.Error("failed to restack valid promises",err)
+	}
+	for i := 3; i >= 1; i-- {
+		if ps.entries[i].index != stackIndex(4-i) {
+			t.Error("restack set incorrect stack index for entry",i,ps.entries[i].index)
+		}
+		if ps.entries[i].Clearance != ps.entries[i-1].TripStart {
+			t.Error("restack set learance date that doesnt match start date of next trip", i, ps.entries[i].Clearance,ps.entries[i-1].TripStart)
+		}
+	}
+	if ps.entries[0].index !=0 {
+		t.Error("restack set incorrect stack index for latest entry",ps.entries[0])
+	}
+	if ps.entries[0].Clearance != epochDays(65).toEpochTime() {
+		t.Error("restack inal clearance data doesnt account for total carry over from previous stacked flights", ps.entries[0].Clearance)
+	}
+}
+
+func TestRestackFull(t *testing.T) {
+	var ps Promises
+	tp := testpredictor{clearRate:1,backfilledDist:4}
+	ps.entries[4]=Promise{TripStart:epochDays(1).toEpochTime(),
+				      TripEnd:epochDays(5).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(16).toEpochTime()}
+	ps.entries[3]=Promise{TripStart:epochDays(10).toEpochTime(),
+				      TripEnd:epochDays(15).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(26).toEpochTime()}
+	ps.entries[2]=Promise{TripStart:epochDays(20).toEpochTime(),
+				      TripEnd:epochDays(25).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(36).toEpochTime()}
+	ps.entries[1]=Promise{TripStart:epochDays(30).toEpochTime(),
+				      TripEnd:epochDays(36).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(46).toEpochTime()}
+	ps.entries[0]=Promise{TripStart:epochDays(40).toEpochTime(),
+				      TripEnd:epochDays(36).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(56).toEpochTime()}
+	err := ps.restack(3,&tp)
+	if err != EEXCEEDEDMAXSTACKSIZE {
+		t.Error("restack succeeded where no valid stacking available")
+	}
+}
+
+func TestRestackOldest(t *testing.T) {
+	var ps Promises
+	tp := testpredictor{clearRate:1,backfilledDist:4}
+	ps.entries[3]=Promise{TripStart:epochDays(1).toEpochTime(),
+				      TripEnd:epochDays(5).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(16).toEpochTime()}
+	ps.entries[2]=Promise{TripStart:epochDays(10).toEpochTime(),
+				      TripEnd:epochDays(15).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(26).toEpochTime()}
+	ps.entries[1]=Promise{TripStart:epochDays(20).toEpochTime(),
+				      TripEnd:epochDays(25).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(36).toEpochTime()}
+	ps.entries[0]=Promise{TripStart:epochDays(30).toEpochTime(),
+				      TripEnd:epochDays(36).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(46).toEpochTime()}
+	err := ps.restack(3,&tp)
+	if (err != nil) {
+		t.Error("failed to restack valid promises",err)
+	}
+	for i := 3; i >= 1; i-- {
+		if ps.entries[i].index != stackIndex(4-i) {
+			t.Error("restack set incorrect stack index for entry",i,ps.entries[i].index)
+		}
+		if ps.entries[i].Clearance != ps.entries[i-1].TripStart {
+			t.Error("restack set learance date that doesnt match start date of next trip", i, ps.entries[i].Clearance,ps.entries[i-1].TripStart)
+		}
+	}
+	if ps.entries[0].index !=0 {
+		t.Error("restack set incorrect stack index for latest entry",ps.entries[0])
+	}
+	if ps.entries[0].Clearance != epochDays(65).toEpochTime() {
+		t.Error("restack inal clearance data doesnt account for total carry over from previous stacked flights", ps.entries[0].Clearance)
 	}
 }
 

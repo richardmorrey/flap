@@ -3,7 +3,7 @@ package flap
 import (
 	"errors"
 	"sort"
-	"fmt"
+	//"fmt"
 )
 
 var EINTERNAL			 = errors.New("Reached internal state that shouldn't be possible")
@@ -22,10 +22,15 @@ type Promise struct {
 	Distance	Kilometres
 	Clearance	EpochTime
 	index		stackIndex
+	carriedOver	Kilometres
 }
 
 func (self *Promise) older (p Promise) bool {
 	return bool(p.TripStart >= self.TripStart)
+}
+
+func (self *Promise) tobackfill() Kilometres {
+	return self.Distance + self.carriedOver
 }
 
 const MaxPromises=10
@@ -62,7 +67,7 @@ func (self *Promises) Propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 		return nil,ENOROOMFORMOREPROMISES
 	}
 
-	// Create a copy of the current promise to work on
+	// Create a copy of the current promises to work on
 	var pp Proposal
 	pp.entries = self.entries
 
@@ -70,7 +75,7 @@ func (self *Promises) Propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	var p Promise
 	clearance,err := predictor.predict(distance,tripEnd.toEpochDays(true)+1)
 	if err == nil {
-		p = Promise{tripStart,tripEnd,distance,clearance.toEpochTime(),0}
+		p = Promise{TripStart:tripStart,TripEnd:tripEnd,Distance:distance,Clearance:clearance.toEpochTime()}
 	} else {
 		return nil,err
 	}
@@ -143,15 +148,15 @@ func (self* Promises) updateStackEntry(i int, predictor predictor) error {
 		return EINVALIDARGUMENT
 	}
 
-	// Set clearance date to start of day before next trip
+	// Set clearance date to start of day of next trip
 	cd := self.entries[i-1].TripStart.toEpochDays(false)
 	self.entries[i].Clearance = cd.toEpochTime() 
 
 	// Set stack index to one more than that of previous
-	// promise is there is one
+	// promise if there is one
 	var lastIndex stackIndex
 	if i < MaxPromises-1 {
-		if self.entries[i+1].index == MaxStackSize {
+		if self.entries[i+1].index >= MaxStackSize {
 			return EEXCEEDEDMAXSTACKSIZE
 		}
 		lastIndex = self.entries[i+1].index
@@ -160,11 +165,12 @@ func (self* Promises) updateStackEntry(i int, predictor predictor) error {
 
 	// Calculate clearance date for next promise, taking account of distance
 	// not cleared from promise i
-	leftOvers,err := predictor.backfilled(self.entries[i].TripEnd.toEpochDays(true)+1,self.entries[i].Clearance.toEpochDays(false))
+	distdone,err := predictor.backfilled(self.entries[i].TripEnd.toEpochDays(true)+1,self.entries[i].Clearance.toEpochDays(false))
 	if err != nil {
 		return err
 	}
-	clearance,err := predictor.predict(self.entries[i-1].Distance+leftOvers,self.entries[i-1].TripEnd.toEpochDays(true)+1)
+	self.entries[i-1].carriedOver = self.entries[i].tobackfill() - distdone
+	clearance,err := predictor.predict(self.entries[i-1].tobackfill(),self.entries[i-1].TripEnd.toEpochDays(true)+1)
 	if err != nil {
 		return err
 	}
@@ -172,13 +178,17 @@ func (self* Promises) updateStackEntry(i int, predictor predictor) error {
 	return nil
 }
 
-// 
+// restack updates the clearance date/stack status for the promise immediately preceding and those following
+// the index of the given promise that has been inserted in order to retain the following position
+// - Clearance date of each trip is soon enough to allow following trip to start
+// - No sequence of more than 3 stacked promises
+// If this is not possible then an error is returned. Note this function does not change the TripStart, TripEnd
+// or Distance fields of any entry.
 const MaxStackSize = 3
 func (self* Promises) restack(i int, predictor predictor) error {
 	
 	// Check previous promise and extend stack if clearance date overlaps
 	if  i < MaxPromises -1 && self.entries[i+1].Clearance >= self.entries[i].TripStart {
-		fmt.Printf("i:%d Clearance:%d TripStart:%d\n", i, self.entries[i+1].Clearance, self.entries[i].TripStart)
 		err := self.updateStackEntry(i+1,predictor)
 		if err != nil {
 			return err
@@ -190,7 +200,6 @@ func (self* Promises) restack(i int, predictor predictor) error {
 	for j:=i; j > 0 && self.entries[j].Clearance >= self.entries[j-1].TripStart; j-- {
 		
 		// Update
-		fmt.Printf("j:%d Clearance:%d TripStart:%d\n", j, self.entries[j].Clearance, self.entries[j-1].TripStart)
 		err := self.updateStackEntry(j,predictor)
 		if err != nil {
 			return err
