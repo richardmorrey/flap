@@ -131,7 +131,7 @@ func fillpromises(ps *Promises) {
 		ps.entries[i]=Promise{TripStart:epochDays(10*(MaxPromises-i)).toEpochTime(),
 				      TripEnd:epochDays(10*(MaxPromises-i)+6).toEpochTime(),
 				      Distance:2,
-				      Clearance:epochDays(10*(MaxPromises-i)+1).toEpochTime()}
+				      Clearance:epochDays(10*(MaxPromises-i)+8).toEpochTime()}
 	}
 }
 
@@ -219,9 +219,19 @@ func TestFitsStacked(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:2}
-	proposal,err := ps.Propose(epochDays(77).toEpochTime(),epochDays(77).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
+	proposal,err := ps.Propose(epochDays(88).toEpochTime(),epochDays(88).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
 	if err != nil {
-		t.Error("Propose accepts stacked proposal that doesnt fit",proposal)
+		t.Error("Propose doesnt accept valid stacked proposal",err,proposal)
+	}
+}
+
+func TestStackTooLong(t *testing.T) {
+	var ps Promises
+	fillpromises(&ps)
+	tp := testpredictor{clearRate:2}
+	proposal,err := ps.Propose(epochDays(78).toEpochTime(),epochDays(78).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
+	if err != EEXCEEDEDMAXSTACKSIZE {
+		t.Error("Propose accepts stacked proposal that doesnt fit",err,proposal)
 	}
 }
 
@@ -440,14 +450,79 @@ func TestRestackOldest(t *testing.T) {
 			t.Error("restack set incorrect stack index for entry",i,ps.entries[i].index)
 		}
 		if ps.entries[i].Clearance != ps.entries[i-1].TripStart {
-			t.Error("restack set learance date that doesnt match start date of next trip", i, ps.entries[i].Clearance,ps.entries[i-1].TripStart)
+			t.Error("restack set clearance date that doesnt match start date of next trip", i, ps.entries[i].Clearance,ps.entries[i-1].TripStart)
 		}
 	}
 	if ps.entries[0].index !=0 {
 		t.Error("restack set incorrect stack index for latest entry",ps.entries[0])
 	}
 	if ps.entries[0].Clearance != epochDays(65).toEpochTime() {
-		t.Error("restack inal clearance data doesnt account for total carry over from previous stacked flights", ps.entries[0].Clearance)
+		t.Error("restack clearance date doesn't account for total carry over from previous stacked flights", ps.entries[0].Clearance)
+	}
+}
+
+func TestMakeInvalid(t *testing.T) {
+	var ps Promises
+	var pl Proposal
+	tp := testpredictor{pv:1}
+	fillpromises(&pl.Promises)
+	psinit := ps
+	err:= ps.Make(&pl,&tp)
+	if err != EPROPOSALEXPIRED {
+		t.Error("Make accepts proposal made with older predictor")
+	}
+	if !reflect.DeepEqual(ps.entries,psinit.entries) {
+		t.Error("Make changed its promises when presented with an invalid proposal",ps.entries) 
+	}
+}
+
+func TestMakeValid(t *testing.T) {
+	var ps Promises
+	pl := Proposal{version:1}
+	tp := testpredictor{pv:1}
+	fillpromises(&pl.Promises)
+	err:= ps.Make(&pl,&tp)
+	if err != nil {
+		t.Error("Make rejects valid proposal")
+	}
+	if !reflect.DeepEqual(ps.entries,pl.entries) {
+		t.Error("Make didn't adopt the promises of a valid proposal",ps.entries) 
+	}
+}
+
+func TestKeepExact(t *testing.T) {
+	var ps Promises
+	fillpromises(&ps)
+	c,err:= ps.keep(epochDays(50).toEpochTime(),epochDays(56).toEpochTime(),2)
+	if err != nil {
+		t.Error("keep can't find valid promise",err)
+	}
+	if c != epochDays(58).toEpochTime() {
+		t.Error("keep returns incorrect clearance date for valid promise",c)
+	}
+}
+
+func TestKeepLaterStart(t *testing.T) {
+	var ps Promises
+	fillpromises(&ps)
+	c,err:= ps.keep(epochDays(50).toEpochTime()+1,epochDays(56).toEpochTime(),2)
+	if err != nil {
+		t.Error("keep can't find valid promise",err)
+	}
+	if c != epochDays(58).toEpochTime() {
+		t.Error("keep returns incorrect clearance date for valid promise",c)
+	}
+}
+
+func TestKeepEarlierEnd(t *testing.T) {
+	var ps Promises
+	fillpromises(&ps)
+	c,err:= ps.keep(epochDays(50).toEpochTime(),epochDays(56).toEpochTime()-1,2)
+	if err != nil {
+		t.Error("keep can't find valid promise",err)
+	}
+	if c != epochDays(58).toEpochTime() {
+		t.Error("keep returns incorrect clearance date for valid promise",c)
 	}
 }
 
