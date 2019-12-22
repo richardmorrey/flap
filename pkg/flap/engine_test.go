@@ -53,7 +53,7 @@ func TestValidParams(t  *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
 	engine := NewEngine(db)
-	paramsIn := FlapParams{365,2,50,1000,0}
+	paramsIn := FlapParams{TripLength:365,FlightsInTrip:2,FlightInterval:50,DailyTotal:1000}
 	err := engine.Administrator.SetParams(paramsIn)
 	if err != nil {
 		t.Error("GetParams failed",err)
@@ -68,7 +68,7 @@ func TestInvalidFlightInterval(t  *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
 	engine := NewEngine(db)
-	paramsIn := FlapParams{200,50,101,1000,0}
+	paramsIn := FlapParams{TripLength:200,FlightsInTrip:50,FlightInterval:101,DailyTotal:1000}
 	err := engine.Administrator.SetParams(paramsIn)
 	if err == nil {
 		t.Error("Invalid flight interval accepted",paramsIn)
@@ -79,7 +79,7 @@ func TestInvalidFlightInTrip(t  *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
 	engine := NewEngine(db)
-	paramsIn := FlapParams{365,51,2,1000,0}
+	paramsIn := FlapParams{TripLength:365,FlightsInTrip:51,FlightInterval:2,DailyTotal:1000}
 	err := engine.Administrator.SetParams(paramsIn)
 	if err == nil {
 		t.Error("Invalid flights in trip  accepted",paramsIn)

@@ -19,7 +19,7 @@ func (self epochDays) toEpochTime() EpochTime {
 type predictVersion uint64
 type predictor interface
 {
-	add(Kilometres) (error)
+	add(Kilometres)
 	predict(Kilometres,epochDays) (epochDays,error)
 	version() predictVersion
 	backfilled(epochDays,epochDays) (Kilometres,error)
@@ -33,14 +33,14 @@ type bestFit struct {
 	m		float64
 	c		float64
 	xorigin		epochDays
-	maxpoints	int
+	maxpoints	uint32
 	pv		predictVersion
 }
 
 // newBestFit constructs a new bestFit struct initialized with
 // the current epoch time so that predictions can be returned
 // in absolute time
-func newBestFit(now EpochTime,maxpoints int) (*bestFit,error) {
+func newBestFit(now EpochTime,maxpoints uint32) (*bestFit,error) {
 
 	// Enforce an xorigin greater than zero so we dont
 	// need to worry about negative integrals
@@ -73,7 +73,7 @@ func (self *bestFit) version() predictVersion {
 // be called each day with the distance share credit to each
 // account for backfilling that day.
 func (self *bestFit) add(share Kilometres) {
-	if len(self.ys) == self.maxpoints {
+	if uint32(len(self.ys)) == self.maxpoints {
 		self.ys= self.ys[1:]
 	}
 	self.ys = append(self.ys,share)

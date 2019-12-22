@@ -233,6 +233,19 @@ func (self *TripHistory) startOfTrip(j tripHistoryIndex) (tripHistoryIndex,error
 	return i-1,nil
 }
 
+// tripStartLength returns the start time of the first flight in the
+// latest trip, the total distance so far flown across the whole trip
+// and the
+func (self *TripHistory) tripStartEndLength() (EpochTime,EpochTime,Kilometres) {
+	i,_ := self.startOfTrip(0)
+	st := self.entries[i].start
+	var d Kilometres
+	for  ; i >=0 ; i-- {
+		d += self.entries[i].distance
+	}
+	return st,self.entries[0].end, d
+}
+
 // empty returns true if their are no flights in the trip history
 func (self *TripHistory) empty() bool {
 	return self.entries[0].start == 0
@@ -284,7 +297,7 @@ func (self *tripState) updateTrip(f* Flight, now EpochTime, params *FlapParams) 
 		self.start = f.start
 	}
 
-	if self.journeys == 2 {
+	if self.journeys == 2 && params.PromisesAlgo == paNone  {
 		self.endTrip(f,true)
 	}
 

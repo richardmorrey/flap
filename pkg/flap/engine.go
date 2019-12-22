@@ -7,21 +7,23 @@ import (
 	"math"
 )
 
-type Days int64
+type Days 		int64
+type PromisesAlgo	uint8
 
 const (
-	paNone PromiseAlgo  = iota
+	paNone PromisesAlgo  = iota
 	paLinearBestFit
 )
 
 type FlapParams struct
 {
-	TripLength	Days
-	FlightsInTrip   uint64
-	FlightInterval  Days
-	DailyTotal      Kilometres
-	MinGrounded	uint64
-	PromisesAlgo	PromiseAlgo
+	TripLength		Days
+	FlightsInTrip   	uint64
+	FlightInterval  	Days
+	DailyTotal      	Kilometres
+	MinGrounded		uint64
+	PromisesAlgo		PromisesAlgo
+	PromisesMaxPoints	uint32
 }
 
 type Administrator struct {
@@ -102,7 +104,7 @@ type Engine struct
 	Administrator 		*Administrator
 	Travellers		*Travellers
 	Airports		*Airports
-	predictor		*predictor
+	predictor		predictor
 	totalGrounded		uint64
 }
 
@@ -116,10 +118,6 @@ func NewEngine(database db.Database) *Engine {
 	engine.Travellers = NewTravellers(database)
 	engine.Airports   = NewAirports(database)
 	engine.Administrator = newAdministrator(database)
-	switch engine.Administrator.params.PromiseAlgo { 
-		case paLinearBestFit:
-			self.predictor = newbestFit(0,0)
-	}
 	return engine
 }
 
@@ -161,7 +159,6 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 	traveller,err := self.Travellers.GetTraveller(passport)
 	if err != nil {
 		traveller.passport=passport
-		traveller.cleared = math.MaxInt64
 	}
 	
 	// Add flights to traveller's flight history
@@ -172,7 +169,7 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 
 		}
 	}
-	
+
 	// Store updated traveller
 	err = self.Travellers.PutTraveller(traveller)
 	return err
@@ -197,6 +194,17 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 	backfillers := 	Kilometres(math.Max(float64(self.Administrator.params.MinGrounded),float64(self.totalGrounded)))
 	if backfillers > 0 {
 		share = self.Administrator.params.DailyTotal / backfillers
+
+		// Add calculated share to predictor algorithm
+		if self.predictor == nil {
+			switch self.Administrator.params.PromisesAlgo { 
+				case paLinearBestFit:
+					self.predictor,_ = newBestFit(now,self.Administrator.params.PromisesMaxPoints)
+			}
+		}
+		if self.predictor != nil {
+			self.predictor.add(share)
+		}
 	}
 
 	// Iterate through travellers
@@ -223,6 +231,9 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 			}
 			changed = true
 		}
+
+		// Check for a promise to keep
+		changed = changed || traveller.keep()
 
 		// Backfill if grounded
 		if !traveller.Cleared(now) {

@@ -24,8 +24,7 @@ type testpredictor struct {
 	pa predictArgs
 }
 
-func (self *testpredictor) add(dist Kilometres) error {
-	return ENOTIMPLEMENTED
+func (self *testpredictor) add(dist Kilometres) {
 }
 
 func (self *testpredictor) predict(dist Kilometres, start epochDays) (epochDays,error) {

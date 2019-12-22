@@ -40,7 +40,24 @@ type Traveller struct {
 // Cleared returns true if the traveller is cleared
 // to travel at the specified date/time
 func (self *Traveller) Cleared(now EpochTime) bool {	
-	return self.tripHistory.MidTrip() || self.cleared <= now || self.balance >=0
+	return self.tripHistory.MidTrip() || (self.cleared > 0 && self.cleared <= now) || self.balance >=0
+}
+
+// keep checks for a matching promise if we are mid-trip. If one is found
+// the trip is ended and the clearance data is set to match that in the matched promise
+func (self *Traveller) keep() bool {
+	kept := false
+	if self.MidTrip() {
+		cd,err := self.Promises.keep(self.tripHistory.tripStartEndLength())
+		if err == nil {
+			err = self.EndTrip()
+			if err == nil {
+				self.cleared=cd
+				kept = true
+			}
+		}
+	}
+	return kept
 }
 
 // Wrapper for TripHistory endTrip
@@ -82,6 +99,8 @@ func (self *Traveller) submitFlight(flight *Flight,now EpochTime, debit bool) er
 	if debit {
 		self.balance -= flight.distance
 	}
+	// Make sure clearance promise only gets applied once
+	self.cleared = 0
 	return nil
 }
 
