@@ -123,12 +123,12 @@ func (self *Promises) Make(pp *Proposal, predictor predictor) error {
 // an error is returned
 func (self* Promises) keep(tripStart EpochTime, tripEnd EpochTime, distance Kilometres) (EpochTime,error) {
 
-	// Look from oldest to newest promise looking for first entry that:
-	// 1) Has a start time greater than or equal to that given
-	// 2) Has an end time less than or equal to that given
-	// 3) has a distance equal to that given
-	for i:=MaxPromises-1; i>=0 && self.entries[i].TripEnd <= tripEnd; i-- {
-		if self.entries[i].TripStart >= tripStart && self.entries[i].Distance == distance {
+	// Look from oldest to newest promise looking for first entry where:
+	// 1) Start time given is greater than or equal to entry start time
+	// 2) End time given is less than or equal to entry end time
+	// 3) Distance given is equal to entry distance
+	for i:=MaxPromises-1; i>=0 && tripStart >= self.entries[i].TripStart; i-- {
+		if tripEnd <= self.entries[i].TripEnd && self.entries[i].Distance == distance {
 			return self.entries[i].Clearance,nil
 		} 
 	}

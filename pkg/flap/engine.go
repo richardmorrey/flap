@@ -9,6 +9,11 @@ import (
 
 type Days int64
 
+const (
+	paNone PromiseAlgo  = iota
+	paLinearBestFit
+)
+
 type FlapParams struct
 {
 	TripLength	Days
@@ -16,6 +21,7 @@ type FlapParams struct
 	FlightInterval  Days
 	DailyTotal      Kilometres
 	MinGrounded	uint64
+	PromisesAlgo	PromiseAlgo
 }
 
 type Administrator struct {
@@ -96,6 +102,7 @@ type Engine struct
 	Administrator 		*Administrator
 	Travellers		*Travellers
 	Airports		*Airports
+	predictor		*predictor
 	totalGrounded		uint64
 }
 
@@ -109,6 +116,10 @@ func NewEngine(database db.Database) *Engine {
 	engine.Travellers = NewTravellers(database)
 	engine.Airports   = NewAirports(database)
 	engine.Administrator = newAdministrator(database)
+	switch engine.Administrator.params.PromiseAlgo { 
+		case paLinearBestFit:
+			self.predictor = newbestFit(0,0)
+	}
 	return engine
 }
 

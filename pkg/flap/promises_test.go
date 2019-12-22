@@ -502,6 +502,31 @@ func TestKeepExact(t *testing.T) {
 	}
 }
 
+func TestKeepExactiOldest(t *testing.T) {
+	var ps Promises
+	fillpromises(&ps)
+	c,err:= ps.keep(epochDays(10).toEpochTime(),epochDays(16).toEpochTime(),2)
+	if err != nil {
+		t.Error("keep can't find valid promise",err)
+	}
+	if c != epochDays(18).toEpochTime() {
+		t.Error("keep returns incorrect clearance date for valid promise",c)
+	}
+}
+
+func TestKeepExactNewest(t *testing.T) {
+	var ps Promises
+	fillpromises(&ps)
+	st:= epochDays((MaxPromises-1)*10)
+	c,err:= ps.keep(st.toEpochTime(),(st+6).toEpochTime(),2)
+	if err != nil {
+		t.Error("keep can't find valid promise",err)
+	}
+	if c != (st+8).toEpochTime() {
+		t.Error("keep returns incorrect clearance date for valid promise",c)
+	}
+}
+
 func TestKeepLaterStart(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
@@ -523,6 +548,33 @@ func TestKeepEarlierEnd(t *testing.T) {
 	}
 	if c != epochDays(58).toEpochTime() {
 		t.Error("keep returns incorrect clearance date for valid promise",c)
+	}
+}
+
+func TestKeepEarilerStart(t *testing.T) {
+	var ps Promises
+	fillpromises(&ps)
+	_,err:= ps.keep(epochDays(50).toEpochTime()-1,epochDays(56).toEpochTime(),2)
+	if err != EPROMISEDOESNTMATCH {
+		t.Error("keep matched promise with earlier start time",err)
+	}
+}
+
+func TestKeepLaterEnd(t *testing.T) {
+	var ps Promises
+	fillpromises(&ps)
+	_,err:= ps.keep(epochDays(50).toEpochTime(),epochDays(56).toEpochTime()+1,2)
+	if err != EPROMISEDOESNTMATCH {
+		t.Error("keep matched promise with later end time",err)
+	}
+}
+
+func TestKeepWrongDistance(t *testing.T) {
+	var ps Promises
+	fillpromises(&ps)
+	_,err:= ps.keep(epochDays(50).toEpochTime(),epochDays(56).toEpochTime(),3)
+	if err != EPROMISEDOESNTMATCH {
+		t.Error("keep matched promise with differnt distance",err)
 	}
 }
 

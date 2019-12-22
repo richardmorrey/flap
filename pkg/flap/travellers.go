@@ -32,6 +32,7 @@ type passportKey [20]byte
 type Traveller struct {
 	passport    Passport
 	tripHistory TripHistory
+	Promises    Promises
 	cleared	    EpochTime
 	balance	    Kilometres
 }
@@ -42,17 +43,17 @@ func (self *Traveller) Cleared(now EpochTime) bool {
 	return self.tripHistory.MidTrip() || self.cleared <= now || self.balance >=0
 }
 
-// Wrapper for TripHistoryr.endTrip
+// Wrapper for TripHistory endTrip
 func (self *Traveller) EndTrip() error {
 	return self.tripHistory.EndTrip()
 }
 
-// Wrapper for TripHistory.reopenTrip
+// Wrapper for TripHistory reopenTrip
 func (self *Traveller) ReopenTrip() error {
 	return self.tripHistory.ReopenTrip()
 }
 
-// Wrapper for TripHistory.midTrip
+// Wrapper for TripHistory midTrip
 func (self *Traveller) MidTrip() bool {
 	return self.tripHistory.MidTrip()
 }
@@ -67,11 +68,9 @@ func (self *Traveller) AsKML(a *Airports) string {
 	return self.tripHistory.AsKML(a)
 }
 
-
-// submitFlight adds given flight to trip history and subtracts
-// its distance from the balance if traveller is cleared for travel
-// and debit is true. If traveller is not cleared for travel
-// it returns an error.
+// submitFlight adds given flight to trip history and if traveller is cleared for travel.
+// Also, If "debit" is true, the flight distance  is subtracted from the traveller's distance balance.
+// If traveller is not cleared for travel no action is taken and an error is returned.
 func (self *Traveller) submitFlight(flight *Flight,now EpochTime, debit bool) error {
 	if !self.Cleared(now) {
 		return EGROUNDED
