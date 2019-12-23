@@ -431,7 +431,7 @@ func TestUpdateTrip2Flights(t *testing.T) {
 		t.Error("updateTrip incorrectly changing trip state", ts)
 	}
 	if  f.et != etFlight {
-		t.Error("updateTrip not setting flight state at trip end", f)
+		t.Error("updateTrip applying soft trip end to reopened trip.", f)
 	}
 	ts.reopened=false
 	ts.updateTrip(f, SecondsInDay, &params)
@@ -441,6 +441,20 @@ func TestUpdateTrip2Flights(t *testing.T) {
 	}
 	if  f.et != etTripEnd {
 		t.Error("updateTrip not setting flight state at trip end", f)
+	}
+}
+
+func TestUpdateTrip2FlightsWithPromises(t *testing.T) {
+	ts := tripState{journeys:2,reopened:false,start:1}
+	f,_ := NewFlight(Airport{},1,Airport{},2)
+	params := FlapParams{TripLength:50,FlightsInTrip:50,FlightInterval:50,PromisesAlgo:paLinearBestFit}
+	tsAfter := ts
+	ts.updateTrip(f, SecondsInDay, &params)
+	if  f.et != etFlight {
+		t.Error("updateTrip applying soft trip end when running with promises enabled", f)
+	}
+	if !reflect.DeepEqual(ts,tsAfter) {
+		t.Error("updateTrip incorrectly changing trip state", ts)
 	}
 }
 
@@ -891,5 +905,56 @@ func TestStartOfTripOneFlight(t *testing.T) {
 	}
 }
 
+func TestTripStartEndLengthEmpty(t *testing.T) {
+	var th TripHistory
+	s,e,d := th.tripStartEndLength()
+	if !(s==0 && e==0 && d==0) {
+		t.Error("tripStartEndDistance not returning zeros for empty history",s,e,d)
+	}
+}
 
+func TestTripStartEndLengthOneFlight(t *testing.T) {
+	var th TripHistory
+	populateFlights(&th,1,1)
+	th.entries[0].distance = 5
+	s,e,d := th.tripStartEndLength()
+	if !(s==1 && e==2 && d==5) {
+		t.Error("tripStartEndDistance returning incorrect value for 1 flight",s,e,d)
+	}
+}
+
+func TestTripStartEndLengthThreeFlights(t *testing.T) {
+	var th TripHistory
+	populateFlights(&th,3,1)
+	th.entries[0].distance = 5
+	th.entries[1].distance = 6
+	th.entries[2].distance = 7
+	s,e,d := th.tripStartEndLength()
+	if !(s==1 && e==4 && d==18) {
+		t.Error("tripStartEndDistance returning incorrect value for 1 flight",s,e,d)
+	}
+}
+
+func TestTripStartEndLengthTwoTrips(t *testing.T) {
+	var th TripHistory
+	populateFlights(&th,3,1)
+	th.entries[0].distance = 5
+	th.entries[2].et = etTripEnd
+	th.entries[1].distance = 6
+	th.entries[2].distance = 7
+	s,e,d := th.tripStartEndLength()
+	if !(s==2 && e==4 && d==11) {
+		t.Error("tripStartEndDistance returning incorrect value for two trips",s,e,d)
+	}
+}
+
+func TestTripStartEndLengthTripEnd(t *testing.T) {
+	var th TripHistory
+	populateFlights(&th,1,1)
+	th.entries[0].et = etTravellerTripEnd
+	s,e,d := th.tripStartEndLength()
+	if !(s==0 && e==0 && d==0) {
+		t.Error("tripStartEndDistance returning values when there is no open trip",s,e,d)
+	}
+}
 

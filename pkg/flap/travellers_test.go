@@ -142,3 +142,49 @@ func TestSubmitFlightNoDebit(t *testing.T) {
 		t.Error("traveller grounded after no debit submissions",traveller)
 	}
 }
+
+func TestKeepNoFlights(t *testing.T) {
+	var tr Traveller
+	kept := tr.keep()
+	if kept != false {
+		t.Error("keep kept promise for an empty traveller")
+	}
+	var tEmpty Traveller
+	if !reflect.DeepEqual(tr,tEmpty) {
+		t.Error("keep changes state of an empty traveller")
+	}
+}
+
+func TestKeepMatchingPromise(t *testing.T) {
+	var tr Traveller
+	tr.tripHistory.entries[0] = *createFlight(1,1,2)
+	tr.tripHistory.entries[0].distance=55
+	tr.Promises.entries[0]=Promise{TripStart:1,TripEnd:2,Clearance: epochDays(88).toEpochTime(), Distance:55}
+	if ! tr.keep()  {
+		t.Error("keep didnt keep matching  promise")
+	}
+	if (tr.cleared != epochDays(88).toEpochTime()) {
+		t.Error("keep didnt set cleared for matching promise",tr)
+	}
+	if tr.MidTrip() {
+		t.Error("keep failed to end trip on matching promise",tr)
+	}
+}
+
+func TestKeepNonMatchingPromise(t *testing.T) {
+	var tr Traveller
+	tr.tripHistory.entries[0] = *createFlight(1,1,2)
+	tr.tripHistory.entries[0].distance=54
+	tr.Promises.entries[0]=Promise{TripStart:1,TripEnd:2,Clearance: epochDays(88).toEpochTime(), Distance:55}
+	if tr.keep()  {
+		t.Error("keep kept promise that didnt match")
+	}
+	if (tr.cleared != 0) {
+		t.Error("keep changed cleared for non-matching promise",tr)
+	}
+	if !tr.MidTrip() {
+		t.Error("keep ended trip on non-matching promise",tr)
+	}
+
+}
+
