@@ -46,7 +46,7 @@ type Proposal struct {
 
 // Propose returns a proposal for a clearance promise date for a Trip with given
 // start and end dates and schedule. The promise is not made at this point
-func (self *Promises) Propose(tripStart EpochTime,tripEnd EpochTime,distance Kilometres, now EpochTime, predictor predictor) (*Proposal,error) {
+func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kilometres, now EpochTime, predictor predictor) (*Proposal,error) {
 
 	// Check args
 	if predictor == nil {
@@ -108,9 +108,9 @@ func (self *Promises) Propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	}
 }
 
-// Make enforces the given promise proposal by overwriting the current list of promises
+// make enforces the given promise proposal by overwriting the current list of promises
 // with it, but only if the predictor is the same version uses to make the proposal.
-func (self *Promises) Make(pp *Proposal, predictor predictor) error {
+func (self *Promises) make(pp *Proposal, predictor predictor) error {
 	if predictor.version() != pp.version {
 		return EPROPOSALEXPIRED
 	}
@@ -210,7 +210,7 @@ func (self* Promises) restack(i int, predictor predictor) error {
 
 // Delete deletes a promise with the given trip start and end date. If the promise
 // is stacked then deleteStack can be used to force deletion of entire stack.
-func (self* Promises) Delete(tripStart EpochTime, tripEnd EpochTime,deleteStack bool) error {
+func (self* Promises) delete(tripStart EpochTime, tripEnd EpochTime,deleteStack bool) error {
 	return ENOTIMPLEMENTED
 }
 

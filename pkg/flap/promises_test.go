@@ -46,23 +46,23 @@ func (self *testpredictor) backfilled(d1 epochDays,d2 epochDays) (Kilometres,err
 func TestProposeInvalid(t *testing.T) {
 	var ps Promises
 	var tp testpredictor
-	_,err:= ps.Propose(0,1,1,0,nil)
+	_,err:= ps.propose(0,1,1,0,nil)
 	if err == nil {
 		t.Error("Proposed a clearance with no predictor")
 	}
-	_,err= ps.Propose(1,1,1,0,&tp)
+	_,err= ps.propose(1,1,1,0,&tp)
 	if err == nil {
 		t.Error("Proposed a clearance with equal trip start and end")
 	}
-	_,err= ps.Propose(0,1,0,0,&tp)
+	_,err= ps.propose(0,1,0,0,&tp)
 	if err == nil {
 		t.Error("Proposed a clearance with no distance")
 	}
-	_,err= ps.Propose(0,1,1,0,&tp)
+	_,err= ps.propose(0,1,1,0,&tp)
 	if err == nil {
 		t.Error("Proposed a clearance date with trip start equalling current date")
 	}
-	_,err= ps.Propose(1,2,1,0,&tp)
+	_,err= ps.propose(1,2,1,0,&tp)
 	if err == EINVALIDARGUMENT {
 		t.Error("Propose rejected valid arguments")
 	}
@@ -72,7 +72,7 @@ func TestProposeFull(t *testing.T) {
 	var ps Promises
 	var tp testpredictor
 	fillpromises(&ps)
-	_,err := ps.Propose(epochDays(8).toEpochTime(),epochDays(9).toEpochTime(),10,epochDays(1).toEpochTime(),&tp)
+	_,err := ps.propose(epochDays(8).toEpochTime(),epochDays(9).toEpochTime(),10,epochDays(1).toEpochTime(),&tp)
 	if err != ENOROOMFORMOREPROMISES {
 		t.Error("Propose not erroring when there are no spare promises")
 	} 
@@ -84,7 +84,7 @@ func TestFirstPromise(t *testing.T) {
 	tp.clearRate=1
 	psold := ps
 	p := Promise{TripStart:epochDays(2).toEpochTime(),TripEnd:epochDays(3).toEpochTime(),Distance:2,Clearance:epochDays(6).toEpochTime()}
-	proposal,err := ps.Propose(p.TripStart,p.TripEnd,p.Distance,epochDays(1).toEpochTime(),&tp)
+	proposal,err := ps.propose(p.TripStart,p.TripEnd,p.Distance,epochDays(1).toEpochTime(),&tp)
 	if err != nil {
 		t.Error("Failed to propose a simple promise",err)
 		return
@@ -107,7 +107,7 @@ func TestNonOverlappingPromises(t *testing.T) {
 					      TripEnd:epochDays(10*(MaxPromises-i)+6).toEpochTime(),
 					      Distance:2,
 					      Clearance:epochDays(10*(MaxPromises-i)+9).toEpochTime()}
-		proposal,err = ps.Propose(psExpected.entries[i].TripStart,psExpected.entries[i].TripEnd,2,epochDays(1).toEpochTime(),&tp)
+		proposal,err = ps.propose(psExpected.entries[i].TripStart,psExpected.entries[i].TripEnd,2,epochDays(1).toEpochTime(),&tp)
 		if  err != nil {
 			t.Error("Propose failed on non-overlapping promise",err)
 			return
@@ -115,7 +115,7 @@ func TestNonOverlappingPromises(t *testing.T) {
 		if !reflect.DeepEqual(proposal.entries[0], psExpected.entries[i])  {
 			t.Error("Proposal doesnt have expected entry",proposal.entries[0])
 		}
-		ps.Make(proposal,&tp)
+		ps.make(proposal,&tp)
 	}
 	if !reflect.DeepEqual(proposal.Promises, psExpected) {
 		t.Error("Full non-overlapping proposal doesn't have expected value",proposal.Promises)
@@ -138,7 +138,7 @@ func TestOverlappingTrip1(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:1}
-	proposal,err := ps.Propose(epochDays(47).toEpochTime(),epochDays(50).toEpochTime(),3, epochDays(20).toEpochTime(),&tp)
+	proposal,err := ps.propose(epochDays(47).toEpochTime(),epochDays(50).toEpochTime(),3, epochDays(20).toEpochTime(),&tp)
 	if err != EOVERLAPSWITHNEXTPROMISE{
 		t.Error("Propose accepted overlapping trip time", err, proposal)
 	}
@@ -148,7 +148,7 @@ func TestOverlappingTrip2(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:1}
-	proposal,err := ps.Propose(epochDays(46).toEpochTime(),epochDays(49).toEpochTime(),3, epochDays(20).toEpochTime(),&tp)
+	proposal,err := ps.propose(epochDays(46).toEpochTime(),epochDays(49).toEpochTime(),3, epochDays(20).toEpochTime(),&tp)
 	if err != EOVERLAPSWITHPREVPROMISE{
 		t.Error("Propose accepted overlapping trip time", err, proposal)
 	}
@@ -158,7 +158,7 @@ func TestOverlappingTrip3(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:1}
-	proposal,err := ps.Propose(epochDays(106).toEpochTime(),epochDays(109).toEpochTime(),3, epochDays(20).toEpochTime(),&tp)
+	proposal,err := ps.propose(epochDays(106).toEpochTime(),epochDays(109).toEpochTime(),3, epochDays(20).toEpochTime(),&tp)
 	if err != EOVERLAPSWITHPREVPROMISE{
 		t.Error("Propose accepted overlapping trip time", err, proposal)
 	}
@@ -168,7 +168,7 @@ func TestOverlappingTrip4(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:1}
-	proposal,err := ps.Propose(epochDays(19).toEpochTime(),epochDays(20).toEpochTime(),3, epochDays(17).toEpochTime(),&tp)
+	proposal,err := ps.propose(epochDays(19).toEpochTime(),epochDays(20).toEpochTime(),3, epochDays(17).toEpochTime(),&tp)
 	if err != EOVERLAPSWITHNEXTPROMISE{
 		t.Error("Propose accepted overlapping trip time", err, proposal)
 	}
@@ -178,7 +178,7 @@ func TestFitsNoOverlap1(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:0}
-	proposal,err := ps.Propose(epochDays(17).toEpochTime(),epochDays(17).toEpochTime()+1,1, epochDays(15).toEpochTime()+10,&tp)
+	proposal,err := ps.propose(epochDays(17).toEpochTime(),epochDays(17).toEpochTime()+1,1, epochDays(15).toEpochTime()+10,&tp)
 	if err != nil {
 		t.Error("Propose rejected valid proposal", err, proposal)
 	}
@@ -188,7 +188,7 @@ func TestFitsNoOverlap2(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:1}
-	proposal,err := ps.Propose(epochDays(107).toEpochTime(),epochDays(107).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
+	proposal,err := ps.propose(epochDays(107).toEpochTime(),epochDays(107).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
 	if err != nil {
 		t.Error("Propose rejected valid proposal", err, proposal)
 	}
@@ -198,7 +198,7 @@ func TestFitsNoOverlap3(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:0}
-	proposal,err := ps.Propose(epochDays(47).toEpochTime(),epochDays(47).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
+	proposal,err := ps.propose(epochDays(47).toEpochTime(),epochDays(47).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
 	if err != nil {
 		t.Error("Propose rejected valid proposal", err, proposal)
 	}
@@ -208,7 +208,7 @@ func TestDoesntFit(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:2}
-	proposal,err := ps.Propose(epochDays(47).toEpochTime(),epochDays(47).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
+	proposal,err := ps.propose(epochDays(47).toEpochTime(),epochDays(47).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
 	if err != EEXCEEDEDMAXSTACKSIZE  {
 		t.Error("Propose accepts stacked proposal that doesnt fit",proposal)
 	}
@@ -218,7 +218,7 @@ func TestFitsStacked(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:2}
-	proposal,err := ps.Propose(epochDays(88).toEpochTime(),epochDays(88).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
+	proposal,err := ps.propose(epochDays(88).toEpochTime(),epochDays(88).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
 	if err != nil {
 		t.Error("Propose doesnt accept valid stacked proposal",err,proposal)
 	}
@@ -228,7 +228,7 @@ func TestStackTooLong(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:2}
-	proposal,err := ps.Propose(epochDays(78).toEpochTime(),epochDays(78).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
+	proposal,err := ps.propose(epochDays(78).toEpochTime(),epochDays(78).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
 	if err != EEXCEEDEDMAXSTACKSIZE {
 		t.Error("Propose accepts stacked proposal that doesnt fit",err,proposal)
 	}
@@ -466,7 +466,7 @@ func TestMakeInvalid(t *testing.T) {
 	tp := testpredictor{pv:1}
 	fillpromises(&pl.Promises)
 	psinit := ps
-	err:= ps.Make(&pl,&tp)
+	err:= ps.make(&pl,&tp)
 	if err != EPROPOSALEXPIRED {
 		t.Error("Make accepts proposal made with older predictor")
 	}
@@ -480,7 +480,7 @@ func TestMakeValid(t *testing.T) {
 	pl := Proposal{version:1}
 	tp := testpredictor{pv:1}
 	fillpromises(&pl.Promises)
-	err:= ps.Make(&pl,&tp)
+	err:= ps.make(&pl,&tp)
 	if err != nil {
 		t.Error("Make rejects valid proposal")
 	}

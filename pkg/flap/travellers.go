@@ -32,7 +32,7 @@ type passportKey [20]byte
 type Traveller struct {
 	passport    Passport
 	tripHistory TripHistory
-	Promises    Promises
+	promises    Promises
 	cleared	    EpochTime
 	balance	    Kilometres
 }
@@ -48,7 +48,7 @@ func (self *Traveller) Cleared(now EpochTime) bool {
 func (self *Traveller) keep() bool {
 	kept := false
 	if self.MidTrip() {
-		cd,err := self.Promises.keep(self.tripHistory.tripStartEndLength())
+		cd,err := self.promises.keep(self.tripHistory.tripStartEndLength())
 		if err == nil {
 			err = self.EndTrip()
 			if err == nil {

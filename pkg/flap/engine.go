@@ -5,7 +5,10 @@ import (
 	"encoding/binary"
 	"bytes"
 	"math"
+	"errors"
 )
+
+var EPROMISESNOTENABLED = errors.New("Promises not enabled")
 
 type Days 		int64
 type PromisesAlgo	uint8
@@ -251,5 +254,20 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 	// Update total grounded
 	self.totalGrounded=newGrounded
 	return totalTravellersYesterday, totalDistanceYesterday,self.totalGrounded, it.Error()
+}
+
+// ProposePromise returns a proposal for change to the give traveller's set of clearance promises to
+// accomodate proposed trip whilst keeping all existing promises. Returns error if no such proposal can be made.
+func (self *Engine) ProposePromise(traveller *Traveller,tripStart EpochTime,tripEnd EpochTime,distance Kilometres, now EpochTime) (*Proposal,error) {
+
+	if (self.predictor == nil) {
+		return nil,EPROMISESNOTENABLED
+	}
+	return traveller.promises.propose(tripStart,tripEnd,distance,now,self.predictor)
+}
+
+// MakePromise attempts to apply a proposal for changes to a traveller's set of clearance promises.
+func (self *Engine) MakePromise(traveller *Traveller, proposal *Proposal) error {
+	return traveller.promises.make(proposal,self.predictor)
 }
 
