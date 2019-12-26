@@ -83,6 +83,9 @@ func (self *Administrator) SetParams(params FlapParams) error {
 	if (params.FlightInterval*2 >  params.TripLength) {
 		return EINVALIDFLAPPARAMS
 	}
+	if (params.PromisesAlgo != paNone && params.PromisesMaxPoints <=0) {
+		return EINVALIDFLAPPARAMS
+	}
 
 	// Write record as binary
 	var buf bytes.Buffer

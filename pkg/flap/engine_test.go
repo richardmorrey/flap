@@ -327,3 +327,41 @@ func TestUpdateTripsAndBackfillThree(t  *testing.T) {
 
 }
 
+func TestUpdateTripsAndBackfillPromises(t  *testing.T) {
+	db:= enginesetup(t)
+	defer engineteardown(db)
+	engine := NewEngine(db)
+	paramsIn := FlapParams{DailyTotal:100, MinGrounded:5,FlightInterval:1,FlightsInTrip:50,TripLength:365,
+				PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10}
+	engine.Administrator.SetParams(paramsIn)
+	var flights []Flight
+	flights = append(flights,*createFlight(1,SecondsInDay,SecondsInDay+1),*createFlight(1,SecondsInDay*3,SecondsInDay*3+1))
+	passport := NewPassport("987654321","uk")
+	err := engine.SubmitFlights(passport,flights,SecondsInDay,true)
+	_,_,_,err = engine.UpdateTripsAndBackfill(SecondsInDay*5)
+	if err != nil {
+		t.Error("Update failed for one Traveller",err)
+	}
+	if engine.predictor == nil {
+		t.Error("Failed to create predictor when promises are active")
+	}
+	if engine.predictor.version() != 0 {
+		t.Error("predictor has more than one point after one call to Update")
+	}
+	pexpected := engine.predictor
+	_,_,_,err = engine.UpdateTripsAndBackfill(SecondsInDay*6)
+	if err != nil {
+		t.Error("Second Update failed with promises activated",err)
+	}
+	if engine.predictor != pexpected {
+		t.Error("predictor replaced on second call to Update when promises are active")
+	}
+	if engine.predictor.version() != 1 {
+		t.Error("predictor add not successfully invoked twice when promises are active")
+	}
+	clearance,_ := engine.predictor.predict(60,5)
+	if clearance != 8 {
+		t.Error("Update not populating predictor  with points to give expected prediction",clearance)
+	}
+}
+

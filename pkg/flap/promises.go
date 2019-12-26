@@ -71,15 +71,17 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	var pp Proposal
 	pp.entries = self.entries
 
-	// Calculate clearance date
+	// Calculate clearance date, defaulting to the next day if predictor
+	// is not ready yet
 	var p Promise
-	clearance,err := predictor.predict(distance,tripEnd.toEpochDays(true)+1)
-	if err == nil {
-		p = Promise{TripStart:tripStart,TripEnd:tripEnd,Distance:distance,Clearance:clearance.toEpochTime()}
-	} else {
+	clearance,err := predictor.predict(distance,tripEnd.toEpochDays(true))
+	if err == ENOTENOUGHDATAPOINTS {
+		clearance = tripEnd.toEpochDays(true)+1
+	} else if err != nil  {
 		return nil,err
 	}
-
+	p = Promise{TripStart:tripStart,TripEnd:tripEnd,Distance:distance,Clearance:clearance.toEpochTime()}
+	
 	// Find index to add promise
 	i := sort.Search(MaxPromises, func(i int) bool { return self.entries[i].older(p)})
 	if  i >= MaxPromises {

@@ -139,7 +139,7 @@ func (self *bestFit) predict(balance Kilometres,start epochDays) (epochDays,erro
 
 	// Check for valid state
 	if self.c < 0 {
-		return epochDays(math.MaxInt64),ENOVALIDPREDICTION
+		return epochDays(math.MaxInt64),ENOTENOUGHDATAPOINTS
 	}
 
 	// Calulate integral of start

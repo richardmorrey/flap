@@ -3,7 +3,7 @@ package flap
 import (
 	"testing"
 	"reflect"
-	//"fmt"
+	"errors"
 )
 
 type backfilledArgs struct {
@@ -83,7 +83,7 @@ func TestFirstPromise(t *testing.T) {
 	var tp testpredictor
 	tp.clearRate=1
 	psold := ps
-	p := Promise{TripStart:epochDays(2).toEpochTime(),TripEnd:epochDays(3).toEpochTime(),Distance:2,Clearance:epochDays(6).toEpochTime()}
+	p := Promise{TripStart:epochDays(2).toEpochTime(),TripEnd:epochDays(3).toEpochTime(),Distance:2,Clearance:epochDays(5).toEpochTime()}
 	proposal,err := ps.propose(p.TripStart,p.TripEnd,p.Distance,epochDays(1).toEpochTime(),&tp)
 	if err != nil {
 		t.Error("Failed to propose a simple promise",err)
@@ -106,7 +106,7 @@ func TestNonOverlappingPromises(t *testing.T) {
 		psExpected.entries[i]=Promise{TripStart:epochDays(10*(MaxPromises-i)).toEpochTime(),
 					      TripEnd:epochDays(10*(MaxPromises-i)+6).toEpochTime(),
 					      Distance:2,
-					      Clearance:epochDays(10*(MaxPromises-i)+9).toEpochTime()}
+					      Clearance:epochDays(10*(MaxPromises-i)+8).toEpochTime()}
 		proposal,err = ps.propose(psExpected.entries[i].TripStart,psExpected.entries[i].TripEnd,2,epochDays(1).toEpochTime(),&tp)
 		if  err != nil {
 			t.Error("Propose failed on non-overlapping promise",err)
@@ -231,6 +231,40 @@ func TestStackTooLong(t *testing.T) {
 	proposal,err := ps.propose(epochDays(78).toEpochTime(),epochDays(78).toEpochTime()+1,1, epochDays(16).toEpochTime()+10,&tp)
 	if err != EEXCEEDEDMAXSTACKSIZE {
 		t.Error("Propose accepts stacked proposal that doesnt fit",err,proposal)
+	}
+}
+type errpredictor struct {
+	err error
+}
+func (self *errpredictor) add(dist Kilometres) {}
+func (self *errpredictor) predict(dist Kilometres, start epochDays) (epochDays,error) { return 0, self.err }
+func (self *errpredictor) version() predictVersion { return 0 }
+func (self *errpredictor) backfilled(d1 epochDays,d2 epochDays) (Kilometres,error) { return 0, self.err }
+func TestProposePredNotReady(t *testing.T) {
+	var ps Promises
+	var ep errpredictor
+	ep.err=ENOTENOUGHDATAPOINTS
+	p := Promise{TripStart:epochDays(2).toEpochTime(),TripEnd:epochDays(3).toEpochTime(),Distance:2,Clearance:epochDays(4).toEpochTime()}
+	proposal,err := ps.propose(p.TripStart,p.TripEnd,p.Distance,epochDays(1).toEpochTime(),&ep)
+	if err != nil {
+		t.Error("Failed to propose a promise when predicitor isnt ready",err)
+		return
+	}
+	if proposal.entries[0] != p {
+		t.Error("Propose didn't deliver expected proposal when predictor isnt ready",proposal.entries[0])
+	}
+}
+
+func TestProposePredError(t *testing.T) {
+	var ps Promises
+	var ep errpredictor
+	var ETEST = errors.New("Test Error")
+	ep.err=ETEST
+	p := Promise{TripStart:epochDays(2).toEpochTime(),TripEnd:epochDays(3).toEpochTime(),Distance:2,Clearance:epochDays(4).toEpochTime()}
+	_,err := ps.propose(p.TripStart,p.TripEnd,p.Distance,epochDays(1).toEpochTime(),&ep)
+	if err != ETEST {
+		t.Error("Failed to act on unexpected predictor error",err)
+		return
 	}
 }
 
