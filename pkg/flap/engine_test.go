@@ -342,7 +342,7 @@ func TestUpdateTripsAndBackfillPromises(t  *testing.T) {
 	if err != nil {
 		t.Error("Update failed for one Traveller",err)
 	}
-	if engine.predictor == nil {
+	if reflect.TypeOf(engine.predictor) == nil {
 		t.Error("Failed to create predictor when promises are active")
 	}
 	if engine.predictor.version() != 0 {
@@ -365,3 +365,99 @@ func TestUpdateTripsAndBackfillPromises(t  *testing.T) {
 	}
 }
 
+func TestProposePromisesActive(t *testing.T) {
+	
+	db:= enginesetup(t)
+	defer engineteardown(db)
+	engine := NewEngine(db)
+	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
+					PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10}
+	engine.Administrator.SetParams(paramsIn)
+	passport := NewPassport("987654321","uk")
+
+	var plannedflights []Flight
+	plannedflights = append(plannedflights,*createFlight(2,SecondsInDay*2,SecondsInDay*2+1),*createFlight(3,SecondsInDay*3,SecondsInDay*3+1))
+	p,err := engine.Propose(passport,plannedflights,0,SecondsInDay)
+	if err != nil {
+		t.Error("Propose not succeding when promises are enabled",err)
+	}
+
+	if p.entries[0].Clearance != SecondsInDay*5 {
+		t.Error("Proposal doesnt include expected Clearance date",p.entries[0])
+	}
+	
+	if p.entries[0].TripStart != SecondsInDay*2 {
+		t.Error("Proposal doesnt include expected trip start date",p.entries[0])
+	}
+
+	if p.entries[0].TripEnd != SecondsInDay*3+1 {
+		t.Error("Proposal doesnt include expected trip end date",p.entries[0])
+	}
+
+	if p.entries[0].Distance != plannedflights[0].distance+plannedflights[1].distance {
+		t.Error("Proposal doesnt include expected trip distance",p.entries[0])
+	}
+
+}
+
+func TestProposePromisesActiveiWithTripEnd(t *testing.T) {
+	
+	db:= enginesetup(t)
+	defer engineteardown(db)
+	engine := NewEngine(db)
+	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
+					PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10}
+	engine.Administrator.SetParams(paramsIn)
+	passport := NewPassport("987654321","uk")
+
+	var plannedflights []Flight
+	plannedflights = append(plannedflights,*createFlight(2,SecondsInDay*2,SecondsInDay*2+1),*createFlight(3,SecondsInDay*3,SecondsInDay*3+1))
+	p,err := engine.Propose(passport,plannedflights,SecondsInDay*10,SecondsInDay)
+	if err != nil {
+		t.Error("Propose not succeding when promises are enabled",err)
+	}
+
+	if p.entries[0].Clearance != SecondsInDay*11 {
+		t.Error("Proposal doesnt include expected Clearance date",p.entries[0])
+	}
+	
+	if p.entries[0].TripStart != SecondsInDay*2 {
+		t.Error("Proposal doesnt include expected trip start date",p.entries[0])
+	}
+
+	if p.entries[0].TripEnd != SecondsInDay*10 {
+		t.Error("Proposal doesnt include expected trip end date",p.entries[0])
+	}
+
+	if p.entries[0].Distance != plannedflights[0].distance+plannedflights[1].distance {
+		t.Error("Proposal doesnt include expected trip distance",p.entries[0])
+	}
+
+}
+
+func TestProposePromisesInactive(t *testing.T) {
+	
+	db:= enginesetup(t)
+	defer engineteardown(db)
+	engine := NewEngine(db)
+	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365}
+	engine.Administrator.SetParams(paramsIn)
+	passport := NewPassport("987654321","uk")
+
+	_,err := engine.Propose(passport,nil,0,0)
+	if err != EINVALIDARGUMENT {
+		t.Error("Propose accepted nil flight list as a valid argument",err)
+	}
+
+	var plannedflights []Flight
+	_,err = engine.Propose(passport,plannedflights,0,SecondsInDay)
+	if err != EINVALIDARGUMENT {
+		t.Error("Propose accepted nil flight list as a valid argument",err)
+	}
+
+	plannedflights = append(plannedflights,*createFlight(2,SecondsInDay*3,SecondsInDay*3+1))
+	_,err = engine.Propose(passport,plannedflights,0,SecondsInDay)
+	if err != EPROMISESNOTENABLED  {
+		t.Error("Propose succeding when promises aren't enabled",err)
+	}
+}

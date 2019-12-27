@@ -145,6 +145,17 @@ func Reset(database db.Database) error {
 	return nil
 }
 
+// getCreateTraveller returns existing traveller record associated 
+// with provided passport details if it exists, and otherwise a new
+// traveller record with passport details filled in
+func (self *Engine) getCreateTraveller(passport Passport)  *Traveller {
+	traveller,err := self.Travellers.GetTraveller(passport)
+	if err != nil {
+		traveller.passport=passport
+	}
+	return &traveller
+}
+
 // SubmitFlights submits a list of one or more flights for the traveller
 // with the specified passport. It is intended to be invoked by the Carrier
 // for each check-in and takes multiple flights to allow for through
@@ -161,15 +172,12 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 		return EINVALIDARGUMENT
 	}
 
-	// Retrieve or create traveller
-	traveller,err := self.Travellers.GetTraveller(passport)
-	if err != nil {
-		traveller.passport=passport
-	}
+	// Retrieve traveller record
+	t := self.getCreateTraveller(passport)
 	
 	// Add flights to traveller's flight history
 	for _,flight := range flights {
-		err = traveller.submitFlight(&flight,now,debit)
+		err := t.submitFlight(&flight,now,debit)
 		if err != nil {
 			return err
 
@@ -177,8 +185,27 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 	}
 
 	// Store updated traveller
-	err = self.Travellers.PutTraveller(traveller)
+	err := self.Travellers.PutTraveller(*t)
 	return err
+}
+
+// validPredictor checks whether promises are enabled and if they are attempts to create
+// predictor of correct type for configured algorithm. Returns true if promises are enabled
+// and a predictor exists, and false otherwise.
+func (self *Engine) validPredictor() bool {
+	
+	// Make sure correct predictor struct is created
+	switch self.Administrator.params.PromisesAlgo { 
+		case paLinearBestFit:
+			_,exists := self.predictor.(*bestFit)
+			var err  error 
+			if !exists {
+				self.predictor,err = newBestFit(SecondsInDay,self.Administrator.params.PromisesMaxPoints)
+			}
+			return err == nil
+		default:
+			return false
+	}
 }
 
 // UpdateTripsAndBackfill iterates through all Traveller records, carrying out
@@ -202,13 +229,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 		share = self.Administrator.params.DailyTotal / backfillers
 
 		// Add calculated share to predictor algorithm
-		if self.predictor == nil {
-			switch self.Administrator.params.PromisesAlgo { 
-				case paLinearBestFit:
-					self.predictor,_ = newBestFit(now,self.Administrator.params.PromisesMaxPoints)
-			}
-		}
-		if self.predictor != nil {
+		if self.validPredictor() {
 			self.predictor.add(share)
 		}
 	}
@@ -259,18 +280,56 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 	return totalTravellersYesterday, totalDistanceYesterday,self.totalGrounded, it.Error()
 }
 
-// ProposePromise returns a proposal for change to the give traveller's set of clearance promises to
-// accomodate proposed trip whilst keeping all existing promises. Returns error if no such proposal can be made.
-func (self *Engine) ProposePromise(traveller *Traveller,tripStart EpochTime,tripEnd EpochTime,distance Kilometres, now EpochTime) (*Proposal,error) {
+// Propose returns a proposal for change to the given traveller's set of clearance promises to
+// accomodate proposed ordered set of flights whilst keeping all existing promises.
+// The set of flights are treated as a single trip with start time the start time of the first
+// flight and the end of the trip being endTrip if endTrip isnt 0 and the end of the last flight
+// otherwise.
+// Returns error if no proposal can be made.
+func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTime, now EpochTime) (*Proposal,error) {
 
-	if (self.predictor == nil) {
+	// Validate args
+	if len(flights)==0 {
+		return nil,EINVALIDARGUMENT
+	}
+	
+	// Check promises are active
+	if !self.validPredictor() {
 		return nil,EPROMISESNOTENABLED
 	}
-	return traveller.promises.propose(tripStart,tripEnd,distance,now,self.predictor)
+
+	// Determine trip start, end, and distance
+	var td Kilometres
+	ts := MaxEpochTime
+	te := tripEnd
+	for i:=0; i < len(flights); i++ {
+		td += flights[i].distance
+		if flights[i].start < ts {
+			ts=flights[i].start
+		}
+		if flights[i].end  > te {
+			te=flights[i].end
+		}
+	}
+
+	// Ask for proposal and return the result
+	return self.getCreateTraveller(passport).promises.propose(ts,te,td,now,self.predictor)
 }
 
-// MakePromise attempts to apply a proposal for changes to a traveller's set of clearance promises.
-func (self *Engine) MakePromise(traveller *Traveller, proposal *Proposal) error {
-	return traveller.promises.make(proposal,self.predictor)
+// Make attempts to apply a proposal for changes to a traveller's set of clearance promises.
+func (self *Engine) Make(passport Passport, proposal *Proposal) error {
+
+	// Check promises are active
+	if !self.validPredictor() {
+		return EPROMISESNOTENABLED
+	}
+
+	// Make promise
+	t := self.getCreateTraveller(passport)
+	err := t.promises.make(proposal,self.predictor)
+	if (err == nil) {
+		self.Travellers.PutTraveller(*t)
+	}
+	return err
 }
 

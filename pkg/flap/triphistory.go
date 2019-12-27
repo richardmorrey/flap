@@ -63,6 +63,8 @@ func (self *EpochTime) toEpochDays(roundup bool) epochDays {
 	}
 }
 
+const MaxEpochTime=EpochTime(math.MaxUint64)
+
 type Flight struct {
 	et flightType
 	start EpochTime
