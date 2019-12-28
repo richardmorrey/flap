@@ -19,7 +19,7 @@ func (self epochDays) toEpochTime() EpochTime {
 type predictVersion uint64
 type predictor interface
 {
-	add(Kilometres)
+	add(epochDays,Kilometres)
 	predict(Kilometres,epochDays) (epochDays,error)
 	version() predictVersion
 	backfilled(epochDays,epochDays) (Kilometres,error)
@@ -32,7 +32,6 @@ type bestFit struct {
 	ys	  	[]Kilometres
 	m		float64
 	c		float64
-	xorigin		epochDays
 	maxpoints	uint32
 	pv		predictVersion
 }
@@ -40,14 +39,7 @@ type bestFit struct {
 // newBestFit constructs a new bestFit struct initialized with
 // the current epoch time so that predictions can be returned
 // in absolute time
-func newBestFit(now EpochTime,maxpoints uint32) (*bestFit,error) {
-
-	// Enforce an xorigin greater than zero so we dont
-	// need to worry about negative integrals
-	var xorigin = now.toEpochDays(false)
-	if xorigin == 0 {
-		return nil,EXORIGINZERO
-	}
+func newBestFit(maxpoints uint32) (*bestFit,error) {
 
 	// Validate maxpoints
 	if maxpoints < 2 {
@@ -56,7 +48,6 @@ func newBestFit(now EpochTime,maxpoints uint32) (*bestFit,error) {
 
 	// Create object
 	bf := new(bestFit)
-	bf.xorigin = xorigin
 	bf.maxpoints=maxpoints
 	bf.c = -1 // indicates uninitializated state as line cant have -ve values
 	return bf,nil
@@ -72,19 +63,19 @@ func (self *bestFit) version() predictVersion {
 // add adds a datapoint to the plot used for predictions. Must
 // be called each day with the distance share credit to each
 // account for backfilling that day.
-func (self *bestFit) add(share Kilometres) {
+func (self *bestFit) add(x epochDays, y Kilometres) {
 	if uint32(len(self.ys)) == self.maxpoints {
 		self.ys= self.ys[1:]
 	}
-	self.ys = append(self.ys,share)
-	self.calculateLine()
+	self.ys = append(self.ys,y)
+	self.calculateLine(x)
 }
 
 // calculateLine calulates the m (gradient) and c (offset)  values for a y=mx+c
 // line best fitting the scatter plot of backfill shares using
 // simple linear best fit. For a good expanation of the algorithm see:
 // https://www.statisticshowto.datasciencecentral.com/probability-and-statistics/regression-analysis/find-a-linear-regression-equation/
-func (self *bestFit) calculateLine() error {
+func (self *bestFit) calculateLine(xmax epochDays) error {
 
 	// Check for data
 	if len(self.ys) < 2 {
@@ -96,8 +87,9 @@ func (self *bestFit) calculateLine() error {
 	var xSum float64
 	var xxSum float64
 	var xySum float64 
+	xorigin := xmax - epochDays(len(self.ys)-1) 
 	for x,y := range self.ys {
-		realx:= float64(x)+float64(self.xorigin)
+		realx:= float64(xorigin)+float64(x)
 		ySum += float64(y)
 		xSum += realx
 		xxSum += realx*realx

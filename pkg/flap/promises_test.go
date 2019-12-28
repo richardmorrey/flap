@@ -24,7 +24,7 @@ type testpredictor struct {
 	pa predictArgs
 }
 
-func (self *testpredictor) add(dist Kilometres) {
+func (self *testpredictor) add(x epochDays,y Kilometres) {
 }
 
 func (self *testpredictor) predict(dist Kilometres, start epochDays) (epochDays,error) {
@@ -236,7 +236,7 @@ func TestStackTooLong(t *testing.T) {
 type errpredictor struct {
 	err error
 }
-func (self *errpredictor) add(dist Kilometres) {}
+func (self *errpredictor) add(x epochDays, y Kilometres) {}
 func (self *errpredictor) predict(dist Kilometres, start epochDays) (epochDays,error) { return 0, self.err }
 func (self *errpredictor) version() predictVersion { return 0 }
 func (self *errpredictor) backfilled(d1 epochDays,d2 epochDays) (Kilometres,error) { return 0, self.err }

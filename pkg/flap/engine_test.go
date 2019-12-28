@@ -452,7 +452,7 @@ func TestProposePromisesInactive(t *testing.T) {
 	var plannedflights []Flight
 	_,err = engine.Propose(passport,plannedflights,0,SecondsInDay)
 	if err != EINVALIDARGUMENT {
-		t.Error("Propose accepted nil flight list as a valid argument",err)
+		t.Error("Propose accepted empty flight list as a valid argument",err)
 	}
 
 	plannedflights = append(plannedflights,*createFlight(2,SecondsInDay*3,SecondsInDay*3+1))
@@ -461,3 +461,71 @@ func TestProposePromisesInactive(t *testing.T) {
 		t.Error("Propose succeding when promises aren't enabled",err)
 	}
 }
+
+func TestMakePromisesInactive(t *testing.T) {
+	db:= enginesetup(t)
+	defer engineteardown(db)
+	engine := NewEngine(db)
+	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365}
+	engine.Administrator.SetParams(paramsIn)
+	passport := NewPassport("987654321","uk")
+
+	err := engine.Make(passport,nil)
+	if err != EINVALIDARGUMENT {
+		t.Error("Make doesnt report expected error when nil proposal provided",err)
+	}
+
+	var p Proposal
+	err = engine.Make(passport,&p)
+	if err != EPROMISESNOTENABLED {
+		t.Error("Make doesnt report expected error when promises aren't enabled",err)
+	}
+
+}
+
+func TestMake(t *testing.T) {
+	db:= enginesetup(t)
+	defer engineteardown(db)
+	engine := NewEngine(db)
+	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
+						PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10}
+	engine.Administrator.SetParams(paramsIn)
+	passport := NewPassport("987654321","uk")
+
+	var p Proposal
+	fillpromises(&(p.Promises))
+	err := engine.Make(passport,&p)
+	if err != nil {
+		t.Error("Make returns error when promises are enabled",err)
+	}
+
+	traveller,err := engine.Travellers.GetTraveller(passport) 
+	if err != nil {
+		t.Error("Make failed to create traveller")
+	}
+
+	if !reflect.DeepEqual(p.Promises.entries,traveller.promises.entries) {
+		t.Error("Make failed to update promises in traveller record", traveller.promises)
+	}
+}
+
+func TestMakeOldProposal(t *testing.T) {
+
+	db:= enginesetup(t)
+	defer engineteardown(db)
+	engine := NewEngine(db)
+	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
+						PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10}
+	engine.Administrator.SetParams(paramsIn)
+	passport := NewPassport("987654321","uk")
+
+	var p Proposal
+	engine.validPredictor()
+	engine.predictor.add(1,50)
+	engine.predictor.add(2,15)
+	err := engine.Make(passport,&p)
+	if err != EPROPOSALEXPIRED {
+		t.Error("Make returns error when promises are enabled",err)
+	}
+}
+

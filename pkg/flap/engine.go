@@ -200,7 +200,7 @@ func (self *Engine) validPredictor() bool {
 			_,exists := self.predictor.(*bestFit)
 			var err  error 
 			if !exists {
-				self.predictor,err = newBestFit(SecondsInDay,self.Administrator.params.PromisesMaxPoints)
+				self.predictor,err = newBestFit(self.Administrator.params.PromisesMaxPoints)
 			}
 			return err == nil
 		default:
@@ -230,7 +230,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 
 		// Add calculated share to predictor algorithm
 		if self.validPredictor() {
-			self.predictor.add(share)
+			self.predictor.add(now.toEpochDays(false),share)
 		}
 	}
 
@@ -318,6 +318,11 @@ func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTi
 
 // Make attempts to apply a proposal for changes to a traveller's set of clearance promises.
 func (self *Engine) Make(passport Passport, proposal *Proposal) error {
+
+	// Validate arguments
+	if proposal == nil {
+		return EINVALIDARGUMENT
+	}
 
 	// Check promises are active
 	if !self.validPredictor() {
