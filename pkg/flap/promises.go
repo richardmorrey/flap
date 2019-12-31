@@ -216,3 +216,33 @@ func (self* Promises) delete(tripStart EpochTime, tripEnd EpochTime,deleteStack 
 	return ENOTIMPLEMENTED
 }
 
+type PromisesIterator struct {
+	index int
+	promises *Promises
+}
+
+func (self *PromisesIterator) Next() (bool) {
+	if self.index > 0 {
+		self.index--
+		return true
+	}
+	return false
+}
+
+func (self *PromisesIterator) Value() Promise {
+	return self.promises.entries[self.index]
+}
+
+func (self *PromisesIterator) Error() error {
+	return nil
+}
+
+// NewIterator provides iterator for iterating over all promises from oldest to newest
+// by trip start time.
+func (self *Promises) NewIterator() *PromisesIterator {
+	iter := new(PromisesIterator)
+	iter.index = sort.Search(MaxPromises,  func(i int) bool {return self.entries[i].TripStart==0}) 
+	iter.promises=self
+	return iter
+}
+

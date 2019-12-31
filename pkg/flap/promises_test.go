@@ -611,3 +611,44 @@ func TestKeepWrongDistance(t *testing.T) {
 	}
 }
 
+func TestIterateEmpty(t *testing.T) {
+	var ps Promises 
+	it := ps.NewIterator()
+	if it.Next() {
+		t.Error("Next returns true for empty Promises struct")
+	}
+}
+
+func TestIterateFull(t *testing.T) {
+	var ps Promises 
+	fillpromises(&ps)
+	it := ps.NewIterator()
+	i:=0
+	for it.Next() {
+		i++
+		if !reflect.DeepEqual(it.Value(),ps.entries[MaxPromises-i])  {
+			t.Error("Next returns wrong answer for full promises  struct",it.Value())
+		}
+	}
+	if i !=MaxPromises {
+		t.Error("Value failed to iterate over all the values of a full promises struct",i)
+	}
+}
+
+func TestIterateOne(t *testing.T) {
+	var ps Promises
+	ps.entries[0]=Promise{TripStart:epochDays(40).toEpochTime(),
+				      TripEnd:epochDays(36).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(56).toEpochTime()}
+	it := ps.NewIterator()
+	if !it.Next() {
+		t.Error("Next failed to iterate over a single value")
+	}
+	if !reflect.DeepEqual(it.Value(),ps.entries[0]) {
+		t.Error("Value returned wrong value for singlei value promises")
+	}
+	if it.Next() {
+		t.Error("Next returns true for second invocation against single entry promises")
+	}
+}
