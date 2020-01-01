@@ -342,24 +342,24 @@ func TestUpdateTripsAndBackfillPromises(t  *testing.T) {
 	if err != nil {
 		t.Error("Update failed for one Traveller",err)
 	}
-	if reflect.TypeOf(engine.predictor) == nil {
+	if reflect.TypeOf(engine.Administrator.predictor) == nil {
 		t.Error("Failed to create predictor when promises are active")
 	}
-	if engine.predictor.version() != 0 {
+	if engine.Administrator.predictor.version() != 0 {
 		t.Error("predictor has more than one point after one call to Update")
 	}
-	pexpected := engine.predictor
+	pexpected := engine.Administrator.predictor
 	_,_,_,err = engine.UpdateTripsAndBackfill(SecondsInDay*6)
 	if err != nil {
 		t.Error("Second Update failed with promises activated",err)
 	}
-	if engine.predictor != pexpected {
+	if engine.Administrator.predictor != pexpected {
 		t.Error("predictor replaced on second call to Update when promises are active")
 	}
-	if engine.predictor.version() != 1 {
+	if engine.Administrator.predictor.version() != 1 {
 		t.Error("predictor add not successfully invoked twice when promises are active")
 	}
-	clearance,_ := engine.predictor.predict(60,5)
+	clearance,_ := engine.Administrator.predictor.predict(60,5)
 	if clearance != 8 {
 		t.Error("Update not populating predictor  with points to give expected prediction",clearance)
 	}
@@ -371,7 +371,7 @@ func TestProposePromisesActive(t *testing.T) {
 	defer engineteardown(db)
 	engine := NewEngine(db)
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
-					PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10}
+		PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:100}
 	engine.Administrator.SetParams(paramsIn)
 	passport := NewPassport("987654321","uk")
 
@@ -397,8 +397,31 @@ func TestProposePromisesActive(t *testing.T) {
 	if p.entries[0].Distance != plannedflights[0].distance+plannedflights[1].distance {
 		t.Error("Proposal doesnt include expected trip distance",p.entries[0])
 	}
-
+	engine2 := NewEngine(db)
+	engine2.Administrator.SetParams(paramsIn)
+	if (!reflect.DeepEqual(*engine.Administrator.predictor.(*bestFit),*engine2.Administrator.predictor.(*bestFit))) {
+		t.Error("predictor state not being persisted across engine instances")
+	}
 }
+
+func TestProposePromisesTooFarAhead(t *testing.T) {
+	
+	db:= enginesetup(t)
+	defer engineteardown(db)
+	engine := NewEngine(db)
+	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
+		PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:1}
+	engine.Administrator.SetParams(paramsIn)
+	passport := NewPassport("987654321","uk")
+
+	var plannedflights []Flight
+	plannedflights = append(plannedflights,*createFlight(3,SecondsInDay*3,SecondsInDay*3+1))
+	_,err := engine.Propose(passport,plannedflights,0,SecondsInDay)
+	if err != ETRIPTOOFARAHEAD {
+		t.Error("Propose not rejecting trip that is too far ahead in time",err)
+	}
+}
+
 
 func TestProposePromisesActiveiWithTripEnd(t *testing.T) {
 	
@@ -406,7 +429,7 @@ func TestProposePromisesActiveiWithTripEnd(t *testing.T) {
 	defer engineteardown(db)
 	engine := NewEngine(db)
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
-					PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10}
+			PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:100}
 	engine.Administrator.SetParams(paramsIn)
 	passport := NewPassport("987654321","uk")
 
@@ -520,9 +543,8 @@ func TestMakeOldProposal(t *testing.T) {
 	passport := NewPassport("987654321","uk")
 
 	var p Proposal
-	engine.validPredictor()
-	engine.predictor.add(1,50)
-	engine.predictor.add(2,15)
+	engine.Administrator.predictor.add(1,50)
+	engine.Administrator.predictor.add(2,15)
 	err := engine.Make(passport,&p)
 	if err != EPROPOSALEXPIRED {
 		t.Error("Make returns error when promises are enabled",err)

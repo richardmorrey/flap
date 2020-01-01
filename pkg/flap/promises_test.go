@@ -4,6 +4,7 @@ import (
 	"testing"
 	"reflect"
 	"errors"
+	"github.com/richardmorrey/flap/pkg/db"
 )
 
 type backfilledArgs struct {
@@ -41,6 +42,14 @@ func (self *testpredictor) backfilled(d1 epochDays,d2 epochDays) (Kilometres,err
 	self.ba.d1=d1
 	self.ba.d2=d2
 	return self.backfilledDist,nil
+}
+
+func (self *testpredictor) get(t db.Table) error {
+	return ENOTIMPLEMENTED
+}
+
+func (self *testpredictor) put(t db.Table) error {
+	return ENOTIMPLEMENTED
 }
 
 func TestProposeInvalid(t *testing.T) {
@@ -233,13 +242,14 @@ func TestStackTooLong(t *testing.T) {
 		t.Error("Propose accepts stacked proposal that doesnt fit",err,proposal)
 	}
 }
-type errpredictor struct {
-	err error
-}
+type errpredictor struct { err error }
 func (self *errpredictor) add(x epochDays, y Kilometres) {}
 func (self *errpredictor) predict(dist Kilometres, start epochDays) (epochDays,error) { return 0, self.err }
 func (self *errpredictor) version() predictVersion { return 0 }
 func (self *errpredictor) backfilled(d1 epochDays,d2 epochDays) (Kilometres,error) { return 0, self.err }
+func (self *errpredictor) get(t db.Table) error { return ENOTIMPLEMENTED }
+func (self *errpredictor) put(t db.Table) error { return ENOTIMPLEMENTED }
+
 func TestProposePredNotReady(t *testing.T) {
 	var ps Promises
 	var ep errpredictor

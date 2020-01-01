@@ -9,7 +9,7 @@ import (
 )
 
 var EPROMISESNOTENABLED = errors.New("Promises not enabled")
-
+var ETRIPTOOFARAHEAD = errors.New("The Trip is too far ahead")
 type Days 		int64
 type PromisesAlgo	uint8
 
@@ -21,17 +21,19 @@ const (
 type FlapParams struct
 {
 	TripLength		Days
-	FlightsInTrip   	uint64
-	FlightInterval  	Days
-	DailyTotal      	Kilometres
+	FlightsInTrip		uint64
+	FlightInterval		Days
+	DailyTotal		Kilometres
 	MinGrounded		uint64
 	PromisesAlgo		PromisesAlgo
 	PromisesMaxPoints	uint32
+	PromisesMaxDays		Days
 }
 
 type Administrator struct {
 	table db.Table
 	params FlapParams
+	predictor predictor
 }
 
 // newAdministrators creates an instance of Administrator, for
@@ -57,7 +59,11 @@ func newAdministrator(flapdb db.Database) *Administrator {
 		buf := bytes.NewReader(blob)
 		err = binary.Read(buf,binary.LittleEndian,&(administrator.params))
 	}
-	return  administrator
+
+	// Create predictor for promises
+	administrator.createPredictor(true)
+	
+	return administrator
 }
 
 // GetParams returns the currently active set of Flap parameters
@@ -68,7 +74,7 @@ func (self *Administrator) GetParams() FlapParams {
 
 // SetParams makes a new complete set of Flap parameters active. 
 // The values are also written to the db table, replacing
-// what was there previously
+// what was there previously.
 func (self *Administrator) SetParams(params FlapParams) error {
 	
 	// Check for valid table
@@ -94,10 +100,33 @@ func (self *Administrator) SetParams(params FlapParams) error {
 		return err
 	}
 	err = self.table.Put([]byte(adminRecordKey),buf.Bytes())
+
+	// Check for promises config change and create new predictor
 	if err == nil {
+		algoOld := self.params.PromisesAlgo
 		self.params=params
+		if params.PromisesAlgo != algoOld {
+			self.createPredictor(false)
+		}
 	}
 	return err
+}
+
+// createPredictor creates predictor of the configured type
+func (self* Administrator) createPredictor(load bool) {
+	switch self.params.PromisesAlgo { 
+		case paLinearBestFit:
+			self.predictor,_ = newBestFit(self.params.PromisesMaxPoints)
+	}
+	if self.validPredictor() && load {
+		self.predictor.get(self.table)
+	}
+}
+
+// validPredictor checks Returns true if promises are enabled  and a predictor exists, and false otherwise.
+func (self *Administrator) validPredictor() bool {
+	_,exists := self.predictor.(*bestFit)
+	return exists
 }
 
 // dropAdministrator Adminitrator table from given database
@@ -110,7 +139,6 @@ type Engine struct
 	Administrator 		*Administrator
 	Travellers		*Travellers
 	Airports		*Airports
-	predictor		predictor
 	totalGrounded		uint64
 }
 
@@ -189,25 +217,6 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 	return err
 }
 
-// validPredictor checks whether promises are enabled and if they are attempts to create
-// predictor of correct type for configured algorithm. Returns true if promises are enabled
-// and a predictor exists, and false otherwise.
-func (self *Engine) validPredictor() bool {
-	
-	// Make sure correct predictor struct is created
-	switch self.Administrator.params.PromisesAlgo { 
-		case paLinearBestFit:
-			_,exists := self.predictor.(*bestFit)
-			var err  error 
-			if !exists {
-				self.predictor,err = newBestFit(self.Administrator.params.PromisesMaxPoints)
-			}
-			return err == nil
-		default:
-			return false
-	}
-}
-
 // UpdateTripsAndBackfill iterates through all Traveller records, carrying out
 // two key FLAP processes for each traveller:
 // (1) Update the trip history, applying FLAP parameters and the provided date time to end journeys and trips
@@ -229,8 +238,9 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 		share = self.Administrator.params.DailyTotal / backfillers
 
 		// Add calculated share to predictor algorithm
-		if self.validPredictor() {
-			self.predictor.add(now.toEpochDays(false),share)
+		if self.Administrator.validPredictor() {
+			self.Administrator.predictor.add(now.toEpochDays(false),share)
+			self.Administrator.predictor.put(self.Administrator.table)
 		}
 	}
 
@@ -284,8 +294,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 // accomodate proposed ordered set of flights whilst keeping all existing promises.
 // The set of flights are treated as a single trip with start time the start time of the first
 // flight and the end of the trip being endTrip if endTrip isnt 0 and the end of the last flight
-// otherwise.
-// Returns error if no proposal can be made.
+// otherwise. Returns error if no proposal can be made.
 func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTime, now EpochTime) (*Proposal,error) {
 
 	// Validate args
@@ -294,7 +303,7 @@ func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTi
 	}
 	
 	// Check promises are active
-	if !self.validPredictor() {
+	if !self.Administrator.validPredictor() {
 		return nil,EPROMISESNOTENABLED
 	}
 
@@ -312,8 +321,13 @@ func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTi
 		}
 	}
 
+	// Check proposed trip is not too far in the future
+	if ts.toEpochDays(true) - now.toEpochDays(false) > epochDays(self.Administrator.params.PromisesMaxDays) {
+		return nil,ETRIPTOOFARAHEAD
+	}
+
 	// Ask for proposal and return the result
-	return self.getCreateTraveller(passport).promises.propose(ts,te,td,now,self.predictor)
+	return self.getCreateTraveller(passport).promises.propose(ts,te,td,now,self.Administrator.predictor)
 }
 
 // Make attempts to apply a proposal for changes to a traveller's set of clearance promises.
@@ -325,13 +339,13 @@ func (self *Engine) Make(passport Passport, proposal *Proposal) error {
 	}
 
 	// Check promises are active
-	if !self.validPredictor() {
+	if !self.Administrator.validPredictor() {
 		return EPROMISESNOTENABLED
 	}
 
 	// Make promise
 	t := self.getCreateTraveller(passport)
-	err := t.promises.make(proposal,self.predictor)
+	err := t.promises.make(proposal,self.Administrator.predictor)
 	if (err == nil) {
 		self.Travellers.PutTraveller(*t)
 	}

@@ -3,7 +3,9 @@ package flap
 import (
 	"errors"
 	"math"
-	//"fmt"
+	"github.com/richardmorrey/flap/pkg/db"
+	"encoding/gob"
+	"bytes"
 )
 
 var ENOVALIDPREDICTION = errors.New("No valid prediction")
@@ -16,6 +18,7 @@ func (self epochDays) toEpochTime() EpochTime {
 	return EpochTime(self)*SecondsInDay
 }
 
+const predictorRecordKey="predictor"
 type predictVersion uint64
 type predictor interface
 {
@@ -23,6 +26,8 @@ type predictor interface
 	predict(Kilometres,epochDays) (epochDays,error)
 	version() predictVersion
 	backfilled(epochDays,epochDays) (Kilometres,error)
+	get(db.Table) error
+	put(db.Table) error
 }
 
 // bestFit predicts dates when a specified distance balance would
@@ -53,6 +58,26 @@ func newBestFit(maxpoints uint32) (*bestFit,error) {
 	return bf,nil
 }
 
+// get reads state from given table
+func (self *bestFit) get(t db.Table) error {
+	blob, err := t.Get([]byte(predictorRecordKey))
+	if err != nil {
+		return err
+	}
+	dec := gob.NewDecoder(bytes.NewBuffer(blob))
+	return dec.Decode(self)
+}
+
+// put saves state to given table
+func (self *bestFit) put(t db.Table) error {
+	var b bytes.Buffer
+	enc := gob.NewEncoder(&b) 
+	err := enc.Encode(self)
+	if err != nil {
+		return err
+	}
+	return t.Put([]byte(predictorRecordKey), b.Bytes())
+}
 
 // version returns number indicating current version of the best fit line.
 // number is incremented each time value of m or c changes.
