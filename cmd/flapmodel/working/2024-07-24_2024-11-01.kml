@@ -1,0 +1,3126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+  <Document>
+    <name>Flight Paths</name>
+    <Style id="0">
+      <LineStyle>
+        <color>7f00a5ff</color>
+        <width>2</width>
+      </LineStyle>
+    </Style>
+    <Style id="1">
+      <LineStyle>
+        <color>7f00ffff</color>
+        <width>2</width>
+      </LineStyle>
+    </Style>
+    <Style id="2">
+      <LineStyle>
+        <color>7f0000ff</color>
+        <width>2</width>
+      </LineStyle>
+    </Style>
+    <Style id="3">
+      <LineStyle>
+        <color>7f00ffff</color>
+        <width>2</width>
+      </LineStyle>
+    </Style>
+    <Style id="4">
+      <LineStyle>
+        <color>7fff00ff</color>
+        <width>2</width>
+      </LineStyle>
+    </Style>
+    <Placemark>
+      <name>LEBL-GMMN</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-24T06:56:33+01:00</when>
+        <when>2024-07-24T08:20:17+01:00</when>
+        <gx:coord>2.07846 41.2971 30000</gx:coord>
+        <gx:coord>-7.589970111846924 33.36750030517578 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDEN-KCOS</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-07-25T00:18:35+01:00</when>
+        <when>2024-07-25T00:26:34+01:00</when>
+        <gx:coord>-104.672996521 39.861698150635 30000</gx:coord>
+        <gx:coord>-104.700996 38.805801 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZLXY-ZSPD</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-24T02:33:33+01:00</when>
+        <when>2024-07-24T04:00:30+01:00</when>
+        <gx:coord>108.751999 34.447102 30000</gx:coord>
+        <gx:coord>121.80500030517578 31.143400192260742 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LKPR-UNNT</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-24T18:47:25+01:00</when>
+        <when>2024-07-24T23:52:40+01:00</when>
+        <gx:coord>14.26 50.1008 30000</gx:coord>
+        <gx:coord>82.650703430176 55.012599945068 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LKPR-EKCH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-24T11:56:16+01:00</when>
+        <when>2024-07-24T12:38:45+01:00</when>
+        <gx:coord>14.26 50.1008 30000</gx:coord>
+        <gx:coord>12.656000137329 55.617900848389 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LIME-EDDW</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-24T06:07:15+01:00</when>
+        <when>2024-07-24T07:03:23+01:00</when>
+        <gx:coord>9.70417 45.673901 30000</gx:coord>
+        <gx:coord>8.78666973114 53.0475006104 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LICC-LIPX</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-24T09:28:18+01:00</when>
+        <when>2024-07-24T10:32:59+01:00</when>
+        <gx:coord>15.0664 37.466801 30000</gx:coord>
+        <gx:coord>10.8885 45.395699 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KCHS-KPHL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-24T11:15:33+01:00</when>
+        <when>2024-07-24T12:16:04+01:00</when>
+        <gx:coord>-80.04049683 32.89860153 30000</gx:coord>
+        <gx:coord>-75.24109649658203 39.87189865112305 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>PHNL-KDFW</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-24T11:13:06+01:00</when>
+        <when>2024-07-24T18:08:32+01:00</when>
+        <gx:coord>-157.924228 21.32062 30000</gx:coord>
+        <gx:coord>-97.038002 32.896801 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>UUEE-LCLK</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-07-25T21:54:15+01:00</when>
+        <when>2024-07-26T00:35:43+01:00</when>
+        <gx:coord>37.4146 55.972599 30000</gx:coord>
+        <gx:coord>33.624900817871094 34.875099182128906 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>WSSS-YBBN</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-07-25T03:20:20+01:00</when>
+        <when>2024-07-25T10:20:00+01:00</when>
+        <gx:coord>103.994003 1.35019 30000</gx:coord>
+        <gx:coord>153.11700439453125 -27.384199142456055 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LIMJ-LATI</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-07-26T15:30:14+01:00</when>
+        <when>2024-07-26T16:34:51+01:00</when>
+        <gx:coord>8.8375 44.4133 30000</gx:coord>
+        <gx:coord>19.7206001282 41.4146995544 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KPHL-KCHS</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-26T06:52:34+01:00</when>
+        <when>2024-07-26T07:53:05+01:00</when>
+        <gx:coord>-75.24109649658203 39.87189865112305 30000</gx:coord>
+        <gx:coord>-80.04049683 32.89860153 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KIAD-KATL</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-07-26T19:29:35+01:00</when>
+        <when>2024-07-26T20:28:15+01:00</when>
+        <gx:coord>-77.45580292 38.94449997 30000</gx:coord>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ENTO-LEMG</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-26T13:33:42+01:00</when>
+        <when>2024-07-26T16:39:29+01:00</when>
+        <gx:coord>10.258600235 59.1866989136 30000</gx:coord>
+        <gx:coord>-4.499110221862793 36.67490005493164 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LTBA-USSS</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-26T05:15:56+01:00</when>
+        <when>2024-07-26T08:32:43+01:00</when>
+        <gx:coord>28.8146 40.976898 30000</gx:coord>
+        <gx:coord>60.802700042725 56.743099212646 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LEMG-ENTO</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-27T19:33:27+01:00</when>
+        <when>2024-07-27T22:39:14+01:00</when>
+        <gx:coord>-4.499110221862793 36.67490005493164 30000</gx:coord>
+        <gx:coord>10.258600235 59.1866989136 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EGCC-EKCH</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-07-27T09:54:32+01:00</when>
+        <when>2024-07-27T11:02:25+01:00</when>
+        <gx:coord>-2.2749500274658203 53.35369873046875 30000</gx:coord>
+        <gx:coord>12.656000137329 55.617900848389 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OKBK-VAGO</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-27T19:30:26+01:00</when>
+        <when>2024-07-27T22:59:39+01:00</when>
+        <gx:coord>47.96889877319336 29.226600646972656 30000</gx:coord>
+        <gx:coord>73.8313980103 15.3808002472 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VTBD-ZLXY</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-27T20:07:44+01:00</when>
+        <when>2024-07-27T22:53:26+01:00</when>
+        <gx:coord>100.607002258 13.9125995636 30000</gx:coord>
+        <gx:coord>108.751999 34.447102 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDFW-KPIA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-27T03:38:09+01:00</when>
+        <when>2024-07-27T04:52:03+01:00</when>
+        <gx:coord>-97.038002 32.896801 30000</gx:coord>
+        <gx:coord>-89.6932983398 40.664199829100006 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>GCTS-LSZH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-28T07:46:40+01:00</when>
+        <when>2024-07-28T11:15:53+01:00</when>
+        <gx:coord>-16.5725002289 28.044500351 30000</gx:coord>
+        <gx:coord>8.54917 47.464699 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>GCTS-ULLI</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-28T10:17:51+01:00</when>
+        <when>2024-07-28T15:57:52+01:00</when>
+        <gx:coord>-16.5725002289 28.044500351 30000</gx:coord>
+        <gx:coord>30.262500762939453 59.80030059814453 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>YBBN-WSSS</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-07-28T09:12:24+01:00</when>
+        <when>2024-07-28T16:12:04+01:00</when>
+        <gx:coord>153.11700439453125 -27.384199142456055 30000</gx:coord>
+        <gx:coord>103.994003 1.35019 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RPVJ-RPLL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-28T15:35:41+01:00</when>
+        <when>2024-07-28T16:00:53+01:00</when>
+        <gx:coord>123.630095 12.369682 30000</gx:coord>
+        <gx:coord>121.019997 14.5086 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDFW-PHNL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-29T01:57:17+01:00</when>
+        <when>2024-07-29T08:52:43+01:00</when>
+        <gx:coord>-97.038002 32.896801 30000</gx:coord>
+        <gx:coord>-157.924228 21.32062 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VAGO-OKBK</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-29T15:23:57+01:00</when>
+        <when>2024-07-29T18:53:10+01:00</when>
+        <gx:coord>73.8313980103 15.3808002472 30000</gx:coord>
+        <gx:coord>47.96889877319336 29.226600646972656 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VGZR-VIDP</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-07-29T10:54:21+01:00</when>
+        <when>2024-07-29T12:31:41+01:00</when>
+        <gx:coord>90.397783 23.843347 30000</gx:coord>
+        <gx:coord>77.103104 28.5665 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KSTL-KDEC</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-07-30T13:14:36+01:00</when>
+        <when>2024-07-30T13:26:41+01:00</when>
+        <gx:coord>-90.370003 38.748697 30000</gx:coord>
+        <gx:coord>-88.8656997680664 39.834598541259766 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EGLL-RJAA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-30T04:19:54+01:00</when>
+        <when>2024-07-30T15:15:13+01:00</when>
+        <gx:coord>-0.461941 51.4706 30000</gx:coord>
+        <gx:coord>140.386001587 35.7647018433 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EKCH-LKPR</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-31T19:32:54+01:00</when>
+        <when>2024-07-31T20:15:23+01:00</when>
+        <gx:coord>12.656000137329 55.617900848389 30000</gx:coord>
+        <gx:coord>14.26 50.1008 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KATL-KIAD</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-07-31T23:27:47+01:00</when>
+        <when>2024-08-01T00:26:27+01:00</when>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+        <gx:coord>-77.45580292 38.94449997 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LOWK-EDDH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-07-31T07:46:39+01:00</when>
+        <when>2024-07-31T08:43:45+01:00</when>
+        <gx:coord>14.3377 46.642502 30000</gx:coord>
+        <gx:coord>9.9882297515869 53.630401611328 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZUUU-VHHH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-01T00:16:00+01:00</when>
+        <when>2024-08-01T01:48:20+01:00</when>
+        <gx:coord>103.9469985961914 30.578500747680664 30000</gx:coord>
+        <gx:coord>113.915001 22.308901 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OKBK-OLBA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-01T17:40:17+01:00</when>
+        <when>2024-08-01T19:08:11+01:00</when>
+        <gx:coord>47.96889877319336 29.226600646972656 30000</gx:coord>
+        <gx:coord>35.488399505615234 33.820899963378906 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LCLK-UUEE</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-02T00:48:02+01:00</when>
+        <when>2024-08-02T03:29:30+01:00</when>
+        <gx:coord>33.624900817871094 34.875099182128906 30000</gx:coord>
+        <gx:coord>37.4146 55.972599 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDDH-LOWK</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-01T22:49:30+01:00</when>
+        <when>2024-08-01T23:46:36+01:00</when>
+        <gx:coord>9.9882297515869 53.630401611328 30000</gx:coord>
+        <gx:coord>14.3377 46.642502 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>USSS-LTBA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-02T20:24:32+01:00</when>
+        <when>2024-08-02T23:41:19+01:00</when>
+        <gx:coord>60.802700042725 56.743099212646 30000</gx:coord>
+        <gx:coord>28.8146 40.976898 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>MYNN-KDCA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-02T19:44:13+01:00</when>
+        <when>2024-08-02T21:29:08+01:00</when>
+        <gx:coord>-77.46620178219999 25.0389995575 30000</gx:coord>
+        <gx:coord>-77.037697 38.8521 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZLXY-VTBD</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-03T12:53:15+01:00</when>
+        <when>2024-08-03T15:38:57+01:00</when>
+        <gx:coord>108.751999 34.447102 30000</gx:coord>
+        <gx:coord>100.607002258 13.9125995636 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KPIA-KDFW</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-03T07:33:27+01:00</when>
+        <when>2024-08-03T08:47:21+01:00</when>
+        <gx:coord>-89.6932983398 40.664199829100006 30000</gx:coord>
+        <gx:coord>-97.038002 32.896801 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KEWR-CYUL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-04T20:22:19+01:00</when>
+        <when>2024-08-04T20:58:39+01:00</when>
+        <gx:coord>-74.168701171875 40.692501068115234 30000</gx:coord>
+        <gx:coord>-73.7407989502 45.4706001282 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RPLL-RPVJ</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-04T11:03:26+01:00</when>
+        <when>2024-08-04T11:28:38+01:00</when>
+        <gx:coord>121.019997 14.5086 30000</gx:coord>
+        <gx:coord>123.630095 12.369682 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>CYUL-KDEN</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-04T12:32:42+01:00</when>
+        <when>2024-08-04T15:29:28+01:00</when>
+        <gx:coord>-73.7407989502 45.4706001282 30000</gx:coord>
+        <gx:coord>-104.672996521 39.861698150635 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OEJN-FAOR</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-04T01:42:04+01:00</when>
+        <when>2024-08-04T07:54:07+01:00</when>
+        <gx:coord>39.156502 21.6796 30000</gx:coord>
+        <gx:coord>28.246 -26.1392 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VHHH-RJAA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-04T12:14:16+01:00</when>
+        <when>2024-08-04T15:36:35+01:00</when>
+        <gx:coord>113.915001 22.308901 30000</gx:coord>
+        <gx:coord>140.386001587 35.7647018433 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>GMFF-LIRP</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-05T00:53:22+01:00</when>
+        <when>2024-08-05T02:50:22+01:00</when>
+        <gx:coord>-4.977960109709999 33.9272994995 30000</gx:coord>
+        <gx:coord>10.3927 43.683899 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>UKHH-OMDB</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-04T20:23:23+01:00</when>
+        <when>2024-08-05T00:01:45+01:00</when>
+        <gx:coord>36.290000915527344 49.924800872802734 30000</gx:coord>
+        <gx:coord>55.3643989563 25.2527999878 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LGIR-EDDK</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-05T15:21:21+01:00</when>
+        <when>2024-08-05T17:55:10+01:00</when>
+        <gx:coord>25.180299758900002 35.3396987915 30000</gx:coord>
+        <gx:coord>7.1427397728 50.8658981323 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ENZV-ENCN</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-05T05:39:07+01:00</when>
+        <when>2024-08-05T05:50:02+01:00</when>
+        <gx:coord>5.6377801895 58.876701354 30000</gx:coord>
+        <gx:coord>8.08537 58.204201 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VIDP-VGZR</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-06T00:49:33+01:00</when>
+        <when>2024-08-06T02:26:53+01:00</when>
+        <gx:coord>77.103104 28.5665 30000</gx:coord>
+        <gx:coord>90.397783 23.843347 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KTUS-KDFW</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-05T04:42:07+01:00</when>
+        <when>2024-08-05T06:11:19+01:00</when>
+        <gx:coord>-110.94100189208984 32.1161003112793 30000</gx:coord>
+        <gx:coord>-97.038002 32.896801 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RJAA-EGLL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-06T21:11:29+01:00</when>
+        <when>2024-08-07T08:06:48+01:00</when>
+        <gx:coord>140.386001587 35.7647018433 30000</gx:coord>
+        <gx:coord>-0.461941 51.4706 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>FAOR-OEJN</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-06T21:39:22+01:00</when>
+        <when>2024-08-07T03:51:25+01:00</when>
+        <gx:coord>28.246 -26.1392 30000</gx:coord>
+        <gx:coord>39.156502 21.6796 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KCOS-KDEN</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-07T11:30:20+01:00</when>
+        <when>2024-08-07T11:38:19+01:00</when>
+        <gx:coord>-104.700996 38.805801 30000</gx:coord>
+        <gx:coord>-104.672996521 39.861698150635 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZSPD-ZLXY</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-07T07:26:14+01:00</when>
+        <when>2024-08-07T08:53:11+01:00</when>
+        <gx:coord>121.80500030517578 31.143400192260742 30000</gx:coord>
+        <gx:coord>108.751999 34.447102 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>UNNT-LKPR</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-07T16:38:15+01:00</when>
+        <when>2024-08-07T21:43:30+01:00</when>
+        <gx:coord>82.650703430176 55.012599945068 30000</gx:coord>
+        <gx:coord>14.26 50.1008 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDDW-LIME</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-07T20:55:17+01:00</when>
+        <when>2024-08-07T21:51:25+01:00</when>
+        <gx:coord>8.78666973114 53.0475006104 30000</gx:coord>
+        <gx:coord>9.70417 45.673901 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LIPX-LICC</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-07T16:31:43+01:00</when>
+        <when>2024-08-07T17:36:24+01:00</when>
+        <gx:coord>10.8885 45.395699 30000</gx:coord>
+        <gx:coord>15.0664 37.466801 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KATL-SBGL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-07T16:50:35+01:00</when>
+        <when>2024-08-08T01:32:38+01:00</when>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+        <gx:coord>-43.2505569458 -22.8099994659 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VHHH-ZUUU</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-08T07:50:55+01:00</when>
+        <when>2024-08-08T09:23:15+01:00</when>
+        <gx:coord>113.915001 22.308901 30000</gx:coord>
+        <gx:coord>103.9469985961914 30.578500747680664 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LIRP-GMFF</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-08T18:54:31+01:00</when>
+        <when>2024-08-08T20:51:31+01:00</when>
+        <gx:coord>10.3927 43.683899 30000</gx:coord>
+        <gx:coord>-4.977960109709999 33.9272994995 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDCA-MYNN</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-09T13:26:29+01:00</when>
+        <when>2024-08-09T15:11:24+01:00</when>
+        <gx:coord>-77.037697 38.8521 30000</gx:coord>
+        <gx:coord>-77.46620178219999 25.0389995575 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VVTS-VDSR</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-09T19:31:57+01:00</when>
+        <when>2024-08-09T20:00:46+01:00</when>
+        <gx:coord>106.652000427 10.8187999725 30000</gx:coord>
+        <gx:coord>103.81300354 13.410699844400002 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EKCH-EGCC</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-10T02:46:34+01:00</when>
+        <when>2024-08-10T03:54:27+01:00</when>
+        <gx:coord>12.656000137329 55.617900848389 30000</gx:coord>
+        <gx:coord>-2.2749500274658203 53.35369873046875 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VDSR-VVTS</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-10T18:19:15+01:00</when>
+        <when>2024-08-10T18:48:04+01:00</when>
+        <gx:coord>103.81300354 13.410699844400002 30000</gx:coord>
+        <gx:coord>106.652000427 10.8187999725 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RJAA-VHHH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-11T14:48:05+01:00</when>
+        <when>2024-08-11T18:10:24+01:00</when>
+        <gx:coord>140.386001587 35.7647018433 30000</gx:coord>
+        <gx:coord>113.915001 22.308901 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OMDB-UKHH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-11T17:20:43+01:00</when>
+        <when>2024-08-11T20:59:05+01:00</when>
+        <gx:coord>55.3643989563 25.2527999878 30000</gx:coord>
+        <gx:coord>36.290000915527344 49.924800872802734 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VHHH-RJGG</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-11T18:04:03+01:00</when>
+        <when>2024-08-11T21:03:21+01:00</when>
+        <gx:coord>113.915001 22.308901 30000</gx:coord>
+        <gx:coord>136.80499267578125 34.8583984375 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KMSY-KDTW</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-11T04:23:00+01:00</when>
+        <when>2024-08-11T06:04:54+01:00</when>
+        <gx:coord>-90.25800323486328 29.99340057373047 30000</gx:coord>
+        <gx:coord>-83.35340118408203 42.212398529052734 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDFW-KTUS</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-12T16:07:04+01:00</when>
+        <when>2024-08-12T17:36:16+01:00</when>
+        <gx:coord>-97.038002 32.896801 30000</gx:coord>
+        <gx:coord>-110.94100189208984 32.1161003112793 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VIDP-UUEE</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-12T17:16:03+01:00</when>
+        <when>2024-08-12T22:14:08+01:00</when>
+        <gx:coord>77.103104 28.5665 30000</gx:coord>
+        <gx:coord>37.4146 55.972599 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OITT-OIII</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-12T13:15:39+01:00</when>
+        <when>2024-08-12T13:51:38+01:00</when>
+        <gx:coord>46.23500061035156 38.1338996887207 30000</gx:coord>
+        <gx:coord>51.31340026855469 35.68920135498047 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZYTL-ZBAA</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-13T11:28:38+01:00</when>
+        <when>2024-08-13T11:58:49+01:00</when>
+        <gx:coord>121.53900146484375 38.9656982421875 30000</gx:coord>
+        <gx:coord>116.58499908447266 40.080101013183594 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KOMA-KDEN</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-13T14:50:43+01:00</when>
+        <when>2024-08-13T15:42:29+01:00</when>
+        <gx:coord>-95.894096 41.3032 30000</gx:coord>
+        <gx:coord>-104.672996521 39.861698150635 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDFW-KATL</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-13T21:55:59+01:00</when>
+        <when>2024-08-13T23:16:10+01:00</when>
+        <gx:coord>-97.038002 32.896801 30000</gx:coord>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LEMD-LFPG</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-13T22:21:47+01:00</when>
+        <when>2024-08-13T23:34:27+01:00</when>
+        <gx:coord>-3.56264 40.471926 30000</gx:coord>
+        <gx:coord>2.55 49.012798 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KLGA-KDCA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-13T01:09:22+01:00</when>
+        <when>2024-08-13T01:32:51+01:00</when>
+        <gx:coord>-73.87259674 40.77719879 30000</gx:coord>
+        <gx:coord>-77.037697 38.8521 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDCA-KLGA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-14T04:42:39+01:00</when>
+        <when>2024-08-14T05:06:08+01:00</when>
+        <gx:coord>-77.037697 38.8521 30000</gx:coord>
+        <gx:coord>-73.87259674 40.77719879 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OITL-OIMM</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-14T01:43:31+01:00</when>
+        <when>2024-08-14T02:53:03+01:00</when>
+        <gx:coord>48.4244003296 38.3256988525 30000</gx:coord>
+        <gx:coord>59.64099884033203 36.235198974609375 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>SBGL-KATL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-15T04:41:01+01:00</when>
+        <when>2024-08-15T13:23:04+01:00</when>
+        <gx:coord>-43.2505569458 -22.8099994659 30000</gx:coord>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>GCLP-GMMN</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-15T05:27:54+01:00</when>
+        <when>2024-08-15T06:33:24+01:00</when>
+        <gx:coord>-15.38659954071045 27.931900024414062 30000</gx:coord>
+        <gx:coord>-7.589970111846924 33.36750030517578 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZBHH-ZHHH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-16T01:08:59+01:00</when>
+        <when>2024-08-16T02:26:51+01:00</when>
+        <gx:coord>111.823997 40.851398 30000</gx:coord>
+        <gx:coord>114.208 30.7838 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZSPD-RKSI</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-16T12:57:59+01:00</when>
+        <when>2024-08-16T13:54:07+01:00</when>
+        <gx:coord>121.80500030517578 31.143400192260742 30000</gx:coord>
+        <gx:coord>126.45099639892578 37.46910095214844 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KATL-MMMY</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-17T22:26:01+01:00</when>
+        <when>2024-08-18T00:25:12+01:00</when>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+        <gx:coord>-100.107002258 25.7784996033 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDEN-CYUL</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-18T04:23:41+01:00</when>
+        <when>2024-08-18T07:20:27+01:00</when>
+        <gx:coord>-104.672996521 39.861698150635 30000</gx:coord>
+        <gx:coord>-73.7407989502 45.4706001282 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RJGG-VHHH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-18T23:56:15+01:00</when>
+        <when>2024-08-19T02:55:33+01:00</when>
+        <gx:coord>136.80499267578125 34.8583984375 30000</gx:coord>
+        <gx:coord>113.915001 22.308901 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDTW-KMSY</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-18T18:28:39+01:00</when>
+        <when>2024-08-18T20:10:33+01:00</when>
+        <gx:coord>-83.35340118408203 42.212398529052734 30000</gx:coord>
+        <gx:coord>-90.25800323486328 29.99340057373047 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RPMP-RPVM</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-19T00:51:10+01:00</when>
+        <when>2024-08-19T01:10:21+01:00</when>
+        <gx:coord>123.461179733 7.83073144787 30000</gx:coord>
+        <gx:coord>123.97899627686 10.307499885559 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>UUEE-VIDP</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-19T19:30:42+01:00</when>
+        <when>2024-08-20T00:28:47+01:00</when>
+        <gx:coord>37.4146 55.972599 30000</gx:coord>
+        <gx:coord>77.103104 28.5665 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RCKH-ZSFZ</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-19T19:32:55+01:00</when>
+        <when>2024-08-19T19:58:48+01:00</when>
+        <gx:coord>120.3499984741211 22.57710075378418 30000</gx:coord>
+        <gx:coord>119.66300201416016 25.935100555419922 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZHHH-RCTP</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-19T01:33:27+01:00</when>
+        <when>2024-08-19T02:37:27+01:00</when>
+        <gx:coord>114.208 30.7838 30000</gx:coord>
+        <gx:coord>121.233002 25.0777 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZBAA-ZYTL</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-20T07:43:42+01:00</when>
+        <when>2024-08-20T08:13:53+01:00</when>
+        <gx:coord>116.58499908447266 40.080101013183594 30000</gx:coord>
+        <gx:coord>121.53900146484375 38.9656982421875 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDEN-KOMA</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-20T13:43:39+01:00</when>
+        <when>2024-08-20T14:35:25+01:00</when>
+        <gx:coord>-104.672996521 39.861698150635 30000</gx:coord>
+        <gx:coord>-95.894096 41.3032 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KATL-KDFW</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-20T09:46:55+01:00</when>
+        <when>2024-08-20T11:07:06+01:00</when>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+        <gx:coord>-97.038002 32.896801 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDDT-BKPR</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-20T15:50:05+01:00</when>
+        <when>2024-08-20T17:15:36+01:00</when>
+        <gx:coord>13.2877 52.5597 30000</gx:coord>
+        <gx:coord>21.035801 42.5728 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RJOA-RJAA</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-20T08:31:05+01:00</when>
+        <when>2024-08-20T09:18:33+01:00</when>
+        <gx:coord>132.919006348 34.4361000061 30000</gx:coord>
+        <gx:coord>140.386001587 35.7647018433 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>DTTA-LOWW</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-20T16:12:57+01:00</when>
+        <when>2024-08-20T17:45:26+01:00</when>
+        <gx:coord>10.22719955444336 36.85100173950195 30000</gx:coord>
+        <gx:coord>16.569700241089 48.110298156738 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OIMM-OITL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-21T10:43:44+01:00</when>
+        <when>2024-08-21T11:53:16+01:00</when>
+        <gx:coord>59.64099884033203 36.235198974609375 30000</gx:coord>
+        <gx:coord>48.4244003296 38.3256988525 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZHHH-ZBHH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-21T07:24:30+01:00</when>
+        <when>2024-08-21T08:42:22+01:00</when>
+        <gx:coord>114.208 30.7838 30000</gx:coord>
+        <gx:coord>111.823997 40.851398 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>BKPR-EDDH</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-21T04:52:49+01:00</when>
+        <when>2024-08-21T06:33:29+01:00</when>
+        <gx:coord>21.035801 42.5728 30000</gx:coord>
+        <gx:coord>9.9882297515869 53.630401611328 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>GMMN-GCLP</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-22T08:37:28+01:00</when>
+        <when>2024-08-22T09:42:58+01:00</when>
+        <gx:coord>-7.589970111846924 33.36750030517578 30000</gx:coord>
+        <gx:coord>-15.38659954071045 27.931900024414062 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RPVM-RPMP</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-22T04:53:39+01:00</when>
+        <when>2024-08-22T05:12:50+01:00</when>
+        <gx:coord>123.97899627686 10.307499885559 30000</gx:coord>
+        <gx:coord>123.461179733 7.83073144787 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EIDW-CYYZ</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-22T19:16:58+01:00</when>
+        <when>2024-08-23T01:16:23+01:00</when>
+        <gx:coord>-6.27007 53.421299 30000</gx:coord>
+        <gx:coord>-79.63059997559999 43.6772003174 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KTUL-KSLC</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-23T00:25:53+01:00</when>
+        <when>2024-08-23T02:07:31+01:00</when>
+        <gx:coord>-95.88809967041016 36.19839859008789 30000</gx:coord>
+        <gx:coord>-111.97799682617188 40.78839874267578 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LOWW-DTTA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-23T09:38:49+01:00</when>
+        <when>2024-08-23T11:11:18+01:00</when>
+        <gx:coord>16.569700241089 48.110298156738 30000</gx:coord>
+        <gx:coord>10.22719955444336 36.85100173950195 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDDH-BKPR</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-23T23:59:05+01:00</when>
+        <when>2024-08-24T01:39:45+01:00</when>
+        <gx:coord>9.9882297515869 53.630401611328 30000</gx:coord>
+        <gx:coord>21.035801 42.5728 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZBAA-FIMP</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-23T03:39:03+01:00</when>
+        <when>2024-08-23T13:59:12+01:00</when>
+        <gx:coord>116.58499908447266 40.080101013183594 30000</gx:coord>
+        <gx:coord>57.683601 -20.430201 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZPPP-ZUCK</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-24T22:04:19+01:00</when>
+        <when>2024-08-24T22:47:20+01:00</when>
+        <gx:coord>102.9291667 25.1019444 30000</gx:coord>
+        <gx:coord>106.64199829101562 29.719200134277344 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LIRQ-EDDM</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-24T08:23:17+01:00</when>
+        <when>2024-08-24T08:57:54+01:00</when>
+        <gx:coord>11.2051 43.810001 30000</gx:coord>
+        <gx:coord>11.7861 48.353802 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KLAS-KBWI</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-24T15:53:33+01:00</when>
+        <when>2024-08-24T19:44:33+01:00</when>
+        <gx:coord>-115.1520004 36.08010101 30000</gx:coord>
+        <gx:coord>-76.668297 39.1754 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZLXY-ZJSY</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-24T16:07:14+01:00</when>
+        <when>2024-08-24T18:09:54+01:00</when>
+        <gx:coord>108.751999 34.447102 30000</gx:coord>
+        <gx:coord>109.41200256347656 18.302900314331055 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>MMUN-KMCI</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-24T04:04:07+01:00</when>
+        <when>2024-08-24T06:31:55+01:00</when>
+        <gx:coord>-86.8770980835 21.036500930800003 30000</gx:coord>
+        <gx:coord>-94.713898 39.2976 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KSLC-KTUL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-25T20:52:39+01:00</when>
+        <when>2024-08-25T22:34:17+01:00</when>
+        <gx:coord>-111.97799682617188 40.78839874267578 30000</gx:coord>
+        <gx:coord>-95.88809967041016 36.19839859008789 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EKVG-ENZV</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-25T23:43:27+01:00</when>
+        <when>2024-08-26T00:37:20+01:00</when>
+        <gx:coord>-7.277219772338867 62.0635986328125 30000</gx:coord>
+        <gx:coord>5.6377801895 58.876701354 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LTFJ-EDDV</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-25T11:01:38+01:00</when>
+        <when>2024-08-25T13:15:38+01:00</when>
+        <gx:coord>29.3092002869 40.898601532 30000</gx:coord>
+        <gx:coord>9.685079574580001 52.461101532 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KORD-EGCC</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-25T14:57:53+01:00</when>
+        <when>2024-08-25T21:57:21+01:00</when>
+        <gx:coord>-87.9048 41.9786 30000</gx:coord>
+        <gx:coord>-2.2749500274658203 53.35369873046875 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OIII-OITT</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-26T12:06:07+01:00</when>
+        <when>2024-08-26T12:42:06+01:00</when>
+        <gx:coord>51.31340026855469 35.68920135498047 30000</gx:coord>
+        <gx:coord>46.23500061035156 38.1338996887207 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZSFZ-RCKH</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-26T05:25:26+01:00</when>
+        <when>2024-08-26T05:51:19+01:00</when>
+        <gx:coord>119.66300201416016 25.935100555419922 30000</gx:coord>
+        <gx:coord>120.3499984741211 22.57710075378418 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LIRQ-LOWW</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-26T13:28:05+01:00</when>
+        <when>2024-08-26T14:11:15+01:00</when>
+        <gx:coord>11.2051 43.810001 30000</gx:coord>
+        <gx:coord>16.569700241089 48.110298156738 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZUUU-ZSPD</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-26T15:27:24+01:00</when>
+        <when>2024-08-26T17:23:47+01:00</when>
+        <gx:coord>103.9469985961914 30.578500747680664 30000</gx:coord>
+        <gx:coord>121.80500030517578 31.143400192260742 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LJLJ-EBBR</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-26T18:04:19+01:00</when>
+        <when>2024-08-26T19:05:39+01:00</when>
+        <gx:coord>14.4576 46.223701 30000</gx:coord>
+        <gx:coord>4.48443984985 50.901401519800004 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LFPG-LEMD</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-27T23:00:20+01:00</when>
+        <when>2024-08-28T00:13:00+01:00</when>
+        <gx:coord>2.55 49.012798 30000</gx:coord>
+        <gx:coord>-3.56264 40.471926 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RJAA-RJOA</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-28T00:30:43+01:00</when>
+        <when>2024-08-28T01:18:11+01:00</when>
+        <gx:coord>140.386001587 35.7647018433 30000</gx:coord>
+        <gx:coord>132.919006348 34.4361000061 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EGCC-KORD</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-27T23:40:09+01:00</when>
+        <when>2024-08-28T06:39:37+01:00</when>
+        <gx:coord>-2.2749500274658203 53.35369873046875 30000</gx:coord>
+        <gx:coord>-87.9048 41.9786 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LOWW-LIRQ</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-27T17:59:45+01:00</when>
+        <when>2024-08-27T18:42:55+01:00</when>
+        <gx:coord>16.569700241089 48.110298156738 30000</gx:coord>
+        <gx:coord>11.2051 43.810001 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>YMML-VIDP</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-27T16:19:33+01:00</when>
+        <when>2024-08-28T03:55:51+01:00</when>
+        <gx:coord>144.843002 -37.673302 30000</gx:coord>
+        <gx:coord>77.103104 28.5665 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EVRA-LGAV</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-27T03:09:20+01:00</when>
+        <when>2024-08-27T05:33:31+01:00</when>
+        <gx:coord>23.971099853515625 56.92359924316406 30000</gx:coord>
+        <gx:coord>23.9444999695 37.9364013672 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KPAH-KORD</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-27T19:27:59+01:00</when>
+        <when>2024-08-27T20:05:41+01:00</when>
+        <gx:coord>-88.7738037109375 37.06079864501953 30000</gx:coord>
+        <gx:coord>-87.9048 41.9786 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>HKJK-FVHA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-27T10:37:18+01:00</when>
+        <when>2024-08-27T12:50:46+01:00</when>
+        <gx:coord>36.9277992249 -1.31923997402 30000</gx:coord>
+        <gx:coord>31.0928 -17.931801 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LGAV-EVRA</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-28T09:49:17+01:00</when>
+        <when>2024-08-28T12:13:28+01:00</when>
+        <gx:coord>23.9444999695 37.9364013672 30000</gx:coord>
+        <gx:coord>23.971099853515625 56.92359924316406 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDFW-EGLL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-28T01:20:34+01:00</when>
+        <when>2024-08-28T10:01:40+01:00</when>
+        <gx:coord>-97.038002 32.896801 30000</gx:coord>
+        <gx:coord>-0.461941 51.4706 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KBWI-KLAS</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-29T13:07:49+01:00</when>
+        <when>2024-08-29T16:58:49+01:00</when>
+        <gx:coord>-76.668297 39.1754 30000</gx:coord>
+        <gx:coord>-115.1520004 36.08010101 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZJSY-ZLXY</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-29T07:49:31+01:00</when>
+        <when>2024-08-29T09:52:11+01:00</when>
+        <gx:coord>109.41200256347656 18.302900314331055 30000</gx:coord>
+        <gx:coord>108.751999 34.447102 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RKSI-ZSPD</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-30T09:44:17+01:00</when>
+        <when>2024-08-30T10:40:25+01:00</when>
+        <gx:coord>126.45099639892578 37.46910095214844 30000</gx:coord>
+        <gx:coord>121.80500030517578 31.143400192260742 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KBPT-KDFW</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-30T03:02:44+01:00</when>
+        <when>2024-08-30T03:32:26+01:00</when>
+        <gx:coord>-94.02069854736328 29.9507999420166 30000</gx:coord>
+        <gx:coord>-97.038002 32.896801 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KJFK-GMMN</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-30T01:40:28+01:00</when>
+        <when>2024-08-30T08:16:22+01:00</when>
+        <gx:coord>-73.77890015 40.63980103 30000</gx:coord>
+        <gx:coord>-7.589970111846924 33.36750030517578 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>MMMY-KATL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-31T01:03:38+01:00</when>
+        <when>2024-08-31T03:02:49+01:00</when>
+        <gx:coord>-100.107002258 25.7784996033 30000</gx:coord>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZUCK-ZPPP</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-31T09:10:40+01:00</when>
+        <when>2024-08-31T09:53:41+01:00</when>
+        <gx:coord>106.64199829101562 29.719200134277344 30000</gx:coord>
+        <gx:coord>102.9291667 25.1019444 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KMCI-MMUN</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-31T14:30:40+01:00</when>
+        <when>2024-08-31T16:58:28+01:00</when>
+        <gx:coord>-94.713898 39.2976 30000</gx:coord>
+        <gx:coord>-86.8770980835 21.036500930800003 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZSPD-ZUUU</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-31T07:51:56+01:00</when>
+        <when>2024-08-31T09:48:19+01:00</when>
+        <gx:coord>121.80500030517578 31.143400192260742 30000</gx:coord>
+        <gx:coord>103.9469985961914 30.578500747680664 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LEBL-UKBB</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-31T21:13:36+01:00</when>
+        <when>2024-08-31T23:59:30+01:00</when>
+        <gx:coord>2.07846 41.2971 30000</gx:coord>
+        <gx:coord>30.894699096679688 50.345001220703125 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KPIE-KBGR</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-08-31T13:42:25+01:00</when>
+        <when>2024-08-31T16:15:45+01:00</when>
+        <gx:coord>-82.68740082 27.91020012 30000</gx:coord>
+        <gx:coord>-68.8281021118164 44.80739974975586 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LFPG-VIDP</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-08-31T04:56:44+01:00</when>
+        <when>2024-08-31T12:25:17+01:00</when>
+        <gx:coord>2.55 49.012798 30000</gx:coord>
+        <gx:coord>77.103104 28.5665 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZBAA-EKCH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-01T18:08:26+01:00</when>
+        <when>2024-09-02T02:19:57+01:00</when>
+        <gx:coord>116.58499908447266 40.080101013183594 30000</gx:coord>
+        <gx:coord>12.656000137329 55.617900848389 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RCTP-ZHHH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-02T10:53:47+01:00</when>
+        <when>2024-09-02T11:57:47+01:00</when>
+        <gx:coord>121.233002 25.0777 30000</gx:coord>
+        <gx:coord>114.208 30.7838 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OIKB-OIII</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-02T17:06:30+01:00</when>
+        <when>2024-09-02T18:18:41+01:00</when>
+        <gx:coord>56.37779998779297 27.218299865722656 30000</gx:coord>
+        <gx:coord>51.31340026855469 35.68920135498047 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>BKPR-EDDT</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-03T19:56:53+01:00</when>
+        <when>2024-09-03T21:22:24+01:00</when>
+        <gx:coord>21.035801 42.5728 30000</gx:coord>
+        <gx:coord>13.2877 52.5597 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KORD-KPAH</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-03T01:23:12+01:00</when>
+        <when>2024-09-03T02:00:54+01:00</when>
+        <gx:coord>-87.9048 41.9786 30000</gx:coord>
+        <gx:coord>-88.7738037109375 37.06079864501953 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>UKBB-LEBL</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-03T13:32:28+01:00</when>
+        <when>2024-09-03T16:18:22+01:00</when>
+        <gx:coord>30.894699096679688 50.345001220703125 30000</gx:coord>
+        <gx:coord>2.07846 41.2971 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZWKL-ZWWW</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-03T06:39:45+01:00</when>
+        <when>2024-09-03T06:58:07+01:00</when>
+        <gx:coord>86.12889862060547 41.69779968261719 30000</gx:coord>
+        <gx:coord>87.47419738769531 43.907100677490234 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VIDP-YMML</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-04T03:16:00+01:00</when>
+        <when>2024-09-04T14:52:18+01:00</when>
+        <gx:coord>77.103104 28.5665 30000</gx:coord>
+        <gx:coord>144.843002 -37.673302 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EGLL-KDFW</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-04T09:54:07+01:00</when>
+        <when>2024-09-04T18:35:13+01:00</when>
+        <gx:coord>-0.461941 51.4706 30000</gx:coord>
+        <gx:coord>-97.038002 32.896801 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZWWW-ZWKL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-04T21:25:18+01:00</when>
+        <when>2024-09-04T21:43:40+01:00</when>
+        <gx:coord>87.47419738769531 43.907100677490234 30000</gx:coord>
+        <gx:coord>86.12889862060547 41.69779968261719 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LEJR-ELLX</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-04T07:33:59+01:00</when>
+        <when>2024-09-04T09:32:46+01:00</when>
+        <gx:coord>-6.060110092163086 36.744598388671875 30000</gx:coord>
+        <gx:coord>6.2044444 49.6233333 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZSSS-VMMC</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-05T15:07:28+01:00</when>
+        <when>2024-09-05T16:33:56+01:00</when>
+        <gx:coord>121.33599853515625 31.197900772094727 30000</gx:coord>
+        <gx:coord>113.592003 22.149599 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>CYYZ-EIDW</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-06T09:45:23+01:00</when>
+        <when>2024-09-06T15:44:48+01:00</when>
+        <gx:coord>-79.63059997559999 43.6772003174 30000</gx:coord>
+        <gx:coord>-6.27007 53.421299 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>FIMP-ZBAA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-06T09:04:40+01:00</when>
+        <when>2024-09-06T19:24:49+01:00</when>
+        <gx:coord>57.683601 -20.430201 30000</gx:coord>
+        <gx:coord>116.58499908447266 40.080101013183594 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDFW-KBPT</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-06T13:40:10+01:00</when>
+        <when>2024-09-06T14:09:52+01:00</when>
+        <gx:coord>-97.038002 32.896801 30000</gx:coord>
+        <gx:coord>-94.02069854736328 29.9507999420166 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KIAD-EHAM</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-06T10:44:45+01:00</when>
+        <when>2024-09-06T17:48:47+01:00</when>
+        <gx:coord>-77.45580292 38.94449997 30000</gx:coord>
+        <gx:coord>4.76389 52.308601 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KIWA-KBZN</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-06T18:06:27+01:00</when>
+        <when>2024-09-06T19:41:11+01:00</when>
+        <gx:coord>-111.6549988 33.30780029 30000</gx:coord>
+        <gx:coord>-111.1529999 45.77750015 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDDM-LIRQ</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-07T13:48:56+01:00</when>
+        <when>2024-09-07T14:23:33+01:00</when>
+        <gx:coord>11.7861 48.353802 30000</gx:coord>
+        <gx:coord>11.2051 43.810001 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VIDP-LFPG</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-07T09:04:53+01:00</when>
+        <when>2024-09-07T16:33:26+01:00</when>
+        <gx:coord>77.103104 28.5665 30000</gx:coord>
+        <gx:coord>2.55 49.012798 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ENBO-ENGM</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-07T10:22:48+01:00</when>
+        <when>2024-09-07T11:18:11+01:00</when>
+        <gx:coord>14.365300178527832 67.26920318603516 30000</gx:coord>
+        <gx:coord>11.0502 60.121 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ENZV-EKVG</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-08T10:02:14+01:00</when>
+        <when>2024-09-08T10:56:07+01:00</when>
+        <gx:coord>5.6377801895 58.876701354 30000</gx:coord>
+        <gx:coord>-7.277219772338867 62.0635986328125 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDDV-LTFJ</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-08T07:25:33+01:00</when>
+        <when>2024-09-08T09:39:33+01:00</when>
+        <gx:coord>9.685079574580001 52.461101532 30000</gx:coord>
+        <gx:coord>29.3092002869 40.898601532 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VMMC-ZSSS</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-08T02:29:22+01:00</when>
+        <when>2024-09-08T03:55:50+01:00</when>
+        <gx:coord>113.592003 22.149599 30000</gx:coord>
+        <gx:coord>121.33599853515625 31.197900772094727 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZBTJ-ZPPP</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-09T00:20:03+01:00</when>
+        <when>2024-09-09T02:40:53+01:00</when>
+        <gx:coord>117.346000671 39.124401092499994 30000</gx:coord>
+        <gx:coord>102.9291667 25.1019444 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VEBD-VIDP</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-08T02:00:40+01:00</when>
+        <when>2024-09-08T03:17:30+01:00</when>
+        <gx:coord>88.32859802246094 26.68120002746582 30000</gx:coord>
+        <gx:coord>77.103104 28.5665 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EBBR-LJLJ</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-09T09:07:24+01:00</when>
+        <when>2024-09-09T10:08:44+01:00</when>
+        <gx:coord>4.48443984985 50.901401519800004 30000</gx:coord>
+        <gx:coord>14.4576 46.223701 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EKCH-ZBAA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-09T03:31:53+01:00</when>
+        <when>2024-09-09T11:43:24+01:00</when>
+        <gx:coord>12.656000137329 55.617900848389 30000</gx:coord>
+        <gx:coord>116.58499908447266 40.080101013183594 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OIII-OIKB</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-09T21:02:24+01:00</when>
+        <when>2024-09-09T22:14:35+01:00</when>
+        <gx:coord>51.31340026855469 35.68920135498047 30000</gx:coord>
+        <gx:coord>56.37779998779297 27.218299865722656 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LECO-LPPT</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-09T09:47:53+01:00</when>
+        <when>2024-09-09T10:22:26+01:00</when>
+        <gx:coord>-8.37726 43.302101 30000</gx:coord>
+        <gx:coord>-9.13592 38.7813 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>FVHA-HKJK</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-10T06:27:11+01:00</when>
+        <when>2024-09-10T08:40:39+01:00</when>
+        <gx:coord>31.0928 -17.931801 30000</gx:coord>
+        <gx:coord>36.9277992249 -1.31923997402 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VABB-OMAA</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-11T04:03:26+01:00</when>
+        <when>2024-09-11T06:18:03+01:00</when>
+        <gx:coord>72.8678970337 19.0886993408 30000</gx:coord>
+        <gx:coord>54.651100158691406 24.433000564575195 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KCLT-KHSV</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-11T14:50:03+01:00</when>
+        <when>2024-09-11T15:26:35+01:00</when>
+        <gx:coord>-80.94309997558594 35.2140007019043 30000</gx:coord>
+        <gx:coord>-86.775100708008 34.637199401855 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>YSSY-YBBN</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-12T14:31:32+01:00</when>
+        <when>2024-09-12T15:22:58+01:00</when>
+        <gx:coord>151.177001953125 -33.94609832763672 30000</gx:coord>
+        <gx:coord>153.11700439453125 -27.384199142456055 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KXNA-KDFW</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-12T06:14:42+01:00</when>
+        <when>2024-09-12T06:45:30+01:00</when>
+        <gx:coord>-94.306801 36.281898 30000</gx:coord>
+        <gx:coord>-97.038002 32.896801 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>GMMN-KJFK</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-13T18:23:46+01:00</when>
+        <when>2024-09-14T00:59:40+01:00</when>
+        <gx:coord>-7.589970111846924 33.36750030517578 30000</gx:coord>
+        <gx:coord>-73.77890015 40.63980103 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KBGR-KPIE</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-14T10:19:19+01:00</when>
+        <when>2024-09-14T12:52:39+01:00</when>
+        <gx:coord>-68.8281021118164 44.80739974975586 30000</gx:coord>
+        <gx:coord>-82.68740082 27.91020012 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>MBPV-KMIA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-14T14:42:59+01:00</when>
+        <when>2024-09-14T15:46:30+01:00</when>
+        <gx:coord>-72.26589965820312 21.77359962463379 30000</gx:coord>
+        <gx:coord>-80.29060363769531 25.79319953918457 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDFW-KXNA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-15T17:37:12+01:00</when>
+        <when>2024-09-15T18:08:00+01:00</when>
+        <gx:coord>-97.038002 32.896801 30000</gx:coord>
+        <gx:coord>-94.306801 36.281898 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDNY-EDDH</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-15T18:25:33+01:00</when>
+        <when>2024-09-15T19:10:50+01:00</when>
+        <gx:coord>9.51148986816 47.671298980699994 30000</gx:coord>
+        <gx:coord>9.9882297515869 53.630401611328 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>URKK-LCLK</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-15T23:29:16+01:00</when>
+        <when>2024-09-16T00:52:52+01:00</when>
+        <gx:coord>39.170501708984 45.034698486328 30000</gx:coord>
+        <gx:coord>33.624900817871094 34.875099182128906 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>MMSD-MMMY</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-15T18:52:05+01:00</when>
+        <when>2024-09-15T20:01:24+01:00</when>
+        <gx:coord>-109.72100067138672 23.15180015563965 30000</gx:coord>
+        <gx:coord>-100.107002258 25.7784996033 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KCVG-KRSW</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-16T14:18:51+01:00</when>
+        <when>2024-09-16T15:55:38+01:00</when>
+        <gx:coord>-84.6678009033 39.0488014221 30000</gx:coord>
+        <gx:coord>-81.75520324707031 26.53619956970215 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KRSW-KCVG</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-17T10:21:05+01:00</when>
+        <when>2024-09-17T11:57:52+01:00</when>
+        <gx:coord>-81.75520324707031 26.53619956970215 30000</gx:coord>
+        <gx:coord>-84.6678009033 39.0488014221 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZYTL-ZSPD</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-17T20:39:11+01:00</when>
+        <when>2024-09-17T21:38:36+01:00</when>
+        <gx:coord>121.53900146484375 38.9656982421875 30000</gx:coord>
+        <gx:coord>121.80500030517578 31.143400192260742 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KBOS-KDEN</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-17T18:31:13+01:00</when>
+        <when>2024-09-17T21:43:33+01:00</when>
+        <gx:coord>-71.00520325 42.36429977 30000</gx:coord>
+        <gx:coord>-104.672996521 39.861698150635 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>UAFM-ZWWW</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-17T13:10:20+01:00</when>
+        <when>2024-09-17T14:22:07+01:00</when>
+        <gx:coord>74.4776000977 43.0612983704 30000</gx:coord>
+        <gx:coord>87.47419738769531 43.907100677490234 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ELLX-LEJR</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-18T18:42:08+01:00</when>
+        <when>2024-09-18T20:40:55+01:00</when>
+        <gx:coord>6.2044444 49.6233333 30000</gx:coord>
+        <gx:coord>-6.060110092163086 36.744598388671875 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>FCPP-HAAB</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-18T21:16:17+01:00</when>
+        <when>2024-09-19T01:05:27+01:00</when>
+        <gx:coord>11.88659954071045 -4.816030025482178 30000</gx:coord>
+        <gx:coord>38.799301147499996 8.97789001465 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KSLC-KONT</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-18T10:20:34+01:00</when>
+        <when>2024-09-18T11:21:54+01:00</when>
+        <gx:coord>-111.97799682617188 40.78839874267578 30000</gx:coord>
+        <gx:coord>-117.60099792480469 34.055999755859375 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VVNB-VDSR</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-18T19:51:59+01:00</when>
+        <when>2024-09-18T20:53:02+01:00</when>
+        <gx:coord>105.80699920654297 21.221200942993164 30000</gx:coord>
+        <gx:coord>103.81300354 13.410699844400002 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>YBBN-YSSY</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-19T08:53:09+01:00</when>
+        <when>2024-09-19T09:44:35+01:00</when>
+        <gx:coord>153.11700439453125 -27.384199142456055 30000</gx:coord>
+        <gx:coord>151.177001953125 -33.94609832763672 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZSFZ-WMKK</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-19T22:05:45+01:00</when>
+        <when>2024-09-20T01:45:17+01:00</when>
+        <gx:coord>119.66300201416016 25.935100555419922 30000</gx:coord>
+        <gx:coord>101.70999908447 2.745579957962 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LFPG-SBGR</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-19T14:48:17+01:00</when>
+        <when>2024-09-20T01:30:50+01:00</when>
+        <gx:coord>2.55 49.012798 30000</gx:coord>
+        <gx:coord>-46.47305679321289 -23.435556411743164 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EHAM-KIAD</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-21T00:14:06+01:00</when>
+        <when>2024-09-21T07:18:08+01:00</when>
+        <gx:coord>4.76389 52.308601 30000</gx:coord>
+        <gx:coord>-77.45580292 38.94449997 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KBZN-KIWA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-20T23:34:19+01:00</when>
+        <when>2024-09-21T01:09:03+01:00</when>
+        <gx:coord>-111.1529999 45.77750015 30000</gx:coord>
+        <gx:coord>-111.6549988 33.30780029 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ENGM-ENBO</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-21T12:43:34+01:00</when>
+        <when>2024-09-21T13:38:57+01:00</when>
+        <gx:coord>11.0502 60.121 30000</gx:coord>
+        <gx:coord>14.365300178527832 67.26920318603516 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KMIA-MBPV</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-21T20:00:54+01:00</when>
+        <when>2024-09-21T21:04:25+01:00</when>
+        <gx:coord>-80.29060363769531 25.79319953918457 30000</gx:coord>
+        <gx:coord>-72.26589965820312 21.77359962463379 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VIDP-VEBD</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-22T02:43:06+01:00</when>
+        <when>2024-09-22T03:59:56+01:00</when>
+        <gx:coord>77.103104 28.5665 30000</gx:coord>
+        <gx:coord>88.32859802246094 26.68120002746582 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LCLK-URKK</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-22T21:20:09+01:00</when>
+        <when>2024-09-22T22:43:45+01:00</when>
+        <gx:coord>33.624900817871094 34.875099182128906 30000</gx:coord>
+        <gx:coord>39.170501708984 45.034698486328 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZPPP-ZBTJ</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-23T16:46:43+01:00</when>
+        <when>2024-09-23T19:07:33+01:00</when>
+        <gx:coord>102.9291667 25.1019444 30000</gx:coord>
+        <gx:coord>117.346000671 39.124401092499994 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LPPT-LECO</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-23T05:07:59+01:00</when>
+        <when>2024-09-23T05:42:32+01:00</when>
+        <gx:coord>-9.13592 38.7813 30000</gx:coord>
+        <gx:coord>-8.37726 43.302101 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDSB-LEPA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-23T21:58:45+01:00</when>
+        <when>2024-09-23T23:14:34+01:00</when>
+        <gx:coord>8.08049964905 48.7793998718 30000</gx:coord>
+        <gx:coord>2.73881006241 39.551700592 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>HAAB-FCPP</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-24T20:09:04+01:00</when>
+        <when>2024-09-24T23:58:14+01:00</when>
+        <gx:coord>38.799301147499996 8.97789001465 30000</gx:coord>
+        <gx:coord>11.88659954071045 -4.816030025482178 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KPSC-KLAS</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-24T17:45:42+01:00</when>
+        <when>2024-09-24T19:06:18+01:00</when>
+        <gx:coord>-119.11900329589844 46.26470184326172 30000</gx:coord>
+        <gx:coord>-115.1520004 36.08010101 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>GCRR-EGNX</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-24T06:36:00+01:00</when>
+        <when>2024-09-24T09:50:03+01:00</when>
+        <gx:coord>-13.6052 28.945499 30000</gx:coord>
+        <gx:coord>-1.32806003094 52.8311004639 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>OMAA-VABB</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-25T22:05:39+01:00</when>
+        <when>2024-09-26T00:20:16+01:00</when>
+        <gx:coord>54.651100158691406 24.433000564575195 30000</gx:coord>
+        <gx:coord>72.8678970337 19.0886993408 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KHSV-KCLT</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-25T20:17:25+01:00</when>
+        <when>2024-09-25T20:53:57+01:00</when>
+        <gx:coord>-86.775100708008 34.637199401855 30000</gx:coord>
+        <gx:coord>-80.94309997558594 35.2140007019043 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>MDPC-LEMD</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-25T03:30:36+01:00</when>
+        <when>2024-09-25T10:59:30+01:00</when>
+        <gx:coord>-68.36340332030001 18.567399978599997 30000</gx:coord>
+        <gx:coord>-3.56264 40.471926 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>FAOR-FQMA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-25T08:42:30+01:00</when>
+        <when>2024-09-25T09:12:04+01:00</when>
+        <gx:coord>28.246 -26.1392 30000</gx:coord>
+        <gx:coord>32.572601 -25.920799 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KATL-KBTR</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-26T12:24:38+01:00</when>
+        <when>2024-09-26T13:13:52+01:00</when>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+        <gx:coord>-91.149597 30.533199 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>MMMY-KORD</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-28T05:05:39+01:00</when>
+        <when>2024-09-28T07:30:27+01:00</when>
+        <gx:coord>-100.107002258 25.7784996033 30000</gx:coord>
+        <gx:coord>-87.9048 41.9786 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDDH-EDNY</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-09-29T22:29:25+01:00</when>
+        <when>2024-09-29T23:14:42+01:00</when>
+        <gx:coord>9.9882297515869 53.630401611328 30000</gx:coord>
+        <gx:coord>9.51148986816 47.671298980699994 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>MMMY-MMSD</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-29T20:20:06+01:00</when>
+        <when>2024-09-29T21:29:25+01:00</when>
+        <gx:coord>-100.107002258 25.7784996033 30000</gx:coord>
+        <gx:coord>-109.72100067138672 23.15180015563965 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LLBG-LSGG</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-29T03:56:23+01:00</when>
+        <when>2024-09-29T07:15:46+01:00</when>
+        <gx:coord>34.88669967651367 32.01139831542969 30000</gx:coord>
+        <gx:coord>6.108950138092041 46.23809814453125 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KPHL-KLAS</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-09-30T23:08:17+01:00</when>
+        <when>2024-10-01T03:07:00+01:00</when>
+        <gx:coord>-75.24109649658203 39.87189865112305 30000</gx:coord>
+        <gx:coord>-115.1520004 36.08010101 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZSPD-ZYTL</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-01T07:41:04+01:00</when>
+        <when>2024-10-01T08:40:29+01:00</when>
+        <gx:coord>121.80500030517578 31.143400192260742 30000</gx:coord>
+        <gx:coord>121.53900146484375 38.9656982421875 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDEN-KBOS</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-01T04:21:24+01:00</when>
+        <when>2024-10-01T07:33:44+01:00</when>
+        <gx:coord>-104.672996521 39.861698150635 30000</gx:coord>
+        <gx:coord>-71.00520325 42.36429977 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZWWW-UAFM</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-01T11:28:56+01:00</when>
+        <when>2024-10-01T12:40:43+01:00</when>
+        <gx:coord>87.47419738769531 43.907100677490234 30000</gx:coord>
+        <gx:coord>74.4776000977 43.0612983704 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>HKJK-HSSS</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-01T19:29:34+01:00</when>
+        <when>2024-10-01T21:42:08+01:00</when>
+        <gx:coord>36.9277992249 -1.31923997402 30000</gx:coord>
+        <gx:coord>32.553199768066406 15.589500427246094 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZLIC-VHHH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-01T01:07:49+01:00</when>
+        <when>2024-10-01T03:21:00+01:00</when>
+        <gx:coord>106.009003 38.481899 30000</gx:coord>
+        <gx:coord>113.915001 22.308901 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RKSI-EDDM</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-01T18:26:46+01:00</when>
+        <when>2024-10-02T04:07:26+01:00</when>
+        <gx:coord>126.45099639892578 37.46910095214844 30000</gx:coord>
+        <gx:coord>11.7861 48.353802 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KONT-KSLC</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-03T00:29:21+01:00</when>
+        <when>2024-10-03T01:30:41+01:00</when>
+        <gx:coord>-117.60099792480469 34.055999755859375 30000</gx:coord>
+        <gx:coord>-111.97799682617188 40.78839874267578 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VDSR-VVNB</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-02T20:07:53+01:00</when>
+        <when>2024-10-02T21:08:56+01:00</when>
+        <gx:coord>103.81300354 13.410699844400002 30000</gx:coord>
+        <gx:coord>105.80699920654297 21.221200942993164 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EHAM-EKCH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-02T02:39:25+01:00</when>
+        <when>2024-10-02T03:22:39+01:00</when>
+        <gx:coord>4.76389 52.308601 30000</gx:coord>
+        <gx:coord>12.656000137329 55.617900848389 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KMLU-KATL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-02T21:36:40+01:00</when>
+        <when>2024-10-02T22:25:50+01:00</when>
+        <gx:coord>-92.0376968383789 32.51089859008789 30000</gx:coord>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KBTR-KATL</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-03T23:02:03+01:00</when>
+        <when>2024-10-03T23:51:17+01:00</when>
+        <gx:coord>-91.149597 30.533199 30000</gx:coord>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KORD-MMMY</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-03T08:32:41+01:00</when>
+        <when>2024-10-03T10:57:29+01:00</when>
+        <gx:coord>-87.9048 41.9786 30000</gx:coord>
+        <gx:coord>-100.107002258 25.7784996033 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KLAS-KPHL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-03T17:36:36+01:00</when>
+        <when>2024-10-03T21:35:19+01:00</when>
+        <gx:coord>-115.1520004 36.08010101 30000</gx:coord>
+        <gx:coord>-75.24109649658203 39.87189865112305 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RKSI-ZSAM</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-03T21:15:59+01:00</when>
+        <when>2024-10-03T23:08:00+01:00</when>
+        <gx:coord>126.45099639892578 37.46910095214844 30000</gx:coord>
+        <gx:coord>118.12799835205078 24.54400062561035 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>WMKK-ZSFZ</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-04T20:36:32+01:00</when>
+        <when>2024-10-05T00:16:04+01:00</when>
+        <gx:coord>101.70999908447 2.745579957962 30000</gx:coord>
+        <gx:coord>119.66300201416016 25.935100555419922 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>SBGR-LFPG</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-04T20:31:57+01:00</when>
+        <when>2024-10-05T07:14:30+01:00</when>
+        <gx:coord>-46.47305679321289 -23.435556411743164 30000</gx:coord>
+        <gx:coord>2.55 49.012798 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDDW-LPPR</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-04T21:24:55+01:00</when>
+        <when>2024-10-04T23:31:25+01:00</when>
+        <gx:coord>8.78666973114 53.0475006104 30000</gx:coord>
+        <gx:coord>-8.68138980865 41.2481002808 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KDCA-MYNN</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-04T07:12:22+01:00</when>
+        <when>2024-10-04T08:57:17+01:00</when>
+        <gx:coord>-77.037697 38.8521 30000</gx:coord>
+        <gx:coord>-77.46620178219999 25.0389995575 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDDM-RKSI</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-05T11:41:57+01:00</when>
+        <when>2024-10-05T21:22:37+01:00</when>
+        <gx:coord>11.7861 48.353802 30000</gx:coord>
+        <gx:coord>126.45099639892578 37.46910095214844 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>UDYZ-LOWW</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-05T13:05:08+01:00</when>
+        <when>2024-10-05T15:47:21+01:00</when>
+        <gx:coord>44.3959007263 40.1473007202 30000</gx:coord>
+        <gx:coord>16.569700241089 48.110298156738 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LEZL-LFLL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-05T17:33:33+01:00</when>
+        <when>2024-10-05T19:02:04+01:00</when>
+        <gx:coord>-5.8931097984313965 37.417999267578125 30000</gx:coord>
+        <gx:coord>5.081111 45.725556 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LSGG-LLBG</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-06T15:28:54+01:00</when>
+        <when>2024-10-06T18:48:17+01:00</when>
+        <gx:coord>6.108950138092041 46.23809814453125 30000</gx:coord>
+        <gx:coord>34.88669967651367 32.01139831542969 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZHHH-ZPPP</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-06T13:12:12+01:00</when>
+        <when>2024-10-06T14:39:13+01:00</when>
+        <gx:coord>114.208 30.7838 30000</gx:coord>
+        <gx:coord>102.9291667 25.1019444 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LIPZ-EDDB</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-06T09:58:21+01:00</when>
+        <when>2024-10-06T10:50:52+01:00</when>
+        <gx:coord>12.3519 45.505299 30000</gx:coord>
+        <gx:coord>13.5225 52.380001 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LEPA-EDSB</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-07T11:33:39+01:00</when>
+        <when>2024-10-07T12:49:28+01:00</when>
+        <gx:coord>2.73881006241 39.551700592 30000</gx:coord>
+        <gx:coord>8.08049964905 48.7793998718 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KATL-KRDU</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-07T07:30:50+01:00</when>
+        <when>2024-10-07T08:09:54+01:00</when>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+        <gx:coord>-78.7874984741211 35.877601623535156 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KLAS-KPSC</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-08T03:53:35+01:00</when>
+        <when>2024-10-08T05:14:11+01:00</when>
+        <gx:coord>-115.1520004 36.08010101 30000</gx:coord>
+        <gx:coord>-119.11900329589844 46.26470184326172 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EGNX-GCRR</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-08T11:50:48+01:00</when>
+        <when>2024-10-08T15:04:51+01:00</when>
+        <gx:coord>-1.32806003094 52.8311004639 30000</gx:coord>
+        <gx:coord>-13.6052 28.945499 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>HSSS-HKJK</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-08T23:30:45+01:00</when>
+        <when>2024-10-09T01:43:19+01:00</when>
+        <gx:coord>32.553199768066406 15.589500427246094 30000</gx:coord>
+        <gx:coord>36.9277992249 -1.31923997402 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZPPP-ZHHH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-08T05:08:12+01:00</when>
+        <when>2024-10-08T06:35:13+01:00</when>
+        <gx:coord>102.9291667 25.1019444 30000</gx:coord>
+        <gx:coord>114.208 30.7838 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LEMD-MDPC</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-09T22:37:30+01:00</when>
+        <when>2024-10-10T06:06:24+01:00</when>
+        <gx:coord>-3.56264 40.471926 30000</gx:coord>
+        <gx:coord>-68.36340332030001 18.567399978599997 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>FQMA-FAOR</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-09T04:08:41+01:00</when>
+        <when>2024-10-09T04:38:15+01:00</when>
+        <gx:coord>32.572601 -25.920799 30000</gx:coord>
+        <gx:coord>28.246 -26.1392 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KATL-KMLU</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-09T05:49:22+01:00</when>
+        <when>2024-10-09T06:38:32+01:00</when>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+        <gx:coord>-92.0376968383789 32.51089859008789 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KRDU-KATL</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-09T14:11:11+01:00</when>
+        <when>2024-10-09T14:50:15+01:00</when>
+        <gx:coord>-78.7874984741211 35.877601623535156 30000</gx:coord>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KPNS-KTPA</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-10T00:38:09+01:00</when>
+        <when>2024-10-10T01:14:21+01:00</when>
+        <gx:coord>-87.186599731445 30.473400115967 30000</gx:coord>
+        <gx:coord>-82.533203125 27.975500106811523 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>CYEG-KPHX</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-09T21:58:54+01:00</when>
+        <when>2024-10-10T00:30:07+01:00</when>
+        <gx:coord>-113.580001831 53.309700012200004 30000</gx:coord>
+        <gx:coord>-112.01200103759766 33.43429946899414 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZSAM-RKSI</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-11T00:25:45+01:00</when>
+        <when>2024-10-11T02:17:46+01:00</when>
+        <gx:coord>118.12799835205078 24.54400062561035 30000</gx:coord>
+        <gx:coord>126.45099639892578 37.46910095214844 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KIAD-CYYZ</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-10T08:10:25+01:00</when>
+        <when>2024-10-10T08:48:23+01:00</when>
+        <gx:coord>-77.45580292 38.94449997 30000</gx:coord>
+        <gx:coord>-79.63059997559999 43.6772003174 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ENGM-ENBR</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-10T12:10:20+01:00</when>
+        <when>2024-10-10T12:32:19+01:00</when>
+        <gx:coord>11.0502 60.121 30000</gx:coord>
+        <gx:coord>5.218140125 60.29339981 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LPPR-EDDW</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-11T03:11:39+01:00</when>
+        <when>2024-10-11T05:18:09+01:00</when>
+        <gx:coord>-8.68138980865 41.2481002808 30000</gx:coord>
+        <gx:coord>8.78666973114 53.0475006104 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>MYNN-KDCA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-11T17:53:37+01:00</when>
+        <when>2024-10-11T19:38:32+01:00</when>
+        <gx:coord>-77.46620178219999 25.0389995575 30000</gx:coord>
+        <gx:coord>-77.037697 38.8521 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>CYYZ-KIAD</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-12T23:12:05+01:00</when>
+        <when>2024-10-12T23:50:03+01:00</when>
+        <gx:coord>-79.63059997559999 43.6772003174 30000</gx:coord>
+        <gx:coord>-77.45580292 38.94449997 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZBAA-ZSSS</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-12T18:51:15+01:00</when>
+        <when>2024-10-12T20:04:44+01:00</when>
+        <gx:coord>116.58499908447266 40.080101013183594 30000</gx:coord>
+        <gx:coord>121.33599853515625 31.197900772094727 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ENZV-LFPG</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-12T08:07:37+01:00</when>
+        <when>2024-10-12T09:23:46+01:00</when>
+        <gx:coord>5.6377801895 58.876701354 30000</gx:coord>
+        <gx:coord>2.55 49.012798 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDDB-LIPZ</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-13T02:12:59+01:00</when>
+        <when>2024-10-13T03:05:30+01:00</when>
+        <gx:coord>13.5225 52.380001 30000</gx:coord>
+        <gx:coord>12.3519 45.505299 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZSSS-ZBAA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-14T20:58:53+01:00</when>
+        <when>2024-10-14T22:12:22+01:00</when>
+        <gx:coord>121.33599853515625 31.197900772094727 30000</gx:coord>
+        <gx:coord>116.58499908447266 40.080101013183594 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VHHH-ZLIC</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-15T10:41:29+01:00</when>
+        <when>2024-10-15T12:54:40+01:00</when>
+        <gx:coord>113.915001 22.308901 30000</gx:coord>
+        <gx:coord>106.009003 38.481899 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KTPA-KPNS</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-15T12:48:17+01:00</when>
+        <when>2024-10-15T13:24:29+01:00</when>
+        <gx:coord>-82.533203125 27.975500106811523 30000</gx:coord>
+        <gx:coord>-87.186599731445 30.473400115967 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>CYYC-CYVR</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-15T10:29:28+01:00</when>
+        <when>2024-10-15T11:16:19+01:00</when>
+        <gx:coord>-114.019996643 51.113899231 30000</gx:coord>
+        <gx:coord>-123.183998108 49.193901062 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EVRA-EGCC</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-15T06:49:04+01:00</when>
+        <when>2024-10-15T08:45:23+01:00</when>
+        <gx:coord>23.971099853515625 56.92359924316406 30000</gx:coord>
+        <gx:coord>-2.2749500274658203 53.35369873046875 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EKCH-EHAM</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-16T08:21:31+01:00</when>
+        <when>2024-10-16T09:04:45+01:00</when>
+        <gx:coord>12.656000137329 55.617900848389 30000</gx:coord>
+        <gx:coord>4.76389 52.308601 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LPPD-EDDL</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-16T18:00:38+01:00</when>
+        <when>2024-10-16T21:21:59+01:00</when>
+        <gx:coord>-25.6979007721 37.7411994934 30000</gx:coord>
+        <gx:coord>6.76678 51.289501 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RKPK-RJBB</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-16T03:56:02+01:00</when>
+        <when>2024-10-16T04:35:43+01:00</when>
+        <gx:coord>128.93800354 35.1795005798 30000</gx:coord>
+        <gx:coord>135.24400329589844 34.42729949951172 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ENBR-ENGM</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-17T11:28:55+01:00</when>
+        <when>2024-10-17T11:50:54+01:00</when>
+        <gx:coord>5.218140125 60.29339981 30000</gx:coord>
+        <gx:coord>11.0502 60.121 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZSHC-VVDN</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-17T18:32:12+01:00</when>
+        <when>2024-10-17T20:49:29+01:00</when>
+        <gx:coord>120.43399810791016 30.22949981689453 30000</gx:coord>
+        <gx:coord>108.1989974975586 16.043899536132812 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KCLT-KATL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-17T12:54:02+01:00</when>
+        <when>2024-10-17T13:18:53+01:00</when>
+        <gx:coord>-80.94309997558594 35.2140007019043 30000</gx:coord>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LOWW-EPKK</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-18T04:11:16+01:00</when>
+        <when>2024-10-18T04:33:07+01:00</when>
+        <gx:coord>16.569700241089 48.110298156738 30000</gx:coord>
+        <gx:coord>19.7848 50.077702 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LOWW-UDYZ</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-20T00:44:59+01:00</when>
+        <when>2024-10-20T03:27:12+01:00</when>
+        <gx:coord>16.569700241089 48.110298156738 30000</gx:coord>
+        <gx:coord>44.3959007263 40.1473007202 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LFLL-LEZL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-19T03:18:33+01:00</when>
+        <when>2024-10-19T04:47:04+01:00</when>
+        <gx:coord>5.081111 45.725556 30000</gx:coord>
+        <gx:coord>-5.8931097984313965 37.417999267578125 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LFPG-ENZV</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-19T14:42:44+01:00</when>
+        <when>2024-10-19T15:58:53+01:00</when>
+        <gx:coord>2.55 49.012798 30000</gx:coord>
+        <gx:coord>5.6377801895 58.876701354 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KMSP-MMUN</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-19T07:14:42+01:00</when>
+        <when>2024-10-19T10:20:09+01:00</when>
+        <gx:coord>-93.221802 44.882 30000</gx:coord>
+        <gx:coord>-86.8770980835 21.036500930800003 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LROP-EKCH</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-21T18:22:52+01:00</when>
+        <when>2024-10-21T20:08:52+01:00</when>
+        <gx:coord>26.085 44.5711111 30000</gx:coord>
+        <gx:coord>12.656000137329 55.617900848389 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LGAV-LFBO</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-21T19:35:43+01:00</when>
+        <when>2024-10-21T21:52:03+01:00</when>
+        <gx:coord>23.9444999695 37.9364013672 30000</gx:coord>
+        <gx:coord>1.36382 43.629101 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>CYVR-CYYC</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-22T21:25:22+01:00</when>
+        <when>2024-10-22T22:12:13+01:00</when>
+        <gx:coord>-123.183998108 49.193901062 30000</gx:coord>
+        <gx:coord>-114.019996643 51.113899231 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KPHX-CYEG</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-23T18:05:35+01:00</when>
+        <when>2024-10-23T20:36:48+01:00</when>
+        <gx:coord>-112.01200103759766 33.43429946899414 30000</gx:coord>
+        <gx:coord>-113.580001831 53.309700012200004 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDDL-LPPD</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-23T21:25:26+01:00</when>
+        <when>2024-10-24T00:46:47+01:00</when>
+        <gx:coord>6.76678 51.289501 30000</gx:coord>
+        <gx:coord>-25.6979007721 37.7411994934 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>SBPS-SBCF</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-23T15:16:43+01:00</when>
+        <when>2024-10-23T15:59:28+01:00</when>
+        <gx:coord>-39.080898 -16.438601 30000</gx:coord>
+        <gx:coord>-43.97194290161133 -19.62444305419922 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VVDN-ZSHC</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-24T20:33:36+01:00</when>
+        <when>2024-10-24T22:50:53+01:00</when>
+        <gx:coord>108.1989974975586 16.043899536132812 30000</gx:coord>
+        <gx:coord>120.43399810791016 30.22949981689453 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KATL-KCLT</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-24T04:11:25+01:00</when>
+        <when>2024-10-24T04:36:16+01:00</when>
+        <gx:coord>-84.428101 33.6367 30000</gx:coord>
+        <gx:coord>-80.94309997558594 35.2140007019043 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VERC-VIDP</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-24T02:56:20+01:00</when>
+        <when>2024-10-24T04:05:07+01:00</when>
+        <gx:coord>85.3217010498 23.314300537100003 30000</gx:coord>
+        <gx:coord>77.103104 28.5665 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LUKK-EIDW</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-25T13:29:41+01:00</when>
+        <when>2024-10-25T16:25:50+01:00</when>
+        <gx:coord>28.930999755859375 46.92770004272461 30000</gx:coord>
+        <gx:coord>-6.27007 53.421299 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDDF-SBGL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-25T08:26:30+01:00</when>
+        <when>2024-10-25T19:20:15+01:00</when>
+        <gx:coord>8.570556 50.033333 30000</gx:coord>
+        <gx:coord>-43.2505569458 -22.8099994659 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>MMUN-KMSP</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-26T15:08:18+01:00</when>
+        <when>2024-10-26T18:13:45+01:00</when>
+        <gx:coord>-86.8770980835 21.036500930800003 30000</gx:coord>
+        <gx:coord>-93.221802 44.882 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>SBGL-EDDF</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-26T16:46:39+01:00</when>
+        <when>2024-10-27T02:40:24Z</when>
+        <gx:coord>-43.2505569458 -22.8099994659 30000</gx:coord>
+        <gx:coord>8.570556 50.033333 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>WAMG-WAAA</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-26T20:59:28+01:00</when>
+        <when>2024-10-26T21:49:28+01:00</when>
+        <gx:coord>122.849998474 0.63711899519 30000</gx:coord>
+        <gx:coord>119.55400085449219 -5.061629772186279 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDDT-LROP</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-26T21:32:22+01:00</when>
+        <when>2024-10-26T23:00:32+01:00</when>
+        <gx:coord>13.2877 52.5597 30000</gx:coord>
+        <gx:coord>26.085 44.5711111 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EKYT-EKBI</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-27T11:29:12Z</when>
+        <when>2024-10-27T11:39:51Z</when>
+        <gx:coord>9.84924316406 57.0927589138 30000</gx:coord>
+        <gx:coord>9.15178012848 55.7402992249 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZUUU-ZSYW</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-27T05:56:14Z</when>
+        <when>2024-10-27T07:42:22Z</when>
+        <gx:coord>103.9469985961914 30.578500747680664 30000</gx:coord>
+        <gx:coord>120.031997681 29.3446998596 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EKBI-EKYT</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-28T09:25:58Z</when>
+        <when>2024-10-28T09:36:37Z</when>
+        <gx:coord>9.15178012848 55.7402992249 30000</gx:coord>
+        <gx:coord>9.84924316406 57.0927589138 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ZSYW-ZUUU</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-28T20:45:33Z</when>
+        <when>2024-10-28T22:31:41Z</when>
+        <gx:coord>120.031997681 29.3446998596 30000</gx:coord>
+        <gx:coord>103.9469985961914 30.578500747680664 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>NZAA-VHHH</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-28T04:01:44Z</when>
+        <when>2024-10-28T14:28:14Z</when>
+        <gx:coord>174.792007446 -37.008098602299995 30000</gx:coord>
+        <gx:coord>113.915001 22.308901 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EGCC-EVRA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-29T08:58:18Z</when>
+        <when>2024-10-29T10:54:37Z</when>
+        <gx:coord>-2.2749500274658203 53.35369873046875 30000</gx:coord>
+        <gx:coord>23.971099853515625 56.92359924316406 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LROP-EDDT</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-29T13:39:11Z</when>
+        <when>2024-10-29T15:07:21Z</when>
+        <gx:coord>26.085 44.5711111 30000</gx:coord>
+        <gx:coord>13.2877 52.5597 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>LFRS-LEBL</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-29T18:40:08Z</when>
+        <when>2024-10-29T19:28:54Z</when>
+        <gx:coord>-1.61073005199 47.153198242200006 30000</gx:coord>
+        <gx:coord>2.07846 41.2971 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>RJBB-RKPK</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-30T05:58:36Z</when>
+        <when>2024-10-30T06:38:17Z</when>
+        <gx:coord>135.24400329589844 34.42729949951172 30000</gx:coord>
+        <gx:coord>128.93800354 35.1795005798 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>TNCB-EHAM</name>
+      <styleUrl>#0</styleUrl>
+      <gx:Track>
+        <when>2024-10-30T18:09:07Z</when>
+        <when>2024-10-31T03:01:29Z</when>
+        <gx:coord>-68.26850128173828 12.130999565124512 30000</gx:coord>
+        <gx:coord>4.76389 52.308601 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>ORBI-OLBA</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-30T05:23:08Z</when>
+        <when>2024-10-30T06:18:35Z</when>
+        <gx:coord>44.2346000671 33.262500762900004 30000</gx:coord>
+        <gx:coord>35.488399505615234 33.820899963378906 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>VIDP-VERC</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-31T19:53:02Z</when>
+        <when>2024-10-31T21:01:49Z</when>
+        <gx:coord>77.103104 28.5665 30000</gx:coord>
+        <gx:coord>85.3217010498 23.314300537100003 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>EDDB-LFLL</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-31T05:00:07Z</when>
+        <when>2024-10-31T06:05:45Z</when>
+        <gx:coord>13.5225 52.380001 30000</gx:coord>
+        <gx:coord>5.081111 45.725556 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>KFWA-KORD</name>
+      <styleUrl>#1</styleUrl>
+      <gx:Track>
+        <when>2024-10-31T06:38:15Z</when>
+        <when>2024-10-31T06:55:23Z</when>
+        <gx:coord>-85.19509888 40.97850037 30000</gx:coord>
+        <gx:coord>-87.9048 41.9786 30000</gx:coord>
+      </gx:Track>
+    </Placemark>
+  </Document>
+</kml>
