@@ -5,45 +5,25 @@ import (
 	"github.com/richardmorrey/flap/pkg/flap"
 )
 
-func TestNewJourneyPlannerNil(t *testing.T) {
-	_,err := NewJourneyPlanner(nil)
+func TestNewJourneyPlannerZero(t *testing.T) {
+	_,err := NewJourneyPlanner(0)
 	if (err == nil) {
-		t.Error("NewJourneyPlanner accepted nil trip lengths")
+		t.Error("NewJourneyPlanner accepted zero trip lengths")
 	}
 }
 
-func TestNewJourneyPlannerEmpty(t *testing.T) {
-	var empty []flap.Days
-	_,err := NewJourneyPlanner(empty)
-	if (err == nil) {
-		t.Error("NewJourneyPlanner accepted nil trip lengths")
-	}
-}
-
-func TestNewJourneyPlannerOneLength(t *testing.T) {
-	simple := []flap.Days{5}
-	jp,err := NewJourneyPlanner(simple)
+func TestNewJourneyPlanner(t *testing.T) {
+	jp,err := NewJourneyPlanner(10)
 	if (err != nil) {
 		t.Error("NewJourneyPlanner failed with 1 trip length")
 	}
-	if len(jp.days) != 7 {
+	if len(jp.days) != 12 {
 		t.Error("NewJourneyPlanner failed to create the correct number of days",len(jp.days))
 	}
 }
 
-func TestNewJourneyPlannerSimple(t *testing.T) {
-	simple := []flap.Days{1,2,2,11,5,10}
-	jp,err := NewJourneyPlanner(simple)
-	if (err != nil) {
-		t.Error("NewJourneyPlanner failed with 1 trip length")
-	}
-	if len(jp.days) != 13 {
-		t.Error("NewJourneyPlanner failed to set correct maxTripLength",len(jp.days))
-	}
-}
-
 func TestAddJourneyHigh(t *testing.T) {
-	jp,_ := NewJourneyPlanner([]flap.Days{1,2,3})
+	jp,_ := NewJourneyPlanner(3)
 	err := jp.addJourney(journey{},flap.Days(len(jp.days)))
 	if  err != EDAYTOOFARAHEAD {
 		t.Error("addJourney accepts day greater than maximum")
@@ -51,7 +31,7 @@ func TestAddJourneyHigh(t *testing.T) {
 }
 
 func TestAddJourney(t *testing.T) {
-	jp,_ := NewJourneyPlanner([]flap.Days{1,2,3})
+	jp,_ := NewJourneyPlanner(3)
 	j := journey{jt:jtInbound}
 	err := jp.addJourney(j,2)
 	if  err != nil {
@@ -66,15 +46,15 @@ func TestAddJourney(t *testing.T) {
 }
 
 func TestplanTrip(t *testing.T) {
-	jp,_ := NewJourneyPlanner([]flap.Days{1,2,3})
+	jp,_ := NewJourneyPlanner(3)
 	bot:= botId{1,2}
 	from:= flap.NewICAOCode("A")
 	to:=flap.NewICAOCode("B")
-	err:=jp.planTrip(from,to,bot) 
+	err:=jp.planTrip(from,to,10,bot) 
 	if (err != nil)  {
 		t.Error("Failed to plan trip",err)
 	}
-	j := journey{jt:jtOutbound,flight:journeyFlight{from,to},bot:bot}
+	j := journey{jt:jtOutbound,flight:journeyFlight{from,to},length:10,bot:bot}
 	if jp.days[0][0] != j {
 		t.Error("Failed to set outbound journey correctly",jp.days[0][0])
 	}

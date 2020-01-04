@@ -27,6 +27,15 @@ func (self *Weights) add(w weight) {
 	}
 }
 
+
+// addMultiple adds multiple weights with the same value. Does nothing if
+// number of multiples requested is less than 1
+func (self *Weights) addMultiple(w weight,multiples int) {
+	for  x=multiples; x > 0;  x-- {
+		self.add(w)
+	}
+}
+
 // find finds the entry within the scale that includes the given value and returns 
 // its index
 func (self  *Weights) find(w weight) (int,error) {
@@ -54,6 +63,14 @@ func (self *Weights) topWeight() (weight,error) {
 		return 0, ENOWEIGHTSDEFINED
 	} else { 
 		return self.Scale[len(self.Scale)-1],nil
+	}
+}
+
+// reset removes all of the existing weights whilst keeping memory
+// of slice allocated
+func (self *Weights) reset() {
+	if  len(self.Scale)>0 {
+		self.scale = self.scale[:0]
 	}
 }
 

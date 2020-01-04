@@ -84,6 +84,7 @@ type TravellerBots struct {
 	countryWeights *CountryWeights
 	fh		*os.File
 	statsFolder    string
+	tripLengths	[]flap.Days
 }
 
 func NewTravellerBots(cw *CountryWeights) *TravellerBots {
@@ -157,6 +158,9 @@ func (self *TravellerBots) Build(modelParams *ModelParams) error {
 		bot.flyProb = botspec.PlanProbability
 		self.bots  = append(self.bots,bot)
 	}
+
+	// Store trip lengths
+	self.tripLengths =  modelParams.TripLengths
 	return nil
 }
 
@@ -200,9 +204,16 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 					if err != nil {
 						return glog(err)
 					}
+					to := airport.Routes[route].To
 
-					// plan trip
-					err = jp.planTrip(airport.Code, airport.Routes[route].To, botId{i,j})
+					// Choose trip length (in days, from start of outbound to end of inbound)
+					tripLength := self.tripLengths[0]
+					if len(self.tripLengths) > 1 {
+						tripLength = self.tripLengths[rand.Intn(len(self.tripLengths)-1)]
+					}
+					
+					// Plan trip
+					err = jp.planTrip(airport.Code,to,tripLength, botId{i,j})
 					if err != nil {
 						return glog(err)
 					}

@@ -4,10 +4,10 @@ import (
 	"github.com/richardmorrey/flap/pkg/flap"
 	"errors"
 	"math/rand"
-	"math"
 )
 
 var  EDAYTOOFARAHEAD = errors.New("Value for days is too far ahead")
+var  EZEROPLANNINGDAYS = errors.New("Zero planning days specified")
 
 type journeyFlight struct {
 	from flap.ICAOCode
@@ -25,41 +25,24 @@ type journey struct {
 	jt		journeyType
 	flight		journeyFlight
 	bot		botId
+	length		flap.Days
 }
 
 type plannerDay []journey
 
 type journeyPlanner struct{
 	days []plannerDay
-	tripLengths []flap.Days
 }
 
 var ENOJOURNEYSPLANNED = errors.New("No journeys have been planned for today")
 
-// Returns longest and shortest trip lengths from given list
-func (self* journeyPlanner) minmaxTripLength() (flap.Days,flap.Days) {
-	var maxLength flap.Days
-	var minLength = flap.Days(math.MaxInt64)
-	for _,length := range(self.tripLengths) {
-		if length > maxLength {
-			maxLength=length
-		}
-		if (length < minLength) {
-			minLength=length
-		}
-	}
-	return minLength, maxLength
-}
-
 // NewJourneyPlanner is factory function for journeyPlanner
-func NewJourneyPlanner(tripLengths []flap.Days) (*journeyPlanner,error) {
-	if (tripLengths == nil || len(tripLengths)==0) {
-		return nil,flap.EINVALIDARGUMENT
+func NewJourneyPlanner(planningDays flap.Days) (*journeyPlanner,error) {
+	if planningDays < 1 {
+		return nil, EZEROPLANNINGDAYS
 	}
 	jp := new(journeyPlanner)
-	jp.tripLengths=tripLengths
-	_, maxLen  := jp.minmaxTripLength() 
-	jp.days =make([]plannerDay,maxLen+2,maxLen+2)
+	jp.days =make([]plannerDay,planningDays+2,planningDays+2)
 	return jp,nil
 }
 
@@ -79,36 +62,35 @@ func (self *journeyPlanner) addJourney(j journey, day flap.Days) error {
 // traveller. Note outbound journey only is planned at this point.
 // Return journey is planned only at point submission of outbound
 // journey is accepted by Flight
-func (self *journeyPlanner) planTrip(from flap.ICAOCode, to flap.ICAOCode, bot botId) error {
-	j:= journey{jt:jtOutbound,flight:journeyFlight{from,to},bot:bot}
+func (self *journeyPlanner) planTrip(from flap.ICAOCode, to flap.ICAOCode, length flap.Days, bot botId) error {
+	j:= journey{jt:jtOutbound,flight:journeyFlight{from,to},length:length,bot:bot}
 	return self.addJourney(j,0)
 }
 
-// Plans the inbound journey for given outbound journey. Includes
-// random selection of trip length in days. 
-func (self *journeyPlanner) planInbound(j * journey,outboundEnd flap.EpochTime,startOfDay flap.EpochTime) error {
+// Plans the inbound journey for given outbound journey 
+func (self *journeyPlanner) planInbound(j * journey) error {
 	
-	// Choose a trip length
-	tripLength := self.tripLengths[0]
-	if len(self.tripLengths) > 1 {
-		tripLength = self.tripLengths[rand.Intn(len(self.tripLengths)-1)]
-	}
-
-	// Calculate start day, ensuring the flight starts on a different day to when
-	// the outbound flight ends
-	inboundDay :=  flap.Days(((outboundEnd - startOfDay) / flap.SecondsInDay)) + tripLength
-
-	// Create journey and add
+	// Create journey for last day of tripd
 	j2 := journey{jt:jtInbound,flight:journeyFlight{j.flight.to,j.flight.from},bot:j.bot}
-	return self.addJourney(j2,inboundDay)
+	return self.addJourney(j2,j.length-1)
+}
+
+// flightLength calulates distance and duration of flight between given two airports
+const airspeed = 0.244 // kms per se
+func (self *journeyPlanner) flightLength(from flap.Airport, to flap.Airport) (flap.Kilometres,flap.EpochTime,error) {
+
+	dist,err := from.Loc.Distance(to.Loc)
+	if err != nil {
+		return 0,0,glog(err)
+	}
+	return dist,flap.EpochTime(float64(dist)/airspeed),nil
 }
 
 // Builds a flap Flight for a given journey flight and datetime, creating a
 // start time randomly within the given day
-const airspeed = 0.244 // kms per sec
 func (self *journeyPlanner) buildFlight(jf *journeyFlight, startOfDay flap.EpochTime,fe *flap.Engine) (flap.EpochTime,flap.EpochTime,*flap.Flight,flap.Kilometres, error) {
 
-	// Retrieve Airport locations
+	// Retrieve airport records
 	fromAirport,err := fe.Airports.GetAirport(jf.from)
 	if (err != nil) {
 		return 0,0,nil,0,glog(err)
@@ -118,13 +100,16 @@ func (self *journeyPlanner) buildFlight(jf *journeyFlight, startOfDay flap.Epoch
 		return 0,0,nil,0,glog(err)
 	}
 
-	// Calc start and end times
-	dist,err := fromAirport.Loc.Distance(toAirport.Loc)
-	if err != nil {
+	// Calculate flight length
+	dist,duration,err := self.flightLength(fromAirport,toAirport)
+	if (err != nil) {
 		return 0,0,nil,0,glog(err)
 	}
-	start := startOfDay + flap.EpochTime(rand.Intn(flap.SecondsInDay-1))
-	end := start + flap.EpochTime(float64(dist)/airspeed)
+	
+	// Set start and end time, ensuring flight ends by end of first day to avoid overlap
+	// with return journey
+	start := startOfDay + flap.EpochTime(rand.Intn(int(flap.SecondsInDay-duration-1)))
+	end := start + duration
 
 	// Create flight
 	f,e := flap.NewFlight(fromAirport,start,toAirport,end)
@@ -163,7 +148,7 @@ func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, sta
 			// ... plan journey ...
 			tb.GetBot(j.bot).stats.Submitted(distance)
 			if j.jt==jtOutbound {
-				err = self.planInbound(&j,end,startOfDay)
+				err = self.planInbound(&j)
 				if err != nil {
 					return glog(err)
 				}

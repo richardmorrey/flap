@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"time"
+	"math"
 	"math/rand"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -89,6 +90,12 @@ func NewEngine(configFilePath string) (*Engine,error) {
 	if e.ModelParams.ReportDayDelta == 0 {
 		e.ModelParams.ReportDayDelta = 1
 	}
+		
+	for _,length := range(e.ModelParams.TripLengths) {
+		if length < 2 {
+			return nil,glog(flap.EINVALIDARGUMENT)
+		}
+	}
 
 	// Initialize logger
 	logpath := filepath.Join(e.ModelParams.WorkingFolder,"model.log")
@@ -154,6 +161,21 @@ func min(a uint64, b uint64) uint64 {
 	return a
 }
 
+// Returns longest and shortest trip lengths
+func (self* Engine) minmaxTripLength() (flap.Days,flap.Days) {
+	var maxLength flap.Days
+	var minLength = flap.Days(math.MaxInt64)
+	for _,length := range(self.ModelParams.TripLengths) {
+		if length > maxLength {
+			maxLength=length
+		}
+		if (length < minLength) {
+			minLength=length
+		}
+	}
+	return minLength, maxLength
+}
+
 // Runs the model with configuration as specified in ModelParams, writing results out
 // to multiple CSV files in the specified working folder.
 func (self *Engine) Run() error {
@@ -199,11 +221,11 @@ func (self *Engine) Run() error {
 	}
 
 	// Model each day
-	jp,err := NewJourneyPlanner(self.ModelParams.TripLengths)
+	_,maxTripLength:=self.minmaxTripLength()
+	jp,err := NewJourneyPlanner(maxTripLength)
 	if (err != nil) {
 		return glog(err)
 	}
-	maxTripLength,_ := jp.minmaxTripLength()
 	currentDay := self.ModelParams.StartDay
 	flightPaths := newFlightPaths(currentDay)
 	for i:=flap.Days(1); i <= self.ModelParams.DaysToRun; i++ {
