@@ -31,7 +31,7 @@ func (self *Weights) add(w weight) {
 // addMultiple adds multiple weights with the same value. Does nothing if
 // number of multiples requested is less than 1
 func (self *Weights) addMultiple(w weight,multiples int) {
-	for  x=multiples; x > 0;  x-- {
+	for  x:=multiples; x > 0;  x-- {
 		self.add(w)
 	}
 }
@@ -70,7 +70,7 @@ func (self *Weights) topWeight() (weight,error) {
 // of slice allocated
 func (self *Weights) reset() {
 	if  len(self.Scale)>0 {
-		self.scale = self.scale[:0]
+		self.Scale = self.Scale[:0]
 	}
 }
 

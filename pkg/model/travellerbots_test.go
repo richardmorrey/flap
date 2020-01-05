@@ -16,7 +16,7 @@ func buildCountryWeights(nEntries int) *CountryWeights{
 }
 
 func TestEmptySpecs(t *testing.T) {
-	ts := NewTravellerBots(buildCountryWeights(1))
+	ts := NewTravellerBots(buildCountryWeights(1),flap.FlapParams{})
 	params := ModelParams{TotalTravellers:0}
 	params.BotSpecs= make([]BotSpec,0,10)
 	err := ts.Build(&params)
@@ -26,7 +26,7 @@ func TestEmptySpecs(t *testing.T) {
 }
 
 func TestOneSpec(t *testing.T) {
-	ts := NewTravellerBots(buildCountryWeights(1))
+	ts := NewTravellerBots(buildCountryWeights(1),flap.FlapParams{})
 	params := ModelParams{TotalTravellers:2}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{PlanProbability:0.1,Weight:12345})
@@ -44,7 +44,7 @@ func TestOneSpec(t *testing.T) {
 }
 
 func TestTwoSpecs(t *testing.T) {
-	ts := NewTravellerBots(buildCountryWeights(1))
+	ts := NewTravellerBots(buildCountryWeights(1),flap.FlapParams{})
 	params := ModelParams{TotalTravellers:2}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{PlanProbability:0.1,Weight:1})
@@ -66,7 +66,7 @@ func TestTwoSpecs(t *testing.T) {
 }
 
 func TestThreeSpecs(t *testing.T) {
-	ts := NewTravellerBots(buildCountryWeights(3))
+	ts := NewTravellerBots(buildCountryWeights(3),flap.FlapParams{})
 	params := ModelParams{TotalTravellers:11}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{PlanProbability:0.1,Weight:1})
@@ -94,7 +94,7 @@ func TestThreeSpecs(t *testing.T) {
 }
 
 func TestGetBot(t *testing.T) {
-	ts := NewTravellerBots(buildCountryWeights(2))
+	ts := NewTravellerBots(buildCountryWeights(2),flap.FlapParams{})
 	params := ModelParams{TotalTravellers:10}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{PlanProbability:0.1,Weight:1})

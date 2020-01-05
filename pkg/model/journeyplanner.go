@@ -62,9 +62,9 @@ func (self *journeyPlanner) addJourney(j journey, day flap.Days) error {
 // traveller. Note outbound journey only is planned at this point.
 // Return journey is planned only at point submission of outbound
 // journey is accepted by Flight
-func (self *journeyPlanner) planTrip(from flap.ICAOCode, to flap.ICAOCode, length flap.Days, bot botId) error {
+func (self *journeyPlanner) planTrip(from flap.ICAOCode, to flap.ICAOCode, length flap.Days, bot botId, day flap.Days) error {
 	j:= journey{jt:jtOutbound,flight:journeyFlight{from,to},length:length,bot:bot}
-	return self.addJourney(j,0)
+	return self.addJourney(j,day)
 }
 
 // Plans the inbound journey for given outbound journey 

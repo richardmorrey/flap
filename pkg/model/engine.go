@@ -199,7 +199,7 @@ func (self *Engine) Run() error {
 	}
 	
 	// Build flight plans for traveller bots
-	travellerBots := NewTravellerBots(&countryWeights)
+	travellerBots := NewTravellerBots(&countryWeights, self.FlapParams)
 	if travellerBots == nil {
 		return EFAILEDTOCREATETRAVELLERBOTS
 	}
@@ -220,18 +220,24 @@ func (self *Engine) Run() error {
 		return glog(err)
 	}
 
-	// Model each day
-	_,maxTripLength:=self.minmaxTripLength()
-	jp,err := NewJourneyPlanner(maxTripLength)
+	// Create journey planner with enougy days
+	var planDays flap.Days
+	if self.FlapParams.PromisesAlgo != 0 {
+		planDays = self.FlapParams.PromisesMaxDays
+	}
+	_,planDays=self.minmaxTripLength()
+	jp,err := NewJourneyPlanner(planDays)
 	if (err != nil) {
 		return glog(err)
 	}
+
+	// Model each day
 	currentDay := self.ModelParams.StartDay
 	flightPaths := newFlightPaths(currentDay)
 	for i:=flap.Days(1); i <= self.ModelParams.DaysToRun; i++ {
 		
 		fmt.Printf("\rDay %d: Planning Flights",i)
-		err = travellerBots.planTrips(cars,jp,fe.Travellers)
+		err = travellerBots.planTrips(cars,jp,fe,currentDay)
 		if err != nil {
 			return glog(err)
 		}
@@ -268,7 +274,7 @@ func (self *Engine) Run() error {
 
 			// Update MinGrounded, skipping until maxTripLength has been reached
 			// so we get full coverage of return journeys
-			if i > maxTripLength {
+			if i > planDays {
 				self.FlapParams.MinGrounded = min(self.FlapParams.MinGrounded,t)
 			}
 		} else  {
@@ -297,7 +303,7 @@ func (self *Engine) ShowTraveller(band uint64,bot uint64) (flap.Passport,string,
 	}
 
 	// Create travellerbots struct
-	travellerBots := NewTravellerBots(&countryWeights)
+	travellerBots := NewTravellerBots(&countryWeights,self.FlapParams)
 	if travellerBots == nil {
 		return p,"","",glog(EFAILEDTOCREATETRAVELLERBOTS)
 	}

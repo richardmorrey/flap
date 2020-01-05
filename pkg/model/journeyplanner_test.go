@@ -50,7 +50,7 @@ func TestplanTrip(t *testing.T) {
 	bot:= botId{1,2}
 	from:= flap.NewICAOCode("A")
 	to:=flap.NewICAOCode("B")
-	err:=jp.planTrip(from,to,10,bot) 
+	err:=jp.planTrip(from,to,10,bot,0)
 	if (err != nil)  {
 		t.Error("Failed to plan trip",err)
 	}

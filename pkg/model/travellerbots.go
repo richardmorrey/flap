@@ -48,6 +48,7 @@ type botStats struct {
 	distance flap.Kilometres
 	taken	 uint64
 	refused  uint64
+	cancelled uint64
 }
 
 // Submitted updates stats to reflect fact a journey
@@ -63,19 +64,26 @@ func (self  *botStats) Refused() {
 	self.refused++
 }
 
+// Canclled updates stats to relect fact a promise
+// request has been refused by flap
+func (self  *botStats) Cancelled() {
+	self.cancelled++
+}
+
 // Report writes a single CSV row with stats
 func (self *travellerBot) ReportDay(rdd flap.Days) string {
 	
 	// Format stats
-	line := fmt.Sprintf("%f,%f,",
-		(float64(self.stats.refused)/float64(self.stats.taken+self.stats.refused))*100,
-		float64(self.stats.distance)/float64(flap.Kilometres(self.numInstances)))
+	line := fmt.Sprintf("%f,%f,%f,",
+		(float64(self.stats.refused)/float64(self.stats.taken+self.stats.refused+self.stats.cancelled))*100,
+		(float64(self.stats.cancelled)/float64(self.stats.taken+self.stats.refused+self.stats.cancelled))*100,
+		 float64(self.stats.distance)/float64(flap.Kilometres(self.numInstances)))
 
 	// Reset counters
 	self.stats.taken = 0
 	self.stats.refused = 0
 	self.stats.distance = 0
-
+	self.stats.cancelled = 0
 	return line
 }
 
@@ -85,12 +93,16 @@ type TravellerBots struct {
 	fh		*os.File
 	statsFolder    string
 	tripLengths	[]flap.Days
+	bp		*botPromises
 }
 
-func NewTravellerBots(cw *CountryWeights) *TravellerBots {
+func NewTravellerBots(cw *CountryWeights, params flap.FlapParams) *TravellerBots {
 	tbs := new(TravellerBots)
 	tbs.bots = make([]travellerBot,0,10)
 	tbs.countryWeights=cw
+	if params.PromisesAlgo != 0 {
+		tbs.bp = newBotPromises(params.PromisesMaxDays)
+	}
 	return tbs
 }
 
@@ -111,7 +123,7 @@ func (self *TravellerBots) ReportDay(day flap.Days, rdd flap.Days) {
 			if self.fh != nil {
 				line:="Day"
 				for bb := bandIndex(0); bb < bandIndex(len(self.bots)); bb++ {
-					line += fmt.Sprintf(",cancelledpercent_%d,distance_%d",bb,bb) 
+					line += fmt.Sprintf(",refusedpercent_%d,cancelledpercent_%d,distance_%d",bb,bb,bb) 
 				}
 				line +="\n"
 				self.fh.WriteString(line)
@@ -164,11 +176,27 @@ func (self *TravellerBots) Build(modelParams *ModelParams) error {
 	return nil
 }
 
+// planningAllowed determines whether planning is allowed for given
+// traveller at this point
+func (self *TravellerBots) planningAllowed(pp flap.Passport,fe *flap.Engine) bool {
+
+	// If we are using promises then planning is always allowed ...
+	if self.bp != nil {
+		return true
+	}
+
+	// ... otherwise we can only plan if we are not currently travelling,
+	// indicated by the traveller record not existing at all or it existing
+	// and "MidTrip" not being true.
+	t,err := fe.Travellers.GetTraveller(pp)
+	return (err != nil) || !t.MidTrip() 	
+}
+
 // planTrips "throws dice" for every traveller bot in every band according to probability
 // of travellers in the band travelling on any one day. If the dice comes up and the
 // travellerbot is not in the middle of a trip, a new trip is planned using weighted 
 // country-airpots-routes model
-func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyPlanner, travellers *flap.Travellers) error {
+func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyPlanner, fe *flap.Engine,currentDay flap.EpochTime) error {
 
 	// Iterate through each bot in each band
 	for i:=bandIndex(0); i < bandIndex(len(self.bots)); i++ {
@@ -183,8 +211,7 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 				}
 
 				// Check bot is not already travelling
-				t,err := travellers.GetTraveller(p)
-				if (err != nil) || !t.MidTrip() {
+				if self.planningAllowed(p,fe) {
 
 					// Retrieve source country record for traveller
 					car,err := cars.getCountry(p.Issuer)
@@ -212,10 +239,22 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 						tripLength = self.tripLengths[rand.Intn(len(self.tripLengths)-1)]
 					}
 					
-					// Plan trip
-					err = jp.planTrip(airport.Code,to,tripLength, botId{i,j})
-					if err != nil {
-						return glog(err)
+					// If we are running with promise then choose which date to plan trip
+					// consistent with current promises
+					startday := flap.Days(0)
+					if self.bp != nil {
+						startday,err = self.bp.getPromise(fe,p,currentDay,tripLength,airport.Code,to) 
+						if err != nil && err != ENOSPACEFORTRIP {
+							self.bots[i].stats.Refused()
+						}
+					}
+					
+					// Plan trip if allowed
+					if err == nil {
+						err = jp.planTrip(airport.Code,to,tripLength, botId{i,j},startday)
+						if err != nil {
+							return glog(err)
+						}
 					}
 				}
 			}
