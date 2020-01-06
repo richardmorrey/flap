@@ -220,34 +220,41 @@ func (self *Engine) Run() error {
 		return glog(err)
 	}
 
-	// Create journey planner with enougy days
+	// Create journey planner with enough days
 	var planDays flap.Days
 	if self.FlapParams.PromisesAlgo != 0 {
 		planDays = self.FlapParams.PromisesMaxDays
+	} else {
+		_,planDays=self.minmaxTripLength()
 	}
-	_,planDays=self.minmaxTripLength()
 	jp,err := NewJourneyPlanner(planDays)
 	if (err != nil) {
 		return glog(err)
 	}
 
-	// Model each day
+	// Model each day as configured, but run for "planDays" first to make
+	// sure journey planner is pre-loaded with data for each of its days.
 	currentDay := self.ModelParams.StartDay
 	flightPaths := newFlightPaths(currentDay)
-	for i:=flap.Days(1); i <= self.ModelParams.DaysToRun; i++ {
+	for i:=flap.Days(-planDays); i <= self.ModelParams.DaysToRun; i++ {
 		
+		// Plan flights for all travellers
 		fmt.Printf("\rDay %d: Planning Flights",i)
 		err = travellerBots.planTrips(cars,jp,fe,currentDay)
 		if err != nil {
 			return glog(err)
 		}
 
+		// Submit all flights for this day, logging only - i.e. not debiting distance accounts - if
+		// we are still pre-loading the journey planner.
 		fmt.Printf("\rDay %d: Submitting Flights",i)
 		err = jp.submitFlights(travellerBots,fe,currentDay,flightPaths,i>self.ModelParams.TrialDays)
 		if err != nil && err != ENOJOURNEYSPLANNED {
 			return glog(err)
 		}
 
+		// For each travller: Update triphistory and backfill those with distance accounts in
+		// deficit.
 		fmt.Printf("\rDay %d: Backfilling       ",i)
 		currentDay += flap.SecondsInDay
 		t,d,g,err :=  fe.UpdateTripsAndBackfill(currentDay)
@@ -263,7 +270,7 @@ func (self *Engine) Run() error {
 		}
 
 		// Calculate/set new daily total
-		if (i<= self.ModelParams.TrialDays) {
+		if (i > 0 && i <= self.ModelParams.TrialDays) {
 			
 			// Calculate DT as average across trial days if specified, defaulting to minimum
 			if self.ModelParams.DTAlgo=="average" {
@@ -272,11 +279,9 @@ func (self *Engine) Run() error {
 				self.FlapParams.DailyTotal=max(self.FlapParams.DailyTotal,d)
 			}
 
-			// Update MinGrounded, skipping until maxTripLength has been reached
-			// so we get full coverage of return journeys
-			if i > planDays {
-				self.FlapParams.MinGrounded = min(self.FlapParams.MinGrounded,t)
-			}
+			// Set MinGrounded,used by flap to ensure initial backfill share
+			// is not too large, to min number of travellers of any one day over the trial period
+			self.FlapParams.MinGrounded = min(self.FlapParams.MinGrounded,t)
 		} else  {
 
 			// Adjust Daily Total for the next day

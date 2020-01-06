@@ -527,8 +527,8 @@ func TestMake(t *testing.T) {
 		t.Error("Make failed to create traveller")
 	}
 
-	if !reflect.DeepEqual(p.Promises.entries,traveller.promises.entries) {
-		t.Error("Make failed to update promises in traveller record", traveller.promises)
+	if !reflect.DeepEqual(p.Promises.entries,traveller.Promises.entries) {
+		t.Error("Make failed to update promises in traveller record", traveller.Promises)
 	}
 }
 

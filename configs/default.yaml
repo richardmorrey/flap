@@ -6,6 +6,10 @@ flapparams:
   flightsintrip: 50
   # Maximum gap between flights in a single Journey, in days
   flightinterval: 1
+  # Promises algo to use. 0 = promises not enabled, 1 = linear best fit
+  promisesalgo: 1
+  # Maximum days ahead to allow a promise trip to end
+  promisesmaxlength: 100
 # Parameters controlling flapmodel
 modelparams:
   # Folder to hold working databases and all output files
@@ -37,7 +41,6 @@ modelparams:
   # is chosen at random from the list. To make a length more frequent
   # add it multiple times.
   triplengths:
-  - 1
   - 2
   - 3
   - 5

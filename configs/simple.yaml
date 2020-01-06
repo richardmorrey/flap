@@ -2,6 +2,9 @@ flapparams:
   triplength: 365
   flightsintrip: 50
   flightinterval: 1
+  promisesalgo: 1
+  promisesmaxpoints: 100
+  promisesmaxdays: 10
 modelparams:
   workingfolder: ./working
   datafolder: ./data
@@ -13,6 +16,6 @@ modelparams:
   - planprobability: 1.0
     weight: 1
   triplengths:
-  - 1
+  - 2
   startday: 0
   dailytotalfactor: 0.99

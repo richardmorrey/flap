@@ -159,7 +159,7 @@ func TestKeepMatchingPromise(t *testing.T) {
 	var tr Traveller
 	tr.tripHistory.entries[0] = *createFlight(1,1,2)
 	tr.tripHistory.entries[0].distance=55
-	tr.promises.entries[0]=Promise{TripStart:1,TripEnd:2,Clearance: epochDays(88).toEpochTime(), Distance:55}
+	tr.Promises.entries[0]=Promise{TripStart:1,TripEnd:2,Clearance: epochDays(88).toEpochTime(), Distance:55}
 	if ! tr.keep()  {
 		t.Error("keep didnt keep matching  promise")
 	}
@@ -175,7 +175,7 @@ func TestKeepNonMatchingPromise(t *testing.T) {
 	var tr Traveller
 	tr.tripHistory.entries[0] = *createFlight(1,1,2)
 	tr.tripHistory.entries[0].distance=54
-	tr.promises.entries[0]=Promise{TripStart:1,TripEnd:2,Clearance: epochDays(88).toEpochTime(), Distance:55}
+	tr.Promises.entries[0]=Promise{TripStart:1,TripEnd:2,Clearance: epochDays(88).toEpochTime(), Distance:55}
 	if tr.keep()  {
 		t.Error("keep kept promise that didnt match")
 	}

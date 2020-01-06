@@ -63,6 +63,13 @@ func (self *EpochTime) toEpochDays(roundup bool) epochDays {
 	}
 }
 
+func min(a EpochTime, b EpochTime) EpochTime {
+	if a > b {
+		return b
+	}
+	return a
+}
+
 const MaxEpochTime=EpochTime(math.MaxUint64)
 
 type Flight struct {

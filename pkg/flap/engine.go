@@ -327,7 +327,7 @@ func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTi
 	}
 
 	// Ask for proposal and return the result
-	return self.getCreateTraveller(passport).promises.propose(ts,te,td,now,self.Administrator.predictor)
+	return self.getCreateTraveller(passport).Promises.propose(ts,te,td,now,self.Administrator.predictor)
 }
 
 // Make attempts to apply a proposal for changes to a traveller's set of clearance promises.
@@ -345,7 +345,7 @@ func (self *Engine) Make(passport Passport, proposal *Proposal) error {
 
 	// Make promise
 	t := self.getCreateTraveller(passport)
-	err := t.promises.make(proposal,self.Administrator.predictor)
+	err := t.Promises.make(proposal,self.Administrator.predictor)
 	if (err == nil) {
 		self.Travellers.PutTraveller(*t)
 	}
