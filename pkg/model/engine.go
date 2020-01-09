@@ -124,7 +124,7 @@ func (self *Engine) Build() error {
 
 	//  Reset flap and load airports
 	err := flap.Reset(self.db)
-	fe := flap.NewEngine(self.db)
+	fe := flap.NewEngine(self.db,self.ModelParams.WorkingFolder)
 	err = fe.Administrator.SetParams(self.FlapParams)
 	if (err != nil) {
 		return glog(err)
@@ -210,7 +210,7 @@ func (self *Engine) Run() error {
 	
 	// Reset flap and load airports
 	err = flap.Reset(self.db)
-	fe := flap.NewEngine(self.db)
+	fe := flap.NewEngine(self.db, self.ModelParams.WorkingFolder)
 	err = fe.Administrator.SetParams(self.FlapParams)
 	if (err != nil) {
 		return glog(err)
@@ -326,7 +326,7 @@ func (self *Engine) ShowTraveller(band uint64,bot uint64) (flap.Passport,string,
 	}
 
 	//  Initialize flap
-	fe := flap.NewEngine(self.db)
+	fe := flap.NewEngine(self.db,self.ModelParams.WorkingFolder)
 	err = fe.Administrator.SetParams(self.FlapParams)
 	if (err != nil) {
 		return p,"","",glog(err)

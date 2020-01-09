@@ -243,6 +243,7 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 					// consistent with current promises
 					startday := flap.Days(0)
 					if self.bp != nil {
+						print("Planning trip\n")
 						startday,err = self.bp.getPromise(fe,p,currentDay,tripLength,airport.Code,to) 
 						if err != nil && err != ENOSPACEFORTRIP {
 							self.bots[i].stats.Refused()

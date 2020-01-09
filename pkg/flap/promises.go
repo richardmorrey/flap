@@ -50,16 +50,16 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 
 	// Check args
 	if predictor == nil {
-		return nil,EINVALIDARGUMENT
+		return nil,glog(EINVALIDARGUMENT)
 	}
 	if tripEnd <= tripStart {
-		return nil,EINVALIDARGUMENT
+		return nil,glog(EINVALIDARGUMENT)
 	}
 	if distance <= 0 {
-		return nil,EINVALIDARGUMENT
+		return nil,glog(EINVALIDARGUMENT)
 	}
 	if tripStart <= now {
-		return nil,EINVALIDARGUMENT
+		return nil,glog(EINVALIDARGUMENT)
 	}
 
 	// Check that oldest promise can be dropped if we are full
@@ -78,23 +78,23 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	if err == ENOTENOUGHDATAPOINTS {
 		clearance = tripEnd.toEpochDays(true)+1
 	} else if err != nil  {
-		return nil,err
+		return nil,glog(err)
 	}
 	p = Promise{TripStart:tripStart,TripEnd:tripEnd,Distance:distance,Clearance:clearance.toEpochTime()}
 	
 	// Find index to add promise
 	i := sort.Search(MaxPromises, func(i int) bool { return self.entries[i].older(p)})
 	if  i >= MaxPromises {
-		return nil,EINTERNAL
+		return nil,glog(EINTERNAL)
 	}
 	
 	// Confirm that there is no trip overlap with promise before or after
 	//fmt.Printf("i:%d TripEnd:%d TripStart:%d\n", i, pp.entries[i+1].TripEnd,p.TripStart)
 	if (i < MaxPromises) && (pp.entries[i].TripEnd) >= p.TripStart {
-		return nil,EOVERLAPSWITHPREVPROMISE
+		return nil,glog(EOVERLAPSWITHPREVPROMISE)
 	}
 	if i > 0 && pp.entries[i-1].TripStart <= p.TripEnd {
-		return nil,EOVERLAPSWITHNEXTPROMISE
+		return nil,glog(EOVERLAPSWITHNEXTPROMISE)
 	}
 
 	// Copy older entries down one - the oldest is dropped - and insert
@@ -106,7 +106,7 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	if err == nil {
 		return &pp,nil
 	} else {
-		return nil,err
+		return nil,glog(err)
 	}
 }
 

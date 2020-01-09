@@ -3,9 +3,11 @@ package model
 import (
 	"github.com/richardmorrey/flap/pkg/flap"
 	"errors"
+	"fmt"
 )
 
 var ENOSPACEFORTRIP = errors.New("No space for trip")
+var ETOOMANYDAYSTOCHOOSEFROM = errors.New("Too many days to choose from")
 
 type botPromises struct {
 	Weights
@@ -27,33 +29,51 @@ func newBotPromises(totalDays flap.Days) *botPromises {
 // and otherwise an error
 func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,currentDay flap.EpochTime,length flap.Days,from flap.ICAOCode, to flap.ICAOCode) (flap.Days,error) {
 	
-	// Retrieve traveller object
-	t,err := fe.Travellers.GetTraveller(pp)
-	if err != nil {
-		return 0, glog(err)
-	}
-
 	// Build weights to cover all possible days for start of the trip
 	// making sure that any day that is not suitable (is part of a planned trip 
 	// or is too close to start of a planned trip) has zero weight
 	self.reset()
-	daysOffset:=flap.Days(currentDay/flap.SecondsInDay)
-	it := t.Promises.NewIterator()
-	var sd,ed flap.Days
-	for it.Next() {
-		sd = flap.Days(it.Value().TripStart/flap.SecondsInDay) - daysOffset - length
-		ed = flap.Days(it.Value().TripEnd/flap.SecondsInDay) - daysOffset 
-		self.addMultiple(1,int(sd))
-		self.addMultiple(0,int(ed+1-sd))
+	t,err := fe.Travellers.GetTraveller(pp)
+	daysToChooseFrom := (self.totalDays-int(length-1))
+	fmt.Printf("self.totalDays=%d length: %d \n", self.totalDays,length)
+	uptoDay:=flap.Days(currentDay/flap.SecondsInDay)
+	lastDay:=uptoDay + flap.Days(daysToChooseFrom)
+	if err == nil {
+		it := t.Promises.NewIterator()
+		var sd,ed flap.Days
+		for it.Next() {
+
+			// Add days when trip can start - up until the start of the current 
+			// promise trip, but allowing for the trip length
+			sd = flap.Days(it.Value().TripStart/flap.SecondsInDay) - (length-1)
+			if sd > uptoDay {
+				self.addMultiple(1,int(sd-uptoDay))
+				uptoDay=sd
+			}
+			
+			// Add days when trip cant start - up until the end of the promise trip
+			ed = flap.Days(it.Value().TripEnd/flap.SecondsInDay) + 1
+			if ed >=uptoDay {
+				self.addMultiple(0,int(ed-uptoDay))
+				uptoDay=ed
+			}
+		}
 	}
-	self.addMultiple(1,self.totalDays-len(self.Scale))
+
+	// Add remaining days
+	self.addMultiple(1,int(lastDay-uptoDay))
+	if len(self.Scale) !=  daysToChooseFrom {
+		fmt.Printf("Weights=#%v\n",self.Scale)
+		return 0, glog(ETOOMANYDAYSTOCHOOSEFROM)
+	}
 
 	// Choose start day. If one cant be found this means there
 	// is no gap in the traveller's schedule, regardless of FLAP,
 	// where the trip could be taken
+	fmt.Printf("Weights=#%v\n",self.Scale)
 	ts,err := self.choose()
 	if (err != nil) {
-		return 0,ENOSPACEFORTRIP
+		return 0,glog(ENOSPACEFORTRIP)
 	}
 
 	// Create airports
@@ -72,7 +92,7 @@ func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,currentDay 
 	var plannedflights [2]flap.Flight
 	sds:=currentDay + flap.EpochTime(ts*flap.SecondsInDay)
 	ede:=sds + flap.EpochTime(length*flap.SecondsInDay)
-	f,err := flap.NewFlight(fromAirport,sds,toAirport,sds+1)
+	f,err := flap.NewFlight(fromAirport,sds+1,toAirport,sds+2)
 	if (err != nil) {
 		return 0, glog(err)
 	}
@@ -84,6 +104,7 @@ func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,currentDay 
 	plannedflights[1]=*f
 
 	// Obtain promise
+	fmt.Printf("TripStart=%d currentDay=%d\n", sds,currentDay)
 	proposal,err := fe.Propose(pp,plannedflights[:],0,currentDay)
 	if (err != nil) {
 		return 0,glog(err)

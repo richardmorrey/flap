@@ -24,7 +24,7 @@ func engineteardown(db *db.LevelDB) {
 func TestNewEngine(t *testing.T) {
 	db:=enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	if engine  == nil {
 		t.Error("Failed to create engine")
 	}
@@ -37,7 +37,7 @@ func TestNewEngine(t *testing.T) {
 func TestEmptyParams(t  *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	paramsIn := FlapParams{}
 	err := engine.Administrator.SetParams(paramsIn)
 	if err != nil {
@@ -52,7 +52,7 @@ func TestEmptyParams(t  *testing.T) {
 func TestValidParams(t  *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	paramsIn := FlapParams{TripLength:365,FlightsInTrip:2,FlightInterval:50,DailyTotal:1000}
 	err := engine.Administrator.SetParams(paramsIn)
 	if err != nil {
@@ -67,7 +67,7 @@ func TestValidParams(t  *testing.T) {
 func TestInvalidFlightInterval(t  *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	paramsIn := FlapParams{TripLength:200,FlightsInTrip:50,FlightInterval:101,DailyTotal:1000}
 	err := engine.Administrator.SetParams(paramsIn)
 	if err == nil {
@@ -78,7 +78,7 @@ func TestInvalidFlightInterval(t  *testing.T) {
 func TestInvalidFlightInTrip(t  *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	paramsIn := FlapParams{TripLength:365,FlightsInTrip:51,FlightInterval:2,DailyTotal:1000}
 	err := engine.Administrator.SetParams(paramsIn)
 	if err == nil {
@@ -89,7 +89,7 @@ func TestInvalidFlightInTrip(t  *testing.T) {
 func TestEngineSubmitFlightsEmpty(t *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	var flights []Flight
 	passport := NewPassport("987654321","uk")
 	err := engine.SubmitFlights(passport,flights,0,true)
@@ -101,7 +101,7 @@ func TestEngineSubmitFlightsEmpty(t *testing.T) {
 func TestEngineSubmitFlights(t *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	var flights []Flight
 	flights = append(flights,*createFlight(1,1,2),*createFlight(2,2,3),*createFlight(3,3,4))
 	passport := NewPassport("987654321","uk")
@@ -130,7 +130,7 @@ func TestEngineSubmitFlights(t *testing.T) {
 func TestEngineSubmitFlightsInBatches(t *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	var flights []Flight
 	flights = append(flights,*createFlight(1,1,2),*createFlight(2,2,3))
 	passport := NewPassport("987654321","uk")
@@ -179,7 +179,7 @@ func TestEngineSubmitFlightsInBatches(t *testing.T) {
 func TestEngineSubmitFlightsGrounded(t *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	var flights []Flight
 	flights = append(flights,*createFlight(1,1,2),*createFlight(2,2,3),*createFlight(3,3,4))
 	passport := NewPassport("987654321","uk")
@@ -211,7 +211,7 @@ func TestEngineSubmitFlightsGrounded(t *testing.T) {
 func TestUpdateTripsAndBackfillEmpty(t  *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	ts,d,g,err := engine.UpdateTripsAndBackfill(1)
 	if (err == nil) {
 		t.Error("Update accepted now that isnt the start of a day")
@@ -235,7 +235,7 @@ func TestUpdateTripsAndBackfillEmpty(t  *testing.T) {
 func TestUpdateTripsAndBackfillOne(t  *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365}
 	engine.Administrator.SetParams(paramsIn)
 	var flights []Flight
@@ -273,7 +273,7 @@ func TestUpdateTripsAndBackfillOne(t  *testing.T) {
 func TestUpdateTripsAndBackfillThree(t  *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365}
 	engine.Administrator.SetParams(paramsIn)
 	var flights13,flights2 []Flight
@@ -330,7 +330,7 @@ func TestUpdateTripsAndBackfillThree(t  *testing.T) {
 func TestUpdateTripsAndBackfillPromises(t  *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:5,FlightInterval:1,FlightsInTrip:50,TripLength:365,
 				PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10}
 	engine.Administrator.SetParams(paramsIn)
@@ -369,7 +369,7 @@ func TestProposePromisesActive(t *testing.T) {
 	
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
 		PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:100}
 	engine.Administrator.SetParams(paramsIn)
@@ -397,7 +397,7 @@ func TestProposePromisesActive(t *testing.T) {
 	if p.entries[0].Distance != plannedflights[0].distance+plannedflights[1].distance {
 		t.Error("Proposal doesnt include expected trip distance",p.entries[0])
 	}
-	engine2 := NewEngine(db)
+	engine2 := NewEngine(db,"")
 	engine2.Administrator.SetParams(paramsIn)
 	if (!reflect.DeepEqual(*engine.Administrator.predictor.(*bestFit),*engine2.Administrator.predictor.(*bestFit))) {
 		t.Error("predictor state not being persisted across engine instances")
@@ -408,7 +408,7 @@ func TestProposePromisesTooFarAhead(t *testing.T) {
 	
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
 		PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:1}
 	engine.Administrator.SetParams(paramsIn)
@@ -427,7 +427,7 @@ func TestProposePromisesActiveiWithTripEnd(t *testing.T) {
 	
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
 			PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:100}
 	engine.Administrator.SetParams(paramsIn)
@@ -462,7 +462,7 @@ func TestProposePromisesInactive(t *testing.T) {
 	
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365}
 	engine.Administrator.SetParams(paramsIn)
 	passport := NewPassport("987654321","uk")
@@ -488,7 +488,7 @@ func TestProposePromisesInactive(t *testing.T) {
 func TestMakePromisesInactive(t *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365}
 	engine.Administrator.SetParams(paramsIn)
 	passport := NewPassport("987654321","uk")
@@ -509,7 +509,7 @@ func TestMakePromisesInactive(t *testing.T) {
 func TestMake(t *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
 						PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10}
 	engine.Administrator.SetParams(paramsIn)
@@ -536,7 +536,7 @@ func TestMakeOldProposal(t *testing.T) {
 
 	db:= enginesetup(t)
 	defer engineteardown(db)
-	engine := NewEngine(db)
+	engine := NewEngine(db,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
 						PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10}
 	engine.Administrator.SetParams(paramsIn)

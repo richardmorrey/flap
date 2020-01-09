@@ -21,12 +21,14 @@ type Weights struct
 func (self *Weights) add(w weight) {
 	if self.Scale == nil {
 		self.Scale = make([]weight,0,500)
+	}
+	l := len(self.Scale)
+	if l == 0 {
 		self.Scale = append(self.Scale,w)
 	} else {
-		self.Scale= append(self.Scale,self.Scale[len(self.Scale)-1]+w)
+		self.Scale= append(self.Scale,self.Scale[l-1]+w)
 	}
 }
-
 
 // addMultiple adds multiple weights with the same value. Does nothing if
 // number of multiples requested is less than 1
@@ -52,7 +54,10 @@ func (self  *Weights) find(w weight) (int,error) {
 func (self *Weights) choose() (int,error) {
 	tw,err := self.topWeight()
 	if err != nil {
-		return 0,ENOWEIGHTSDEFINED
+		return -1,ENOWEIGHTSDEFINED
+	}
+	if tw == 0 {
+		return -1,EWEIGHTNOTFOUND
 	}
 	return self.find(weight(rand.Intn(int(tw))))
 }
