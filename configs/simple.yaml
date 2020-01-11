@@ -6,6 +6,7 @@ flapparams:
   promisesmaxpoints: 100
   promisesmaxdays: 10
 modelparams:
+  loglevel: 3
   workingfolder: ./working
   datafolder: ./data
   dtalgo: average

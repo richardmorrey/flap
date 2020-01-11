@@ -50,16 +50,19 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 
 	// Check args
 	if predictor == nil {
-		return nil,glog(EINVALIDARGUMENT)
+		return nil,logError(EINVALIDARGUMENT)
 	}
 	if tripEnd <= tripStart {
-		return nil,glog(EINVALIDARGUMENT)
+		return nil,logError(EINVALIDARGUMENT)
 	}
 	if distance <= 0 {
-		return nil,glog(EINVALIDARGUMENT)
+		return nil,logError(EINVALIDARGUMENT)
 	}
 	if tripStart <= now {
-		return nil,glog(EINVALIDARGUMENT)
+		return nil,logError(EINVALIDARGUMENT)
+	}
+	if tripStart == 0 {
+		return nil,logError(EINVALIDARGUMENT)
 	}
 
 	// Check that oldest promise can be dropped if we are full
@@ -78,23 +81,23 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	if err == ENOTENOUGHDATAPOINTS {
 		clearance = tripEnd.toEpochDays(true)+1
 	} else if err != nil  {
-		return nil,glog(err)
+		return nil,logError(err)
 	}
 	p = Promise{TripStart:tripStart,TripEnd:tripEnd,Distance:distance,Clearance:clearance.toEpochTime()}
 	
 	// Find index to add promise
 	i := sort.Search(MaxPromises, func(i int) bool { return self.entries[i].older(p)})
 	if  i >= MaxPromises {
-		return nil,glog(EINTERNAL)
+		return nil,logError(EINTERNAL)
 	}
 	
 	// Confirm that there is no trip overlap with promise before or after
 	//fmt.Printf("i:%d TripEnd:%d TripStart:%d\n", i, pp.entries[i+1].TripEnd,p.TripStart)
 	if (i < MaxPromises) && (pp.entries[i].TripEnd) >= p.TripStart {
-		return nil,glog(EOVERLAPSWITHPREVPROMISE)
+		return nil,logError(EOVERLAPSWITHPREVPROMISE)
 	}
 	if i > 0 && pp.entries[i-1].TripStart <= p.TripEnd {
-		return nil,glog(EOVERLAPSWITHNEXTPROMISE)
+		return nil,logError(EOVERLAPSWITHNEXTPROMISE)
 	}
 
 	// Copy older entries down one - the oldest is dropped - and insert
@@ -106,7 +109,7 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	if err == nil {
 		return &pp,nil
 	} else {
-		return nil,glog(err)
+		return nil,logError(err)
 	}
 }
 
@@ -169,12 +172,12 @@ func (self* Promises) updateStackEntry(i int, predictor predictor) error {
 	// not cleared from promise i
 	distdone,err := predictor.backfilled(self.entries[i].TripEnd.toEpochDays(true)+1,self.entries[i].Clearance.toEpochDays(false))
 	if err != nil {
-		return err
+		return logError(err)
 	}
 	self.entries[i-1].carriedOver = self.entries[i].tobackfill() - distdone
 	clearance,err := predictor.predict(self.entries[i-1].tobackfill(),self.entries[i-1].TripEnd.toEpochDays(true)+1)
 	if err != nil {
-		return err
+		return logError(err)
 	}
 	self.entries[i-1].Clearance=clearance.toEpochTime()
 	return nil
@@ -193,7 +196,7 @@ func (self* Promises) restack(i int, predictor predictor) error {
 	if  i < MaxPromises -1 && self.entries[i+1].Clearance >= self.entries[i].TripStart {
 		err := self.updateStackEntry(i+1,predictor)
 		if err != nil {
-			return err
+			return logError(err)
 		}
 	}
 
@@ -204,7 +207,7 @@ func (self* Promises) restack(i int, predictor predictor) error {
 		// Update
 		err := self.updateStackEntry(j,predictor)
 		if err != nil {
-			return err
+			return logError(err)
 		}
 	}
 	return nil

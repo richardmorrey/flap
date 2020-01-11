@@ -159,7 +159,7 @@ func (self *TravellerBots) Build(modelParams *ModelParams) error {
 	// Create bots
 	topWeight, err := self.countryWeights.topWeight()
 	if err != nil {
-		return glog(err)
+		return logError(err)
 	}
 	for _, botspec := range modelParams.BotSpecs {
 		var bot travellerBot
@@ -207,7 +207,7 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 				// Retrieve passport
 				p,err := self.getPassport(botId{i,j})
 				if err != nil {
-					return glog(err)
+					return logError(err)
 				}
 
 				// Check bot is not already travelling
@@ -216,20 +216,20 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 					// Retrieve source country record for traveller
 					car,err := cars.getCountry(p.Issuer)
 					if err != nil {
-						return glog(err)
+						return logError(err)
 					}
 
 					// Choose source airport
 					ap,err := car.choose()
 					if err != nil {
-						return glog(err)
+						return logError(err)
 					}
 					airport := car.Airports[ap]
 
 					// Choose route (destination airport)
 					route,err := airport.choose()
 					if err != nil {
-						return glog(err)
+						return logError(err)
 					}
 					to := airport.Routes[route].To
 
@@ -254,7 +254,7 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 					if err == nil {
 						err = jp.planTrip(airport.Code,to,tripLength, botId{i,j},startday)
 						if err != nil {
-							return glog(err)
+							return logError(err)
 						}
 					}
 				}

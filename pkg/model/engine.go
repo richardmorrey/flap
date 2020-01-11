@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"time"
 	"math"
@@ -42,6 +41,7 @@ type ModelParams struct {
 	StartDay		flap.EpochTime
 	DailyTotalFactor	float64
 	ReportDayDelta		flap.Days
+	LogLevel		logLevel
 }
 
 type plannedFlight struct {
@@ -65,14 +65,6 @@ type Engine struct {
 	stats				summaryStats
 }
 
-var glogger *log.Logger
-func glog(e error) error {
-	if glogger != nil {
-		glogger.Output(2,e.Error())
-	}
-	return e
-}
-
 // NewEngine is factory function for Engine
 func NewEngine(configFilePath string) (*Engine,error) {
 	
@@ -81,11 +73,11 @@ func NewEngine(configFilePath string) (*Engine,error) {
 	// Load config file
 	buff, err := ioutil.ReadFile(configFilePath)
 	if err != nil {
-		return nil,glog(err)
+		return nil,logError(err)
 	}
 	err = yaml.Unmarshal(buff, &e)
 	if err != nil {
-		return nil,glog(err)
+		return nil,logError(err)
 	}
 	if e.ModelParams.ReportDayDelta == 0 {
 		e.ModelParams.ReportDayDelta = 1
@@ -93,14 +85,12 @@ func NewEngine(configFilePath string) (*Engine,error) {
 		
 	for _,length := range(e.ModelParams.TripLengths) {
 		if length < 2 {
-			return nil,glog(flap.EINVALIDARGUMENT)
+			return nil,logError(flap.EINVALIDARGUMENT)
 		}
 	}
 
 	// Initialize logger
-	logpath := filepath.Join(e.ModelParams.WorkingFolder,"model.log")
-	f, _ := os.OpenFile(logpath,os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	glogger = log.New(f, "model ", log.LstdFlags | log.Lshortfile)
+	NewLogger(e.ModelParams.LogLevel,e.ModelParams.WorkingFolder)
 
 	// Create db
 	e.db = db.NewLevelDB(e.ModelParams.WorkingFolder)
@@ -124,14 +114,14 @@ func (self *Engine) Build() error {
 
 	//  Reset flap and load airports
 	err := flap.Reset(self.db)
-	fe := flap.NewEngine(self.db,self.ModelParams.WorkingFolder)
+	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
 	err = fe.Administrator.SetParams(self.FlapParams)
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 	err =fe.Airports.LoadAirports(filepath.Join(self.ModelParams.DataFolder,"airports.dat"))
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 
 	// Build countries-airports-flights table from real-world data
@@ -141,7 +131,7 @@ func (self *Engine) Build() error {
 	}
 	err = cars.Build(self.ModelParams.DataFolder,self.ModelParams.WorkingFolder)
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 	fmt.Printf("...Finished\n")
 	return nil
@@ -195,7 +185,7 @@ func (self *Engine) Run() error {
 	var countryWeights CountryWeights
 	err := countryWeights.load(self.ModelParams.WorkingFolder)
 	if err != nil {
-		return glog(err)
+		return logError(err)
 	}
 	
 	// Build flight plans for traveller bots
@@ -205,19 +195,19 @@ func (self *Engine) Run() error {
 	}
 	err = travellerBots.Build(&(self.ModelParams))
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 	
 	// Reset flap and load airports
 	err = flap.Reset(self.db)
-	fe := flap.NewEngine(self.db, self.ModelParams.WorkingFolder)
+	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
 	err = fe.Administrator.SetParams(self.FlapParams)
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 	err =fe.Airports.LoadAirports(filepath.Join(self.ModelParams.DataFolder,"airports.dat"))
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 
 	// Create journey planner with enough days
@@ -229,7 +219,7 @@ func (self *Engine) Run() error {
 	}
 	jp,err := NewJourneyPlanner(planDays)
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 
 	// Model each day as configured, but run for "planDays" first to make
@@ -242,7 +232,7 @@ func (self *Engine) Run() error {
 		fmt.Printf("\rDay %d: Planning Flights",i)
 		err = travellerBots.planTrips(cars,jp,fe,currentDay)
 		if err != nil {
-			return glog(err)
+			return logError(err)
 		}
 
 		// Submit all flights for this day, logging only - i.e. not debiting distance accounts - if
@@ -250,7 +240,7 @@ func (self *Engine) Run() error {
 		fmt.Printf("\rDay %d: Submitting Flights",i)
 		err = jp.submitFlights(travellerBots,fe,currentDay,flightPaths,i>self.ModelParams.TrialDays)
 		if err != nil && err != ENOJOURNEYSPLANNED {
-			return glog(err)
+			return logError(err)
 		}
 
 		// For each travller: Update triphistory and backfill those with distance accounts in
@@ -259,7 +249,7 @@ func (self *Engine) Run() error {
 		currentDay += flap.SecondsInDay
 		t,d,g,err :=  fe.UpdateTripsAndBackfill(currentDay)
 		if err != nil {
-			return glog(err)
+			return logError(err)
 		}
 		
 		// Report daily stats
@@ -288,7 +278,7 @@ func (self *Engine) Run() error {
 			self.FlapParams.DailyTotal = flap.Kilometres(float64(self.FlapParams.DailyTotal)*self.ModelParams.DailyTotalFactor)
 			err = fe.Administrator.SetParams(self.FlapParams)
 			if err != nil {
-				return glog(err)
+				return logError(err)
 			}
 		}
 	}
@@ -304,46 +294,46 @@ func (self *Engine) ShowTraveller(band uint64,bot uint64) (flap.Passport,string,
 	var countryWeights CountryWeights
 	err := countryWeights.load(self.ModelParams.WorkingFolder)
 	if err != nil {
-		return p,"","",glog(err)
+		return p,"","",logError(err)
 	}
 
 	// Create travellerbots struct
 	travellerBots := NewTravellerBots(&countryWeights,self.FlapParams)
 	if travellerBots == nil {
-		return p,"","",glog(EFAILEDTOCREATETRAVELLERBOTS)
+		return p,"","",logError(EFAILEDTOCREATETRAVELLERBOTS)
 	}
 	err = travellerBots.Build(&(self.ModelParams))
 	if (err != nil) {
-		return p,"","",glog(err)
+		return p,"","",logError(err)
 	}
 
 	// Valid args
 	if band >= uint64(len(travellerBots.bots)) {
-		return p,"","",glog(ENOSUCHTRAVELLER)
+		return p,"","",logError(ENOSUCHTRAVELLER)
 	}
 	if bot >= uint64(travellerBots.bots[band].numInstances) {
-		return p,"","",glog(ENOSUCHTRAVELLER)
+		return p,"","",logError(ENOSUCHTRAVELLER)
 	}
 
 	//  Initialize flap
-	fe := flap.NewEngine(self.db,self.ModelParams.WorkingFolder)
+	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
 	err = fe.Administrator.SetParams(self.FlapParams)
 	if (err != nil) {
-		return p,"","",glog(err)
+		return p,"","",logError(err)
 	}
 	err =fe.Airports.LoadAirports(filepath.Join(self.ModelParams.DataFolder,"airports.dat"))
 	if (err != nil) {
-		return p,"","",glog(err)
+		return p,"","",logError(err)
 	}
 
 	// Resolve given spec to a passport and look up in the travellers db
 	p,err = travellerBots.getPassport(botId{bandIndex(band),botIndex(bot)})
 	if err != nil {
-		return  p,"","",glog(err)
+		return  p,"","",logError(err)
 	}
 	t,err := fe.Travellers.GetTraveller(p)
 	if err != nil {
-		return p,"", "",glog(err)
+		return p,"", "",logError(err)
 	}
 
 	// Return the traveller as JSON

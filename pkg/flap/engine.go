@@ -6,9 +6,6 @@ import (
 	"bytes"
 	"math"
 	"errors"
-	"log"
-	"path/filepath"
-	"os"
 )
 
 var EPROMISESNOTENABLED = errors.New("Promises not enabled")
@@ -137,14 +134,6 @@ func dropAdministrator(database db.Database) error {
 	return database.DropTable(adminTableName)
 }
 
-var glogger *log.Logger
-func glog(e error) error {
-	if glogger != nil {
-		glogger.Output(2,e.Error())
-	}
-	return e
-}
-
 type Engine struct
 {
 	Administrator 		*Administrator
@@ -158,18 +147,12 @@ type Engine struct
 // - Submission of flights taken by carriers
 // - Updating of the status of Journeys and Trips for every Traveller.
 // - Backfilling of the Daily Total to all grounded Travellers.
-func NewEngine(database db.Database, logFolder string) *Engine {
+func NewEngine(database db.Database, logLevel LogLevel,logFolder string) *Engine {
+	NewLogger(logLevel,logFolder)
 	engine := new(Engine)
 	engine.Travellers = NewTravellers(database)
 	engine.Airports   = NewAirports(database)
 	engine.Administrator = newAdministrator(database)
-
-	// Initialize logger
-	if (logFolder != "") {
-		logpath := filepath.Join(logFolder,"flap.log")
-		f, _ := os.OpenFile(logpath,os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		glogger = log.New(f, "model ", log.LstdFlags | log.Lshortfile)
-	}
 	return engine
 }
 

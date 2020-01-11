@@ -49,7 +49,7 @@ func NewJourneyPlanner(planningDays flap.Days) (*journeyPlanner,error) {
 // Adds journey to a day. Day is 0-indexed with 0 meaning "today"
 func (self *journeyPlanner) addJourney(j journey, day flap.Days) error {
 	if day >= flap.Days(len(self.days)) {
-		return glog(EDAYTOOFARAHEAD)
+		return logError(EDAYTOOFARAHEAD)
 	}
 	if self.days[day] == nil {
 		self.days[day] = make([]journey,0,100)
@@ -81,7 +81,7 @@ func (self *journeyPlanner) flightLength(from flap.Airport, to flap.Airport) (fl
 
 	dist,err := from.Loc.Distance(to.Loc)
 	if err != nil {
-		return 0,0,glog(err)
+		return 0,0,logError(err)
 	}
 	return dist,flap.EpochTime(float64(dist)/airspeed),nil
 }
@@ -93,17 +93,17 @@ func (self *journeyPlanner) buildFlight(jf *journeyFlight, startOfDay flap.Epoch
 	// Retrieve airport records
 	fromAirport,err := fe.Airports.GetAirport(jf.from)
 	if (err != nil) {
-		return 0,0,nil,0,glog(err)
+		return 0,0,nil,0,logError(err)
 	}
 	toAirport,err := fe.Airports.GetAirport(jf.to)
 	if (err != nil) {
-		return 0,0,nil,0,glog(err)
+		return 0,0,nil,0,logError(err)
 	}
 
 	// Calculate flight length
 	dist,duration,err := self.flightLength(fromAirport,toAirport)
 	if (err != nil) {
-		return 0,0,nil,0,glog(err)
+		return 0,0,nil,0,logError(err)
 	}
 	
 	// Set start and end time, ensuring flight ends by end of first day to avoid overlap
@@ -132,7 +132,7 @@ func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, sta
 		// Build flight
 		start,end,flight,distance,err := self.buildFlight(&(j.flight),startOfDay,fe)
 		if (err != nil) {
-			return glog(err)
+			return logError(err)
 		}
 
 		// Submit flight
@@ -140,7 +140,7 @@ func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, sta
 		flights[0]=*flight
 		p,err := tb.getPassport(j.bot)
 		if err != nil {
-			return glog(err)
+			return logError(err)
 		}
 		err = fe.SubmitFlights(p,flights[:],start,debit)
 		// If successful  ...
@@ -150,7 +150,7 @@ func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, sta
 			if j.jt==jtOutbound {
 				err = self.planInbound(&j)
 				if err != nil {
-					return glog(err)
+					return logError(err)
 				}
 			}
 			// ... and report

@@ -3,7 +3,6 @@ package model
 import (
 	"github.com/richardmorrey/flap/pkg/flap"
 	"errors"
-	"fmt"
 )
 
 var ENOSPACEFORTRIP = errors.New("No space for trip")
@@ -35,7 +34,6 @@ func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,currentDay 
 	self.reset()
 	t,err := fe.Travellers.GetTraveller(pp)
 	daysToChooseFrom := (self.totalDays-int(length-1))
-	fmt.Printf("self.totalDays=%d length: %d \n", self.totalDays,length)
 	uptoDay:=flap.Days(currentDay/flap.SecondsInDay)
 	lastDay:=uptoDay + flap.Days(daysToChooseFrom)
 	if err == nil {
@@ -63,27 +61,26 @@ func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,currentDay 
 	// Add remaining days
 	self.addMultiple(1,int(lastDay-uptoDay))
 	if len(self.Scale) !=  daysToChooseFrom {
-		fmt.Printf("Weights=#%v\n",self.Scale)
-		return 0, glog(ETOOMANYDAYSTOCHOOSEFROM)
+		return 0, logError(ETOOMANYDAYSTOCHOOSEFROM)
 	}
 
 	// Choose start day. If one cant be found this means there
 	// is no gap in the traveller's schedule, regardless of FLAP,
 	// where the trip could be taken
-	fmt.Printf("Weights=#%v\n",self.Scale)
 	ts,err := self.choose()
+	logDebug("ts=",ts,"weights=",self.Scale)
 	if (err != nil) {
-		return 0,glog(ENOSPACEFORTRIP)
+		return 0,logError(ENOSPACEFORTRIP)
 	}
 
 	// Create airports
 	fromAirport,err := fe.Airports.GetAirport(from)
 	if (err != nil) {
-		return 0,glog(err)
+		return 0,logError(err)
 	}
 	toAirport,err := fe.Airports.GetAirport(to)
 	if (err != nil) {
-		return 0,glog(err)
+		return 0,logError(err)
 	}
 
 	// Build trip flights. Note flight times do not need to be accurate for promises as long as the
@@ -94,21 +91,21 @@ func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,currentDay 
 	ede:=sds + flap.EpochTime(length*flap.SecondsInDay)
 	f,err := flap.NewFlight(fromAirport,sds+1,toAirport,sds+2)
 	if (err != nil) {
-		return 0, glog(err)
+		return 0, logError(err)
 	}
 	plannedflights[0]=*f
 	f,err = flap.NewFlight(fromAirport,ede-2,toAirport,ede-1)
 	if (err != nil) {
-		return 0, glog(err)
+		return 0, logError(err)
 	}
 	plannedflights[1]=*f
+	logDebug("plannedflights:",plannedflights)
 
 	// Obtain promise
-	fmt.Printf("TripStart=%d currentDay=%d\n", sds,currentDay)
 	proposal,err := fe.Propose(pp,plannedflights[:],0,currentDay)
 	if (err != nil) {
-		return 0,glog(err)
+		return 0,logError(err)
 	}
-	return flap.Days(ts),fe.Make(pp,proposal)
+	return flap.Days(ts),logError(fe.Make(pp,proposal))
 }
 

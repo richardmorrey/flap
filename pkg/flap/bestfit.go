@@ -178,7 +178,7 @@ func (self *bestFit) predict(balance Kilometres,start epochDays) (epochDays,erro
 		}
 	}
 	if choice == math.MaxFloat64 {
-		return epochDays(choice),glog(ENOVALIDPREDICTION)
+		return epochDays(choice),logError(ENOVALIDPREDICTION)
 	} else {
 		return epochDays(math.Ceil(choice)), nil
 	}
@@ -189,11 +189,11 @@ func (self *bestFit) predict(balance Kilometres,start epochDays) (epochDays,erro
 func (self* bestFit) backfilled(start epochDays,end epochDays) (Kilometres,error) {
 	d1 := float64(start)
 	if self.calcY(d1) < 0 {
-		return 0, glog(ENOVALIDPREDICTION)
+		return 0, logError(ENOVALIDPREDICTION)
 	}
 	d2 := float64(end)
 	if self.calcY(d2) < 0 {
-		return 0, glog(ENOVALIDPREDICTION)
+		return 0, logError(ENOVALIDPREDICTION)
 	}
 	return Kilometres(self.integral(d2)-self.integral(d1)),nil
 }

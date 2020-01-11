@@ -86,7 +86,7 @@ func NewCountryWeights() *CountryWeights {
 func (self *CountryWeights) save(folder string) error  {
 	jsonData, err  := json.MarshalIndent(self, "", "    ")
 	if err != nil {
-		return glog(err)
+		return logError(err)
 	}
 	filePath := filepath.Join(folder,"countryweights.json")
 	return ioutil.WriteFile(filePath, jsonData, 0644)
@@ -99,7 +99,7 @@ func (self *CountryWeights) load(folder string) error {
 	filePath := filepath.Join(folder,"countryweights.json")
 	file, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		return glog(err)
+		return logError(err)
 	}
 	return json.Unmarshal([]byte(file), self)
 }
@@ -109,7 +109,7 @@ func (self *CountryWeights) update(cs *countryState) error {
 	self.Countries= append(self.Countries,string(cs.countryCode[:2]))
 	w,err := cs.country.topWeight()
 	if err != nil {
-		return glog(err)
+		return logError(err)
 	}
 	self.add(w)
 	return nil
@@ -154,14 +154,14 @@ func (self *CountriesAirportsRoutes) Build(dataFolder string, workingFolder stri
 	// Load openflightsid-to-airport ICAOCode map
 	err := self.loadIDs(dataFolder)
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 	fmt.Printf("...loaded %d airport codes...\n",len(self.acs))
 
 	// Load airport sizes
 	err = self.loadSizes(dataFolder)
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 	fmt.Printf("...loaded %d airport sizes...\n",len(self.wcs))
 
@@ -169,7 +169,7 @@ func (self *CountriesAirportsRoutes) Build(dataFolder string, workingFolder stri
 	self.res = make([]RouteWithWeight,0,60000) 
 	err = self.loadRoutes(dataFolder)
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 	fmt.Printf("...loaded %d routes...\n", len(self.res))
 
@@ -187,13 +187,13 @@ func (self *CountriesAirportsRoutes) Build(dataFolder string, workingFolder stri
 			// Add last airport weight and save current country
 			err = self.putCountry(cs)
 			if (err != nil) {
-				return glog(err)
+				return logError(err)
 			}
 
 			// Update country weights
 			err = countryWeights.update(&cs)
 			if err != nil {
-				return glog(err)
+				return logError(err)
 			}
 
 			// Create next country
@@ -206,7 +206,7 @@ func (self *CountriesAirportsRoutes) Build(dataFolder string, workingFolder stri
 		if  route.From != cs.airport.Code {
 			w,err := cs.airport.topWeight()
 			if err != nil {
-				return glog(err)
+				return logError(err)
 			}
 			cs.country.add(w)
 			cs.airport = cs.country.getAirport(route.From)
@@ -226,19 +226,19 @@ func (self *CountriesAirportsRoutes) Build(dataFolder string, workingFolder stri
 	// Save last country
 	err = self.putCountry(cs)
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 	
 	// Update country weights with last country
 	err = countryWeights.update(&cs)
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 
 	// Save country weights
 	err = countryWeights.save(workingFolder)
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 	fmt.Printf("\r...built weighted model for %d countries...                           \n",len(countryWeights.Countries))
 	return nil
@@ -305,7 +305,7 @@ func (self  *CountriesAirportsRoutes) putCountry(cs countryState) error {
 	if cs.airport != nil {
 		w,err := cs.airport.topWeight()
 		if err != nil {
-			return glog(err)
+			return logError(err)
 		}	
 		cs.country.add(w)
 	}
@@ -319,13 +319,13 @@ func (self  *CountriesAirportsRoutes) putCountry(cs countryState) error {
 	var buff bytes.Buffer
 	err := cs.country.To(&buff)
 	if err != nil {
-		return glog(err)
+		return logError(err)
 	}
 
 	// Put record
 	err = self.table.Put(cs.countryCode[:], buff.Bytes())
 	if err != nil {
-		return glog(err)
+		return logError(err)
 	}
 	cs.report()
 	return nil
@@ -353,7 +353,7 @@ func (self *CountriesAirportsRoutes) loadRoutes(folderPath string) error {
 	filepath := filepath.Join(folderPath,"routes.dat")
 	csvFile, err := os.Open(filepath)
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 	reader := csv.NewReader(bufio.NewReader(csvFile))
 	for {
@@ -363,7 +363,7 @@ func (self *CountriesAirportsRoutes) loadRoutes(folderPath string) error {
 			break
 		} else
 		if err != nil {
-			return glog(err)
+			return logError(err)
 		}
 		
 		// Retrieve openflight from and to ids
@@ -408,7 +408,7 @@ func (self *CountriesAirportsRoutes) loadIDs(folderPath string) error {
 	filepath := filepath.Join(folderPath,"airports.dat")
 	csvFile, err := os.Open(filepath)
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 	reader := csv.NewReader(bufio.NewReader(csvFile))
 	self.acs = make(airportCodesMap)
@@ -419,7 +419,7 @@ func (self *CountriesAirportsRoutes) loadIDs(folderPath string) error {
 			break
 		} else
 		if err != nil {
-			return glog(err)
+			return logError(err)
 		}
 		
 		// Add record to map
@@ -441,7 +441,7 @@ func (self *CountriesAirportsRoutes) loadSizes(folderPath string) error {
 	filepath := filepath.Join(folderPath,"airports.csv")
 	csvFile, err := os.Open(filepath)
 	if (err != nil) {
-		return glog(err)
+		return logError(err)
 	}
 	reader := csv.NewReader(bufio.NewReader(csvFile))
 	self.wcs = make(airportWeightCountryMap)
@@ -452,7 +452,7 @@ func (self *CountriesAirportsRoutes) loadSizes(folderPath string) error {
 			break
 		} else
 		if err != nil {
-			return glog(err)
+			return logError(err)
 		}
 		
 		// Add record to map if the row contains an airpot size category
