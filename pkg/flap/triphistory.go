@@ -243,8 +243,8 @@ func (self *TripHistory) startOfTrip(j tripHistoryIndex) (tripHistoryIndex,error
 }
 
 // tripStartEndLength returns the start time of the first flight in the
-// latest trip, the total distance so far flown across the whole trip
-// and the
+// latest trip,the end time of the last flight taken and the total distance
+// so far flown across the whole trip
 func (self *TripHistory) tripStartEndLength() (EpochTime,EpochTime,Kilometres) {
 	var d Kilometres
 	var st EpochTime

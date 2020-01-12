@@ -3,7 +3,6 @@ package flap
 import (
 	"testing"
 	"reflect"
-	"errors"
 	"github.com/richardmorrey/flap/pkg/db"
 )
 
@@ -254,7 +253,7 @@ func TestProposePredNotReady(t *testing.T) {
 	var ps Promises
 	var ep errpredictor
 	ep.err=ENOTENOUGHDATAPOINTS
-	p := Promise{TripStart:epochDays(2).toEpochTime(),TripEnd:epochDays(3).toEpochTime(),Distance:2,Clearance:epochDays(4).toEpochTime()}
+	p := Promise{TripStart:epochDays(2).toEpochTime(),TripEnd:epochDays(3).toEpochTime()+1,Distance:2,Clearance:epochDays(4).toEpochTime()}
 	proposal,err := ps.propose(p.TripStart,p.TripEnd,p.Distance,epochDays(1).toEpochTime(),&ep)
 	if err != nil {
 		t.Error("Failed to propose a promise when predicitor isnt ready",err)
@@ -262,19 +261,6 @@ func TestProposePredNotReady(t *testing.T) {
 	}
 	if proposal.entries[0] != p {
 		t.Error("Propose didn't deliver expected proposal when predictor isnt ready",proposal.entries[0])
-	}
-}
-
-func TestProposePredError(t *testing.T) {
-	var ps Promises
-	var ep errpredictor
-	var ETEST = errors.New("Test Error")
-	ep.err=ETEST
-	p := Promise{TripStart:epochDays(2).toEpochTime(),TripEnd:epochDays(3).toEpochTime(),Distance:2,Clearance:epochDays(4).toEpochTime()}
-	_,err := ps.propose(p.TripStart,p.TripEnd,p.Distance,epochDays(1).toEpochTime(),&ep)
-	if err != ETEST {
-		t.Error("Failed to act on unexpected predictor error",err)
-		return
 	}
 }
 
@@ -618,6 +604,14 @@ func TestKeepWrongDistance(t *testing.T) {
 	_,err:= ps.keep(epochDays(50).toEpochTime(),epochDays(56).toEpochTime(),3)
 	if err != EPROMISEDOESNTMATCH {
 		t.Error("keep matched promise with differnt distance",err)
+	}
+}
+
+func TestKeepInvalid(t *testing.T) {
+	var ps Promises
+	_,err:= ps.keep(0,0,0)
+	if err != EINVALIDARGUMENT {
+		t.Error("keep accepts empty flight details",err)
 	}
 }
 

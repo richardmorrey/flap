@@ -187,6 +187,13 @@ func (self *bestFit) predict(balance Kilometres,start epochDays) (epochDays,erro
 // backfilled predicts distance that would be backfilled for a single traveller between
 // the two given days
 func (self* bestFit) backfilled(start epochDays,end epochDays) (Kilometres,error) {
+
+	// Check for valid state
+	if self.c < 0 {
+		return 0,ENOTENOUGHDATAPOINTS
+	}
+
+	// Calc intergral for start and end date
 	d1 := float64(start)
 	if self.calcY(d1) < 0 {
 		return 0, logError(ENOVALIDPREDICTION)
@@ -195,6 +202,9 @@ func (self* bestFit) backfilled(start epochDays,end epochDays) (Kilometres,error
 	if self.calcY(d2) < 0 {
 		return 0, logError(ENOVALIDPREDICTION)
 	}
+
+	// Backfilled between start and end is the difference between
+	// the two integrals
 	return Kilometres(self.integral(d2)-self.integral(d1)),nil
 }
 

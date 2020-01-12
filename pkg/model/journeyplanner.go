@@ -55,6 +55,7 @@ func (self *journeyPlanner) addJourney(j journey, day flap.Days) error {
 		self.days[day] = make([]journey,0,100)
 	}
 	self.days[day] = append(self.days[day],j)
+	logDebug("Added journey. Day +",day," now has ", len(self.days[day]), " journeys.")
 	return nil
 }
 
@@ -121,11 +122,8 @@ func (self *journeyPlanner) buildFlight(jf *journeyFlight, startOfDay flap.Epoch
 // journey is planned
 func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, startOfDay flap.EpochTime, fp *flightPaths, debit bool) error {
 	
-	// Check for plan for today
-	if self.days[0] == nil {
-		return ENOJOURNEYSPLANNED
-	}
-	
+	logInfo("submitFlights processing ", len(self.days[0])," journeys")
+
 	// Iterate through all journeys for today
 	for _, j := range(self.days[0])  {
 		
@@ -155,6 +153,7 @@ func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, sta
 			}
 			// ... and report
 			fp.addFlight(j.flight.from,j.flight.to,start,end,fe.Airports,j.bot.band)
+			logDebug("Submitted flight for ",j.bot)
 		} else {
 			tb.GetBot(j.bot).stats.Refused()
 		}
@@ -162,8 +161,7 @@ func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, sta
 
 	// Delete the plan for today now it has been submitted
 	copy(self.days[:],self.days[1:])
-	self.days= self.days[:len(self.days)-1]
-	self.days=append(self.days,plannerDay{})
+	self.days[len(self.days)-1]=plannerDay{}
 	return nil
 }
 

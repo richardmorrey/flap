@@ -42,6 +42,7 @@ type ModelParams struct {
 	DailyTotalFactor	float64
 	ReportDayDelta		flap.Days
 	LogLevel		logLevel
+	Deterministic		bool
 }
 
 type plannedFlight struct {
@@ -229,8 +230,9 @@ func (self *Engine) Run() error {
 	for i:=flap.Days(-planDays); i <= self.ModelParams.DaysToRun; i++ {
 		
 		// Plan flights for all travellers
+		logInfo("DAY ", i)
 		fmt.Printf("\rDay %d: Planning Flights",i)
-		err = travellerBots.planTrips(cars,jp,fe,currentDay)
+		err = travellerBots.planTrips(cars,jp,fe,currentDay,self.ModelParams.Deterministic)
 		if err != nil {
 			return logError(err)
 		}

@@ -15,6 +15,7 @@ type weight uint64
 type Weights struct
 {
 	Scale [] weight
+	deterministic int
 }
 
 // add adds a new entry to the end of a scale of accummulating Weights
@@ -60,6 +61,20 @@ func (self *Weights) choose() (int,error) {
 		return -1,EWEIGHTNOTFOUND
 	}
 	return self.find(weight(rand.Intn(int(tw))))
+}
+
+// choosedeterministic chooses an entry based on an incrementing counter
+// Not thread safe and for testing purposes only
+func (self *Weights) choosedeterministic() (int,error) {
+	tw,err := self.topWeight()
+	if err != nil {
+		return -1,ENOWEIGHTSDEFINED
+	}
+	if tw == 0 {
+		return -1,EWEIGHTNOTFOUND
+	}
+	self.deterministic += 1
+	return  self.deterministic % int(tw), nil
 }
 
 // topWeight returns the highest weight value

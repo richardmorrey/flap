@@ -26,7 +26,7 @@ func newBotPromises(totalDays flap.Days) *botPromises {
 // trip for which a promise already exists. It then tries to obtain a promise
 // for the new trip and if successful returns start day of  the trip for planning
 // and otherwise an error
-func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,currentDay flap.EpochTime,length flap.Days,from flap.ICAOCode, to flap.ICAOCode) (flap.Days,error) {
+func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,currentDay flap.EpochTime,length flap.Days,from flap.ICAOCode, to flap.ICAOCode,deterministic bool) (flap.Days,error) {
 	
 	// Build weights to cover all possible days for start of the trip
 	// making sure that any day that is not suitable (is part of a planned trip 
@@ -67,7 +67,12 @@ func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,currentDay 
 	// Choose start day. If one cant be found this means there
 	// is no gap in the traveller's schedule, regardless of FLAP,
 	// where the trip could be taken
-	ts,err := self.choose()
+	var ts int 
+	if deterministic {
+		ts,err = self.choosedeterministic()
+	} else {
+		ts,err = self.choose()
+	}
 	logDebug("ts=",ts,"weights=",self.Scale)
 	if (err != nil) {
 		return 0,logError(ENOSPACEFORTRIP)
@@ -94,7 +99,7 @@ func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,currentDay 
 		return 0, logError(err)
 	}
 	plannedflights[0]=*f
-	f,err = flap.NewFlight(fromAirport,ede-2,toAirport,ede-1)
+	f,err = flap.NewFlight(toAirport,ede-2,fromAirport,ede-1)
 	if (err != nil) {
 		return 0, logError(err)
 	}
@@ -106,6 +111,10 @@ func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,currentDay 
 	if (err != nil) {
 		return 0,logError(err)
 	}
-	return flap.Days(ts),logError(fe.Make(pp,proposal))
+	err = logError(fe.Make(pp,proposal))
+	if err == nil {
+		logDebug("Made promise for trip in ",ts," days")
+	}
+	return flap.Days(ts),err
 }
 

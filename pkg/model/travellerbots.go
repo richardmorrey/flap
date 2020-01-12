@@ -196,7 +196,7 @@ func (self *TravellerBots) planningAllowed(pp flap.Passport,fe *flap.Engine) boo
 // of travellers in the band travelling on any one day. If the dice comes up and the
 // travellerbot is not in the middle of a trip, a new trip is planned using weighted 
 // country-airpots-routes model
-func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyPlanner, fe *flap.Engine,currentDay flap.EpochTime) error {
+func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyPlanner, fe *flap.Engine,currentDay flap.EpochTime,deterministic bool) error {
 
 	// Iterate through each bot in each band
 	for i:=bandIndex(0); i < bandIndex(len(self.bots)); i++ {
@@ -243,8 +243,7 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 					// consistent with current promises
 					startday := flap.Days(0)
 					if self.bp != nil {
-						print("Planning trip\n")
-						startday,err = self.bp.getPromise(fe,p,currentDay,tripLength,airport.Code,to) 
+						startday,err = self.bp.getPromise(fe,p,currentDay,tripLength,airport.Code,to,deterministic) 
 						if err != nil && err != ENOSPACEFORTRIP {
 							self.bots[i].stats.Refused()
 						}
@@ -255,6 +254,8 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 						err = jp.planTrip(airport.Code,to,tripLength, botId{i,j},startday)
 						if err != nil {
 							return logError(err)
+						} else {
+							logDebug("planned trip in ",startday," days")
 						}
 					}
 				}

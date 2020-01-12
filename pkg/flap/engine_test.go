@@ -382,7 +382,7 @@ func TestProposePromisesActive(t *testing.T) {
 		t.Error("Propose not succeding when promises are enabled",err)
 	}
 
-	if p.entries[0].Clearance != SecondsInDay*5 {
+	if p.entries[0].Clearance != SecondsInDay*4 {
 		t.Error("Proposal doesnt include expected Clearance date",p.entries[0])
 	}
 	

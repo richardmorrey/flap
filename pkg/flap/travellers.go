@@ -55,6 +55,7 @@ func (self *Traveller) keep() bool {
 				self.cleared=cd
 				kept = true
 			}
+			logDebug("EndTrip returned ",err)
 		}
 	}
 	return kept
@@ -96,6 +97,7 @@ func (self *Traveller) submitFlight(flight *Flight,now EpochTime, debit bool) er
 	if err != nil {
 		return err
 	}
+	logDebug("triphistory:",self.tripHistory)
 	if debit {
 		self.balance -= flight.distance
 	}

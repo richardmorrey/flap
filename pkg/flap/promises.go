@@ -66,7 +66,7 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	}
 
 	// Check that oldest promise can be dropped if we are full
-	if self.entries[MaxPromises-1].TripStart >= now {
+	if self.entries[MaxPromises-1].TripStart >= now && self.entries[MaxPromises-1].TripStart > 0 {
 		return nil,ENOROOMFORMOREPROMISES
 	}
 
@@ -78,10 +78,9 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	// is not ready yet
 	var p Promise
 	clearance,err := predictor.predict(distance,tripEnd.toEpochDays(true))
-	if err == ENOTENOUGHDATAPOINTS {
-		clearance = tripEnd.toEpochDays(true)+1
-	} else if err != nil  {
-		return nil,logError(err)
+	if err !=nil {
+		clearance = tripEnd.toEpochDays(false)+1
+		logDebug("predict failed: ",err)
 	}
 	p = Promise{TripStart:tripStart,TripEnd:tripEnd,Distance:distance,Clearance:clearance.toEpochTime()}
 	
@@ -92,7 +91,6 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	}
 	
 	// Confirm that there is no trip overlap with promise before or after
-	//fmt.Printf("i:%d TripEnd:%d TripStart:%d\n", i, pp.entries[i+1].TripEnd,p.TripStart)
 	if (i < MaxPromises) && (pp.entries[i].TripEnd) >= p.TripStart {
 		return nil,logError(EOVERLAPSWITHPREVPROMISE)
 	}
@@ -127,6 +125,11 @@ func (self *Promises) make(pp *Proposal, predictor predictor) error {
 // valid promise is found its clearance date is returned for use by the Traveller. Otherwise
 // an error is returned
 func (self* Promises) keep(tripStart EpochTime, tripEnd EpochTime, distance Kilometres) (EpochTime,error) {
+
+	// Check for valid trip details
+	if distance == 0 {
+		return EpochTime(0),EINVALIDARGUMENT
+	}
 
 	// Look from oldest to newest promise looking for first entry where:
 	// 1) Start time given is greater than or equal to entry start time
@@ -172,12 +175,14 @@ func (self* Promises) updateStackEntry(i int, predictor predictor) error {
 	// not cleared from promise i
 	distdone,err := predictor.backfilled(self.entries[i].TripEnd.toEpochDays(true)+1,self.entries[i].Clearance.toEpochDays(false))
 	if err != nil {
-		return logError(err)
+		distdone = 0
+		logDebug("backfill failed: ",err)
 	}
 	self.entries[i-1].carriedOver = self.entries[i].tobackfill() - distdone
 	clearance,err := predictor.predict(self.entries[i-1].tobackfill(),self.entries[i-1].TripEnd.toEpochDays(true)+1)
 	if err != nil {
-		return logError(err)
+		clearance = self.entries[i-1].TripEnd.toEpochDays(false)+1
+		logDebug("predict failed: ",err)
 	}
 	self.entries[i-1].Clearance=clearance.toEpochTime()
 	return nil
