@@ -46,28 +46,35 @@ func (self *TravellerBots) getPassport(bot botId) (flap.Passport,error) {
 
 type botStats struct {
 	distance flap.Kilometres
-	taken	 uint64
-	refused  uint64
-	cancelled uint64
+	flightsTaken	 uint64
+	flightsRefused   uint64
+	tripsCancelled   uint64
+	tripsPlanned	 uint64
 }
 
 // Submitted updates stats to reflect fact a journey
 // has been successfully submitted
 func (self *botStats) Submitted(dist flap.Kilometres) {
-	self.taken++
+	self.flightsTaken++
 	self.distance += dist
 }
 
 // Refused updates stats to relect fact a journey 
 // submission has been refused by flap
 func (self  *botStats) Refused() {
-	self.refused++
+	self.flightsRefused++
 }
 
 // Canclled updates stats to relect fact a promise
 // request has been refused by flap
 func (self  *botStats) Cancelled() {
-	self.cancelled++
+	self.tripsCancelled++
+}
+
+// Planned updates stats to relect fact a promise
+// request has been refused by flap
+func (self  *botStats) Planned() {
+	self.tripsPlanned++
 }
 
 // Report writes a single CSV row with stats
@@ -75,15 +82,16 @@ func (self *travellerBot) ReportDay(rdd flap.Days) string {
 	
 	// Format stats
 	line := fmt.Sprintf("%f,%f,%f,",
-		(float64(self.stats.refused)/float64(self.stats.taken+self.stats.refused+self.stats.cancelled))*100,
-		(float64(self.stats.cancelled)/float64(self.stats.taken+self.stats.refused+self.stats.cancelled))*100,
+		(float64(self.stats.flightsRefused)/float64(self.stats.flightsTaken+self.stats.flightsRefused))*100,
+		(float64(self.stats.tripsCancelled)/float64(self.stats.tripsPlanned+self.stats.tripsCancelled))*100,
 		 float64(self.stats.distance)/float64(flap.Kilometres(self.numInstances)))
 
 	// Reset counters
-	self.stats.taken = 0
-	self.stats.refused = 0
+	self.stats.flightsTaken = 0
+	self.stats.flightsRefused = 0
 	self.stats.distance = 0
-	self.stats.cancelled = 0
+	self.stats.tripsCancelled = 0
+	self.stats.tripsPlanned = 0
 	return line
 }
 
@@ -245,7 +253,7 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 					if self.bp != nil {
 						startday,err = self.bp.getPromise(fe,p,currentDay,tripLength,airport.Code,to,deterministic) 
 						if err != nil && err != ENOSPACEFORTRIP {
-							self.bots[i].stats.Refused()
+							self.bots[i].stats.Cancelled() 
 						}
 					}
 					
@@ -256,6 +264,7 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 							return logError(err)
 						} else {
 							logDebug("planned trip in ",startday," days")
+							self.bots[i].stats.Planned()
 						}
 					}
 				}
