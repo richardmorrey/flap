@@ -90,6 +90,7 @@ func TestFirstPromise(t *testing.T) {
 	var ps Promises
 	var tp testpredictor
 	tp.clearRate=1
+	tp.pv=999
 	psold := ps
 	p := Promise{TripStart:epochDays(2).toEpochTime(),TripEnd:epochDays(3).toEpochTime(),Distance:2,Clearance:epochDays(5).toEpochTime()}
 	proposal,err := ps.propose(p.TripStart,p.TripEnd,p.Distance,epochDays(1).toEpochTime(),&tp)
@@ -102,6 +103,9 @@ func TestFirstPromise(t *testing.T) {
 	}
 	if proposal.entries[0] != p {
 		t.Error("Propose didn't deliver expected proposal",proposal.entries[0])
+	}
+	if proposal.version != 999 {
+		t.Error("Proposes didn't set version of proposal to match predictor version", proposal.version)
 	}
 }
 

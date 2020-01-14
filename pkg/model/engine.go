@@ -227,6 +227,7 @@ func (self *Engine) Run() error {
 	// sure journey planner is pre-loaded with data for each of its days.
 	currentDay := self.ModelParams.StartDay
 	flightPaths := newFlightPaths(currentDay)
+	var travellersTotal float64
 	for i:=flap.Days(-planDays); i <= self.ModelParams.DaysToRun; i++ {
 		
 		// Plan flights for all travellers
@@ -261,7 +262,7 @@ func (self *Engine) Run() error {
 			flightPaths= reportFlightPaths(flightPaths,currentDay,self.ModelParams.WorkingFolder) 
 		}
 
-		// Calculate/set new daily total
+		// If in trial period calculate starting daily total and minimum grounded travellers
 		if (i > 0 && i <= self.ModelParams.TrialDays) {
 			
 			// Calculate DT as average across trial days if specified, defaulting to minimum
@@ -271,10 +272,14 @@ func (self *Engine) Run() error {
 				self.FlapParams.DailyTotal=max(self.FlapParams.DailyTotal,d)
 			}
 
-			// Set MinGrounded,used by flap to ensure initial backfill share
-			// is not too large, to min number of travellers of any one day over the trial period
-			self.FlapParams.MinGrounded = min(self.FlapParams.MinGrounded,t)
-		} else  {
+			// Set MinGrounded, used by flap to ensure initial backfill share
+			// is not too large, to average number of travellers per day over the trial period
+			travellersTotal += float64(t)
+			self.FlapParams.MinGrounded = uint64(math.Ceil(travellersTotal/float64(i)))
+		} 
+
+		// If next day is beyond trial period then set daily total and min grounded
+		if i >= self.ModelParams.TrialDays {
 
 			// Adjust Daily Total for the next day
 			self.FlapParams.DailyTotal = flap.Kilometres(float64(self.FlapParams.DailyTotal)*self.ModelParams.DailyTotalFactor)
@@ -282,6 +287,7 @@ func (self *Engine) Run() error {
 			if err != nil {
 				return logError(err)
 			}
+			logDebug("Updated FLAP Params:",self.FlapParams)
 		}
 	}
 	fmt.Printf("\nFinished\n")

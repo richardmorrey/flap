@@ -97,7 +97,7 @@ func (self *Traveller) submitFlight(flight *Flight,now EpochTime, debit bool) er
 	if err != nil {
 		return err
 	}
-	logDebug("triphistory:",self.tripHistory)
+	//logDebug("triphistory:",self.tripHistory)
 	if debit {
 		self.balance -= flight.distance
 	}

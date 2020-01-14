@@ -101,6 +101,7 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	// Copy older entries down one - the oldest is dropped - and insert
 	copy(pp.entries[i+1:], pp.entries[i:])
 	pp.entries[i] = p
+	pp.version = predictor.version()
 
 	// Stack promises to ensure no overlap
 	err = pp.restack(i,predictor)

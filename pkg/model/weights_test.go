@@ -13,22 +13,6 @@ func TestFindNoWeights(t *testing.T) {
 	}
 }
 
-func TestFindZeroWeight(t *testing.T) {
-	var w Weights
-	w.add(0)
-	i,err := w.find(0)
-	if err != nil {
-		t.Error("find failed with zero weight")
-	}
-	if i != 0 {
-		t.Error("find returned wrong index for zero weight")
-	}
-	i,err = w.find(1)
-	if err == nil {
-		t.Error("find succeeded with one for zero weight")
-	}
-}
-
 func TestFindOneWeight(t *testing.T) {
 	var w Weights
 	w.add(1)

@@ -242,6 +242,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 		if self.Administrator.validPredictor() {
 			self.Administrator.predictor.add(now.toEpochDays(false),share)
 			self.Administrator.predictor.put(self.Administrator.table)
+			logDebug("Added predictior data point:",now.toEpochDays(false),share)
 		}
 	}
 

@@ -12,23 +12,30 @@ var ENOWEIGHTSDEFINED = errors.New("No Weights defined")
 
 type weight uint64
 
+type ScaleEntry struct {
+	I int
+	W weight
+}
 type Weights struct
 {
-	Scale [] weight
+	Scale []ScaleEntry
 	deterministic int
 }
 
 // add adds a new entry to the end of a scale of accummulating Weights
-func (self *Weights) add(w weight) {
+func (self *Weights) addIndexWeight(i int, w weight) {
 	if self.Scale == nil {
-		self.Scale = make([]weight,0,500)
+		self.Scale = make([]ScaleEntry,0,500)
 	}
 	l := len(self.Scale)
 	if l == 0 {
-		self.Scale = append(self.Scale,w)
+		self.Scale = append(self.Scale,ScaleEntry{I:i,W:w})
 	} else {
-		self.Scale= append(self.Scale,self.Scale[l-1]+w)
+		self.Scale= append(self.Scale,ScaleEntry{I:i,W:(self.Scale[l-1].W+w)})
 	}
+}
+func (self *Weights) add(w weight) {
+	self.addIndexWeight(len(self.Scale),w)
 }
 
 // addMultiple adds multiple weights with the same value. Does nothing if
@@ -42,9 +49,10 @@ func (self *Weights) addMultiple(w weight,multiples int) {
 // find finds the entry within the scale that includes the given value and returns 
 // its index
 func (self  *Weights) find(w weight) (int,error) {
-	i := sort.Search(len(self.Scale), func(i int) bool { return self.Scale[i] >= w})
+	i := sort.Search(len(self.Scale), func(i int) bool { return self.Scale[i].W >= w })
 	if i < len(self.Scale)  {
-		return i,nil
+		logDebug("index=",self.Scale[i].I,"weight=",self.Scale[i].W)
+		return self.Scale[i].I,nil
 	} else {
 		return -1,EWEIGHTNOTFOUND
 	}
@@ -82,7 +90,7 @@ func (self *Weights) topWeight() (weight,error) {
 	if  len(self.Scale) == 0 {
 		return 0, ENOWEIGHTSDEFINED
 	} else { 
-		return self.Scale[len(self.Scale)-1],nil
+		return self.Scale[len(self.Scale)-1].W,nil
 	}
 }
 
