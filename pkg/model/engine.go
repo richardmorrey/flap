@@ -40,6 +40,7 @@ type ModelParams struct {
 	TripLengths		[]flap.Days
 	StartDay		flap.EpochTime
 	DailyTotalFactor	float64
+	DailyTotalDelta		float64
 	ReportDayDelta		flap.Days
 	LogLevel		logLevel
 	Deterministic		bool
@@ -212,12 +213,10 @@ func (self *Engine) Run() error {
 	}
 
 	// Create journey planner with enough days
-	var planDays flap.Days
+	_,planDays := self.minmaxTripLength()
 	if self.FlapParams.PromisesAlgo != 0 {
-		planDays = self.FlapParams.PromisesMaxDays
-	} else {
-		_,planDays=self.minmaxTripLength()
-	}
+		planDays += self.FlapParams.PromisesMaxDays
+	} 
 	jp,err := NewJourneyPlanner(planDays)
 	if (err != nil) {
 		return logError(err)
@@ -263,6 +262,7 @@ func (self *Engine) Run() error {
 		}
 
 		// If in trial period calculate starting daily total and minimum grounded travellers
+		var totalDayOne float64
 		if (i > 0 && i <= self.ModelParams.TrialDays) {
 			
 			// Calculate DT as average across trial days if specified, defaulting to minimum
@@ -271,6 +271,7 @@ func (self *Engine) Run() error {
 			} else {
 				self.FlapParams.DailyTotal=max(self.FlapParams.DailyTotal,d)
 			}
+			totalDayOne = float64(self.FlapParams.DailyTotal)
 
 			// Set MinGrounded, used by flap to ensure initial backfill share
 			// is not too large, to average number of travellers per day over the trial period
@@ -283,6 +284,7 @@ func (self *Engine) Run() error {
 
 			// Adjust Daily Total for the next day
 			self.FlapParams.DailyTotal = flap.Kilometres(float64(self.FlapParams.DailyTotal)*self.ModelParams.DailyTotalFactor)
+			self.FlapParams.DailyTotal += flap.Kilometres(self.ModelParams.DailyTotalDelta*totalDayOne/100.0)
 			err = fe.Administrator.SetParams(self.FlapParams)
 			if err != nil {
 				return logError(err)

@@ -50,8 +50,12 @@ func (self* botPromises) buildWeights(fe *flap.Engine,pp flap.Passport,currentDa
 				}
 			}
 
-			// Skip days within the trip in this promises
-			cd = flap.Days(it.Value().TripEnd/flap.SecondsInDay) + 1
+			// Skip days within the trip in this promise if they spread
+			// beyond the current day
+			ep := flap.Days(it.Value().TripEnd/flap.SecondsInDay) + 1
+			if ep > cd {
+				cd = ep
+			}
 		}
 	}
 

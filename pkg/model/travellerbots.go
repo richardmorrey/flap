@@ -218,7 +218,7 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 					return logError(err)
 				}
 
-				// Check bot is not already travelling
+				// Check bot is allowed to travel
 				if self.planningAllowed(p,fe) {
 
 					// Retrieve source country record for traveller
