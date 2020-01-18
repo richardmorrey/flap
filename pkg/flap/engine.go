@@ -272,10 +272,11 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 		}
 
 		// Check for a promise to keep
-		changed = changed || traveller.keep()
+		kept := traveller.keep()
+		changed = changed || kept
 
-		// Backfill if grounded
-		if !traveller.Cleared(now) {
+		// Backfill if not travelling and balance is negative
+		if !traveller.MidTrip() && traveller.balance < 0 {
 			traveller.balance += share
 			newGrounded++
 			changed = true

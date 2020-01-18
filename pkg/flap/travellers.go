@@ -52,10 +52,10 @@ func (self *Traveller) keep() bool {
 		if err == nil {
 			err = self.EndTrip()
 			if err == nil {
+				logDebug("kept promise, clearday set to ",cd/SecondsInDay)
 				self.cleared=cd
 				kept = true
 			}
-			logDebug("EndTrip returned ",err)
 		}
 	}
 	return kept
@@ -91,6 +91,7 @@ func (self *Traveller) AsKML(a *Airports) string {
 // If traveller is not cleared for travel no action is taken and an error is returned.
 func (self *Traveller) submitFlight(flight *Flight,now EpochTime, debit bool) error {
 	if !self.Cleared(now) {
+		logDebug("balance:",self.balance,"clear day:",self.cleared/SecondsInDay)
 		return EGROUNDED
 	}
 	err := self.tripHistory.AddFlight(flight)

@@ -226,11 +226,12 @@ func (self *Engine) Run() error {
 	// sure journey planner is pre-loaded with data for each of its days.
 	currentDay := self.ModelParams.StartDay
 	flightPaths := newFlightPaths(currentDay)
+	var totalDayOne float64
 	var travellersTotal float64
 	for i:=flap.Days(-planDays); i <= self.ModelParams.DaysToRun; i++ {
 		
 		// Plan flights for all travellers
-		logInfo("DAY ", i)
+		logInfo("DAY", currentDay/flap.SecondsInDay)
 		fmt.Printf("\rDay %d: Planning Flights",i)
 		err = travellerBots.planTrips(cars,jp,fe,currentDay,self.ModelParams.Deterministic)
 		if err != nil {
@@ -262,7 +263,6 @@ func (self *Engine) Run() error {
 		}
 
 		// If in trial period calculate starting daily total and minimum grounded travellers
-		var totalDayOne float64
 		if (i > 0 && i <= self.ModelParams.TrialDays) {
 			
 			// Calculate DT as average across trial days if specified, defaulting to minimum

@@ -51,7 +51,6 @@ func (self *Weights) addMultiple(w weight,multiples int) {
 func (self  *Weights) find(w weight) (int,error) {
 	i := sort.Search(len(self.Scale), func(i int) bool { return self.Scale[i].W >= w })
 	if i < len(self.Scale)  {
-		logDebug("index=",self.Scale[i].I,"weight=",self.Scale[i].W)
 		return self.Scale[i].I,nil
 	} else {
 		return -1,EWEIGHTNOTFOUND

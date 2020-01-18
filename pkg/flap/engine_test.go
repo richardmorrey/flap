@@ -365,6 +365,62 @@ func TestUpdateTripsAndBackfillPromises(t  *testing.T) {
 	}
 }
 
+func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
+	
+	// Create engine with promises enabled
+	db:= enginesetup(t)
+	defer engineteardown(db)
+	engine := NewEngine(db,0,"")
+	paramsIn := FlapParams{DailyTotal:100, MinGrounded:5,FlightInterval:1,FlightsInTrip:50,TripLength:365,
+				PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:3}
+	engine.Administrator.SetParams(paramsIn)
+
+	// Get and make a promise for flights
+	var flights []Flight
+	passport := NewPassport("987654321","uk")
+	flights = append(flights,*createFlight(2,SecondsInDay*2,SecondsInDay*2+1),*createFlight(3,SecondsInDay*3,SecondsInDay*3+1))
+	p,err := engine.Propose(passport,flights,0,SecondsInDay)
+	if err != nil {
+		t.Error("Couldnt propose promise for testing keep",err)
+	}
+	err = engine.Make(passport,p)
+	if err != nil {
+		t.Error("Couldnt make promise for testing keep",err)
+	}
+
+	// Submit flights
+	err = engine.SubmitFlights(passport,flights,SecondsInDay,true)
+
+	// Carry out Update on date when promise should be enforced
+	_,_,_,err = engine.UpdateTripsAndBackfill(SecondsInDay*4)
+	if err != nil {
+		t.Error("Update failed when trying to test keep",err)
+	}
+
+	// Confirm traveller now has a clearance date
+	traveller,err := engine.Travellers.GetTraveller(passport)
+	if err != nil {
+		t.Error("Failed to get traveller when testing keep")
+	}
+	if traveller.cleared != SecondsInDay*4 {
+		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.cleared)
+	}
+
+	// Check traveller is backfilled even though they are cleared to fly
+	startbalance := traveller.balance
+	_,_,_,err = engine.UpdateTripsAndBackfill(SecondsInDay*4)
+	if err != nil {
+		t.Error("Update failed when trying to test keep",err)
+	}
+	traveller,err = engine.Travellers.GetTraveller(passport)
+	if err != nil {
+		t.Error("Failed to get traveller when testing keep")
+	}
+	if traveller.balance != startbalance+20 {
+		t.Error("Failed to backfill cleared traveller with negative balance",startbalance,traveller.balance)
+	}
+}
+
 func TestProposePromisesActive(t *testing.T) {
 	
 	db:= enginesetup(t)

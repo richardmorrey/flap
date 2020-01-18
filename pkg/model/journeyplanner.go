@@ -155,6 +155,7 @@ func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, sta
 			fp.addFlight(j.flight.from,j.flight.to,start,end,fe.Airports,j.bot.band)
 			logDebug("Submitted flight for ",j.bot)
 		} else {
+			logError(err)
 			tb.GetBot(j.bot).stats.Refused()
 		}
 	}

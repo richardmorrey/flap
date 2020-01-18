@@ -129,7 +129,7 @@ func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,now flap.Ep
 	}
 	err = logError(fe.Make(pp,proposal))
 	if err == nil {
-		logDebug("Made promise for trip in  ",nowInDays," days")
+		logDebug("Made promise for trip on Day ",ts)
 	}
 	return flap.Days(ts)-nowInDays,err
 }
