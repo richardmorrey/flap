@@ -12,6 +12,7 @@ import (
 	"math/rand"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"encoding/json"
 )
 
 var EFAILEDTOCREATECOUNTRIESAIRPORTSROUTES = errors.New("Failed to create Countries-Airports-Routes")
@@ -231,7 +232,7 @@ func (self *Engine) Run() error {
 	for i:=flap.Days(-planDays); i <= self.ModelParams.DaysToRun; i++ {
 		
 		// Plan flights for all travellers
-		logInfo("DAY", currentDay/flap.SecondsInDay)
+		logInfo("DAY", currentDay/flap.SecondsInDay, currentDay.ToTime())
 		fmt.Printf("\rDay %d: Planning Flights",i)
 		err = travellerBots.planTrips(cars,jp,fe,currentDay,self.ModelParams.Deterministic)
 		if err != nil {
@@ -297,57 +298,78 @@ func (self *Engine) Run() error {
 }
 
 // ShowTraveller reports the trip history for the specificied traveller bot in JSON and KML format
-func (self *Engine) ShowTraveller(band uint64,bot uint64) (flap.Passport,string,string,error){
+func (self *Engine) ShowTraveller(band uint64,bot uint64) (flap.Passport,string,string,string,error){
 
 	// Load country weights (need to establish issuing country of passport)
 	var p flap.Passport
 	var countryWeights CountryWeights
 	err := countryWeights.load(self.ModelParams.WorkingFolder)
 	if err != nil {
-		return p,"","",logError(err)
+		return p,"","","",logError(err)
 	}
 
 	// Create travellerbots struct
 	travellerBots := NewTravellerBots(&countryWeights,self.FlapParams)
 	if travellerBots == nil {
-		return p,"","",logError(EFAILEDTOCREATETRAVELLERBOTS)
+		return p,"","","",logError(EFAILEDTOCREATETRAVELLERBOTS)
 	}
 	err = travellerBots.Build(&(self.ModelParams))
 	if (err != nil) {
-		return p,"","",logError(err)
+		return p,"","","",logError(err)
 	}
 
 	// Valid args
 	if band >= uint64(len(travellerBots.bots)) {
-		return p,"","",logError(ENOSUCHTRAVELLER)
+		return p,"","","",logError(ENOSUCHTRAVELLER)
 	}
 	if bot >= uint64(travellerBots.bots[band].numInstances) {
-		return p,"","",logError(ENOSUCHTRAVELLER)
+		return p,"","","",logError(ENOSUCHTRAVELLER)
 	}
 
 	//  Initialize flap
 	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
 	err = fe.Administrator.SetParams(self.FlapParams)
 	if (err != nil) {
-		return p,"","",logError(err)
+		return p,"","","",logError(err)
 	}
 	err =fe.Airports.LoadAirports(filepath.Join(self.ModelParams.DataFolder,"airports.dat"))
 	if (err != nil) {
-		return p,"","",logError(err)
+		return p,"","","",logError(err)
 	}
 
 	// Resolve given spec to a passport and look up in the travellers db
 	p,err = travellerBots.getPassport(botId{bandIndex(band),botIndex(bot)})
 	if err != nil {
-		return  p,"","",logError(err)
+		return  p,"","","",logError(err)
 	}
 	t,err := fe.Travellers.GetTraveller(p)
 	if err != nil {
-		return p,"", "",logError(err)
+		return p,"", "","",logError(err)
 	}
 
 	// Return the traveller as JSON
-	return p,t.AsJSON(),t.AsKML(fe.Airports),nil
+	return p,t.AsJSON(),t.AsKML(fe.Airports),self.promisesAsJSON(&t),nil
+}
+
+type jsonPromise struct {
+	TripStart time.Time
+	TripEnd time.Time
+	Clearance time.Time
+	Distance flap.Kilometres
+	Stacked flap.StackIndex
+	CarriedOver flap.Kilometres
+}
+
+// Write out promises for the given traveller as JSON string
+func (self *Engine) promisesAsJSON(t *flap.Traveller) string {
+	promises := make([]jsonPromise,0)
+	it := t.Promises.NewIterator()
+	for it.Next() {
+		p := it.Value()
+		promises = append(promises,jsonPromise{TripStart:p.TripStart.ToTime(),TripEnd:p.TripEnd.ToTime(),Clearance:p.Clearance.ToTime(),Distance:p.Distance,Stacked:p.StackIndex,CarriedOver:p.CarriedOver})
+	}
+	jsonData, _ := json.MarshalIndent(promises, "", "    ")
+	return string(jsonData)
 }
 
 // reportDay reports daily total set for the day as well as total distance
@@ -387,3 +409,5 @@ func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, t uint64,d flap
 		self.stats = summaryStats{0,0,0,0}
 	}
 }
+
+

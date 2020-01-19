@@ -50,7 +50,7 @@ func (self *Traveller) keep() bool {
 	if self.MidTrip() {
 		cd,err := self.Promises.keep(self.tripHistory.tripStartEndLength())
 		if err == nil {
-			err = self.EndTrip()
+			err = logError(self.EndTrip())
 			if err == nil {
 				logDebug("kept promise, clearday set to ",cd/SecondsInDay)
 				self.cleared=cd

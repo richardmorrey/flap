@@ -130,6 +130,7 @@ func (self *bestFit) calculateLine(xmax epochDays) error {
 		self.c=c
 		self.m=m
 	}
+	logInfo("m=",self.m,"c=",self.c)
 	return nil
 }
 

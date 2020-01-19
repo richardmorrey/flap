@@ -63,7 +63,7 @@ func (self *botStats) Submitted(dist flap.Kilometres) {
 // submission has been refused by flap
 func (self  *botStats) Refused() {
 	self.flightsRefused++
-	panic(nil)
+	//panic(nil)
 }
 
 // Canclled updates stats to relect fact a promise

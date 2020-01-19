@@ -127,9 +127,11 @@ func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,now flap.Ep
 	if (err != nil) {
 		return 0,logError(err)
 	}
-	err = logError(fe.Make(pp,proposal))
+	err = fe.Make(pp,proposal)
 	if err == nil {
 		logDebug("Made promise for trip on Day ",ts)
+	} else {
+		logInfo("Failed to make promises ", err)
 	}
 	return flap.Days(ts)-nowInDays,err
 }

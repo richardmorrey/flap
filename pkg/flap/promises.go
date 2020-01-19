@@ -15,14 +15,14 @@ var EPROMISEDOESNTMATCH		 = errors.New("Promise trip end or distance travelled d
 var EEXCEEDEDMAXSTACKSIZE	 = errors.New("Exceeded max promise stack size")
 var EPROPOSALEXPIRED		 = errors.New("Proposal has expired")
 
-type stackIndex int8
+type StackIndex int8
 type Promise struct {
 	TripStart 	EpochTime
 	TripEnd	  	EpochTime
 	Distance	Kilometres
 	Clearance	EpochTime
-	index		stackIndex
-	carriedOver	Kilometres
+	StackIndex	StackIndex
+	CarriedOver	Kilometres
 }
 
 func (self *Promise) older (p Promise) bool {
@@ -30,7 +30,7 @@ func (self *Promise) older (p Promise) bool {
 }
 
 func (self *Promise) tobackfill() Kilometres {
-	return self.Distance + self.carriedOver
+	return self.Distance + self.CarriedOver
 }
 
 const MaxPromises=10
@@ -163,14 +163,14 @@ func (self* Promises) updateStackEntry(i int, predictor predictor) error {
 
 	// Set stack index to one more than that of previous
 	// promise if there is one
-	var lastIndex stackIndex
+	var lastIndex StackIndex
 	if i < MaxPromises-1 {
-		if self.entries[i+1].index >= MaxStackSize {
+		if self.entries[i+1].StackIndex >= MaxStackSize {
 			return EEXCEEDEDMAXSTACKSIZE
 		}
-		lastIndex = self.entries[i+1].index
+		lastIndex = self.entries[i+1].StackIndex
 	}
-	self.entries[i].index = lastIndex+1
+	self.entries[i].StackIndex = lastIndex+1
 
 	// Calculate clearance date for next promise, taking account of distance
 	// not cleared from promise i
@@ -179,7 +179,7 @@ func (self* Promises) updateStackEntry(i int, predictor predictor) error {
 		distdone = 0
 		logDebug("backfill failed: ",err)
 	}
-	self.entries[i-1].carriedOver = self.entries[i].tobackfill() - distdone
+	self.entries[i-1].CarriedOver = self.entries[i].tobackfill() - distdone
 	clearance,err := predictor.predict(self.entries[i-1].tobackfill(),self.entries[i-1].TripEnd.toEpochDays(true)+1)
 	if err != nil {
 		clearance = self.entries[i-1].TripEnd.toEpochDays(false)+1

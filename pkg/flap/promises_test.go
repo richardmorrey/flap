@@ -319,11 +319,11 @@ func TestUpdateStackEntrySimple(t* testing.T) {
 	if ps.entries[0].Clearance != epochDays(43).toEpochTime() {
 		t.Error("updatedStackEntry set wrong clearance date for the following flight",ps.entries[0].Clearance)
 	}
-	if ps.entries[1].index != 1 {
-		t.Error("updateStackEntry set wrong stack index for the stacked flight",ps.entries[1].index)
+	if ps.entries[1].StackIndex != 1 {
+		t.Error("updateStackEntry set wrong stack index for the stacked flight",ps.entries[1].StackIndex)
 	}
-	if ps.entries[0].index != 0 {
-		t.Error("updatedStackEntry set wrong stack index for the following flight",ps.entries[0].index)
+	if ps.entries[0].StackIndex != 0 {
+		t.Error("updatedStackEntry set wrong stack index for the following flight",ps.entries[0].StackIndex)
 	}
 }
 
@@ -334,12 +334,12 @@ func TestUpdateStackEntryContinued(t* testing.T) {
 				      TripEnd:epochDays(5).toEpochTime(),
 				      Distance:10,
 				      Clearance:epochDays(10).toEpochTime(),
-				      index:2}
+				      StackIndex:2}
 	ps.entries[1]=Promise{TripStart:epochDays(10).toEpochTime(),
 				      TripEnd:epochDays(15).toEpochTime(),
 				      Distance:10,
 				      Clearance:epochDays(25).toEpochTime(),
-			      	      carriedOver:5}
+			      	      CarriedOver:5}
 	ps.entries[0]=Promise{TripStart:epochDays(20).toEpochTime(),
 				      TripEnd:epochDays(25).toEpochTime(),
 				      Distance:10,
@@ -348,11 +348,11 @@ func TestUpdateStackEntryContinued(t* testing.T) {
 	if err != nil {
 		t.Error("updateStackEntry returned error for simple case",err)
 	}
-	if ps.entries[2].index !=2  {
-		t.Error("updateStackEntry didnt maintain correct index for existing stack entry", ps.entries[2].index)
+	if ps.entries[2].StackIndex !=2  {
+		t.Error("updateStackEntry didnt maintain correct index for existing stack entry", ps.entries[2].StackIndex)
 	}
-	if ps.entries[1].index !=3  {
-		t.Error("updateStackEntry didnt set correct index for new stack entry", ps.entries[1].index)
+	if ps.entries[1].StackIndex !=3  {
+		t.Error("updateStackEntry didnt set correct index for new stack entry", ps.entries[1].StackIndex)
 	}
 	if ps.entries[2].Clearance != epochDays(10).toEpochTime() {
 		t.Error("updateStackEntry didnt retain Clearance date for existing stack entry",ps.entries[2].Clearance)
@@ -372,7 +372,7 @@ func TestUpdateStackEntryFull(t* testing.T) {
 				      TripEnd:epochDays(15).toEpochTime(),
 				      Distance:10,
 				      Clearance:epochDays(25).toEpochTime(),
-			      	      index:3}
+			      	      StackIndex:3}
 	ps.entries[1]=Promise{TripStart:epochDays(20).toEpochTime(),
 				      TripEnd:epochDays(25).toEpochTime(),
 				      Distance:10,
@@ -411,14 +411,14 @@ func TestRestack(t *testing.T) {
 		t.Error("failed to restack valid promises",err)
 	}
 	for i := 3; i >= 1; i-- {
-		if ps.entries[i].index != stackIndex(4-i) {
-			t.Error("restack set incorrect stack index for entry",i,ps.entries[i].index)
+		if ps.entries[i].StackIndex != StackIndex(4-i) {
+			t.Error("restack set incorrect stack index for entry",i,ps.entries[i].StackIndex)
 		}
 		if ps.entries[i].Clearance != ps.entries[i-1].TripStart {
 			t.Error("restack set learance date that doesnt match start date of next trip", i, ps.entries[i].Clearance,ps.entries[i-1].TripStart)
 		}
 	}
-	if ps.entries[0].index !=0 {
+	if ps.entries[0].StackIndex !=0 {
 		t.Error("restack set incorrect stack index for latest entry",ps.entries[0])
 	}
 	if ps.entries[0].Clearance != epochDays(65).toEpochTime() {
@@ -479,14 +479,14 @@ func TestRestackOldest(t *testing.T) {
 		t.Error("failed to restack valid promises",err)
 	}
 	for i := 3; i >= 1; i-- {
-		if ps.entries[i].index != stackIndex(4-i) {
-			t.Error("restack set incorrect stack index for entry",i,ps.entries[i].index)
+		if ps.entries[i].StackIndex != StackIndex(4-i) {
+			t.Error("restack set incorrect stack index for entry",i,ps.entries[i].StackIndex)
 		}
 		if ps.entries[i].Clearance != ps.entries[i-1].TripStart {
 			t.Error("restack set clearance date that doesnt match start date of next trip", i, ps.entries[i].Clearance,ps.entries[i-1].TripStart)
 		}
 	}
-	if ps.entries[0].index !=0 {
+	if ps.entries[0].StackIndex !=0 {
 		t.Error("restack set incorrect stack index for latest entry",ps.entries[0])
 	}
 	if ps.entries[0].Clearance != epochDays(65).toEpochTime() {
