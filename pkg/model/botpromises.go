@@ -89,7 +89,7 @@ func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,now flap.Ep
 	} else {
 		ts,err = self.choose()
 	}
-	logDebug("ts=",ts,"weights=",self.Scale)
+	logDebug("trip start day =",ts)
 	if (err != nil) {
 		return 0,logError(ENOSPACEFORTRIP)
 	}

@@ -402,8 +402,8 @@ func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
 	if err != nil {
 		t.Error("Failed to get traveller when testing keep")
 	}
-	if traveller.cleared != SecondsInDay*4 {
-		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.cleared)
+	if traveller.kept.Clearance != SecondsInDay*4 {
+		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.kept.Clearance)
 	}
 
 	// Check traveller is backfilled even though they are cleared to fly

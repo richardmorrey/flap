@@ -27,20 +27,32 @@ func NewPassport(number string,issuer string) Passport {
 	return passport
 }
 
+func (self *Passport) ToString() string {
+	return string(self.Number[:]) + " " + string(self.Issuer[:])
+}
+
 type passportKey [20]byte
 
 type Traveller struct {
 	passport    Passport
 	tripHistory TripHistory
 	Promises    Promises
-	cleared	    EpochTime
+	kept	    Promise
 	balance	    Kilometres
 }
 
 // Cleared returns true if the traveller is cleared
 // to travel at the specified date/time
 func (self *Traveller) Cleared(now EpochTime) bool {	
-	return self.tripHistory.MidTrip() || (self.cleared > 0 && self.cleared <= now) || self.balance >=0
+
+	// If we have a kept promises then update its Clearance date, which might
+	// have changed due to "stacking"
+	if self.kept.Clearance != 0 {
+		self.kept.Clearance,_ = self.Promises.match(self.kept)
+	}
+
+	// Cleared to travel if in a trip, past the clearance date or with a distance account in credit
+	return self.tripHistory.MidTrip() || (self.kept.Clearance > 0 && self.kept.Clearance <= now) || self.balance >=0
 }
 
 // keep checks for a matching promise if we are mid-trip. If one is found
@@ -48,12 +60,12 @@ func (self *Traveller) Cleared(now EpochTime) bool {
 func (self *Traveller) keep() bool {
 	kept := false
 	if self.MidTrip() {
-		cd,err := self.Promises.keep(self.tripHistory.tripStartEndLength())
+		p,err := self.Promises.keep(self.tripHistory.tripStartEndLength())
 		if err == nil {
 			err = logError(self.EndTrip())
 			if err == nil {
-				logDebug("kept promise, clearday set to ",cd/SecondsInDay)
-				self.cleared=cd
+				logDebug("Kept promise for", self.passport.ToString(), ". Clearance set to",self.kept.Clearance.ToTime())
+				self.kept=p
 				kept = true
 			}
 		}
@@ -91,19 +103,19 @@ func (self *Traveller) AsKML(a *Airports) string {
 // If traveller is not cleared for travel no action is taken and an error is returned.
 func (self *Traveller) submitFlight(flight *Flight,now EpochTime, debit bool) error {
 	if !self.Cleared(now) {
-		logDebug("balance:",self.balance,"clear day:",self.cleared/SecondsInDay)
+		logDebug("balance:",self.balance,"cleared:",self.kept.Clearance.ToTime())
 		return EGROUNDED
 	}
 	err := self.tripHistory.AddFlight(flight)
 	if err != nil {
 		return err
 	}
-	//logDebug("triphistory:",self.tripHistory)
 	if debit {
 		self.balance -= flight.distance
 	}
+
 	// Make sure clearance promise only gets applied once
-	self.cleared = 0
+	self.kept = Promise{}
 	return nil
 }
 

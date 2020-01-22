@@ -93,7 +93,7 @@ func TestCleared1(t *testing.T) {
 
 func TestCleared2Default(t *testing.T) {
 	var traveller Traveller
-	traveller.cleared=1
+	traveller.kept.Clearance=1
 	traveller.balance=-1
 	populateFlights(&(traveller.tripHistory),1,1)
 	traveller.EndTrip()
@@ -104,7 +104,7 @@ func TestCleared2Default(t *testing.T) {
 
 func TestSubmitFlight(t *testing.T) {
 	var traveller Traveller
-	traveller.cleared=2
+	traveller.kept.Clearance=2
 	traveller.balance=0
 	oneflight := *createFlight(1,1,2)
 	oneflight.distance=1
@@ -127,7 +127,7 @@ func TestSubmitFlight(t *testing.T) {
 
 func TestSubmitFlightNoDebit(t *testing.T) {
 	var traveller Traveller
-	traveller.cleared=2
+	traveller.kept.Clearance=2
 	traveller.balance=0
 	oneflight := *createFlight(1,1,2)
 	oneflight.distance=1
@@ -163,8 +163,8 @@ func TestKeepMatchingPromise(t *testing.T) {
 	if ! tr.keep()  {
 		t.Error("keep didnt keep matching  promise")
 	}
-	if (tr.cleared != epochDays(88).toEpochTime()) {
-		t.Error("keep didnt set cleared for matching promise",tr)
+	if (tr.kept != tr.Promises.entries[0]) {
+		t.Error("keep didnt set kept  for matching made promise",tr)
 	}
 	if tr.MidTrip() {
 		t.Error("keep failed to end trip on matching promise",tr)
@@ -179,7 +179,7 @@ func TestKeepNonMatchingPromise(t *testing.T) {
 	if tr.keep()  {
 		t.Error("keep kept promise that didnt match")
 	}
-	if (tr.cleared != 0) {
+	if (tr.kept.Clearance != 0) {
 		t.Error("keep changed cleared for non-matching promise",tr)
 	}
 	if !tr.MidTrip() {

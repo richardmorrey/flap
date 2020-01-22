@@ -125,23 +125,29 @@ func (self *Promises) make(pp *Proposal, predictor predictor) error {
 // keep asks for a promise applying to completed trip with given details to be kept. If a matching
 // valid promise is found its clearance date is returned for use by the Traveller. Otherwise
 // an error is returned
-func (self* Promises) keep(tripStart EpochTime, tripEnd EpochTime, distance Kilometres) (EpochTime,error) {
+func (self* Promises) keep(tripStart EpochTime, tripEnd EpochTime, distance Kilometres) (Promise,error) {
 
 	// Check for valid trip details
 	if distance == 0 {
-		return EpochTime(0),EINVALIDARGUMENT
+		return Promise{},EINVALIDARGUMENT
 	}
 
 	// Look from oldest to newest promise looking for first entry where:
 	// 1) Start time given is greater than or equal to entry start time
 	// 2) End time given is less than or equal to entry end time
 	// 3) Distance given is equal to entry distance
-	for i:=MaxPromises-1; i>=0 && tripStart >= self.entries[i].TripStart; i-- {
-		if tripEnd <= self.entries[i].TripEnd && self.entries[i].Distance == distance {
-			return self.entries[i].Clearance,nil
+	it:=self.NewIterator()
+	for it.Next() {
+		p := it.Value()
+		if (tripStart < p.TripStart) {
+			continue
+		}
+		if tripEnd <= p.TripEnd && p.Distance == distance {
+			logDebug("keeping",p.TripStart.ToTime(),p.TripEnd.ToTime(),p.Clearance.ToTime())
+			return p,nil
 		} 
 	}
-	return EpochTime(0), EPROMISEDOESNTMATCH
+	return Promise{}, EPROMISEDOESNTMATCH
 }
 
 // updateStackEntry updates stack entry i clearance date to allow the trip after to proceed and 
@@ -253,5 +259,14 @@ func (self *Promises) NewIterator() *PromisesIterator {
 	iter.index = sort.Search(MaxPromises,  func(i int) bool {return self.entries[i].TripStart==0}) 
 	iter.promises=self
 	return iter
+}
+
+// match returns current clearance date for promise matching that given in all other respects
+func (self* Promises) match(p Promise) (EpochTime,error) {
+	i := sort.Search(MaxPromises,  func(i int) bool {return self.entries[i].TripStart <= p.TripStart}) 
+	if i  < MaxPromises && self.entries[i].TripStart == p.TripStart && self.entries[i].TripEnd==p.TripEnd && self.entries[i].Distance == p.Distance {
+		return self.entries[i].Clearance, nil
+	}
+	return 0, EPROMISENOTFOUND
 }
 
