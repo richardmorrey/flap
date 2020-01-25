@@ -20,4 +20,4 @@ modelparams:
   - 2
   startday: 0
   dailytotalfactor: 0.99
-  deterministic: true
+  deterministic: false

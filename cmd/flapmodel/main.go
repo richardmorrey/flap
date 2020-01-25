@@ -59,6 +59,10 @@ the weights across all the specs and the value of "totalTravellers".
 
 kml <botspec> <index>
 Works like show but returns kml for import into Google Earth instead of JSON.
+
+promises <botspec> <index>
+Works like show but returns made promises instead of the trip history.
+
 `)
 	os.Exit(0)
 }
@@ -97,7 +101,7 @@ func main() {
 				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
 			} else {
 				defer engine.Release()
-				_,json,_,err := engine.ShowTraveller(spec,index)
+				_,json,_,_,err := engine.ShowTraveller(spec,index)
 				if err != nil {
 					fmt.Printf("\nFailed to find traveller with error '%s'\n",err)
 				} else {
@@ -112,11 +116,27 @@ func main() {
 				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
 			} else {
 				defer engine.Release()
-				_,_,kml, err := engine.ShowTraveller(spec,index)
+				_,_,kml,_,err := engine.ShowTraveller(spec,index)
 				if err != nil {
 					fmt.Printf("\nFailed to find traveller with error '%s'\n",err)
 				} else {
 					fmt.Printf("\n%s\n",kml)
+				}
+			}
+
+		case "promises":
+			spec,_ := strconv.ParseUint(flag.Arg(1), 10, 64)
+			index,_ := strconv.ParseUint(flag.Arg(2), 10, 64)
+		 	engine,err := model.NewEngine(*configfile)
+			if err != nil {
+				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
+			} else {
+				defer engine.Release()
+				_,_,_,json,err := engine.ShowTraveller(spec,index)
+				if err != nil {
+					fmt.Printf("\nFailed to find traveller with error '%s'\n",err)
+				} else {
+					fmt.Printf("\n%s\n",json)
 				}
 			}
 

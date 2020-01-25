@@ -196,6 +196,20 @@ func TestPredictSlope(t *testing.T) {
 	}
 }
 
+func TestPredictNoAnswer(t *testing.T) {
+	bf,_ := newBestFit(10)
+	bf.add(1,2)
+	bf.m=-1
+	bf.c=4
+	clear,err := bf.predict(5,1)
+	if err !=  nil {
+		t.Error("predicted failed to revert to simple algo",err)
+	}
+	if  clear != 4 {
+		t.Error("predict simple algo returned worun answer",clear)
+	}
+}
+
 func TestBackfilledSlope(t *testing.T) {
 	bf,_ := newBestFit(10)
 	bf.m=-1

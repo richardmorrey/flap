@@ -164,22 +164,31 @@ func (self *bestFit) predict(balance Kilometres,start epochDays) (epochDays,erro
 	is := self.integral(float64(start))
 
 	// Solve quadratic
-	//fmt.Printf("a=%f,b=%f,c=%f\n",(self.m/2)*self.c,self.c,-(float64(balance)+is))
 	ends,_ := qr(self.m/2,self.c,-(float64(balance)+is))
-	//fmt.Printf("ends: %v\n", ends)
 
-	// Choose an answer and return
+	// Choose an answer 
 	choice := math.MaxFloat64
 	for _,candidate := range ends {
-		//fmt.Printf("considering %f with integral %f\n",candidate, self.integral(candidate))
 		if candidate > float64(start) && candidate < choice {
 			if self.calcY(candidate) > 0.0 {
 				choice=candidate
 			}
 		}
 	}
+
+	// Calculate an estimate based on 0 gradient and last point
+	// if no valid choice from the formula
 	if choice == math.MaxFloat64 {
-		return epochDays(choice),logError(ENOVALIDPREDICTION)
+		l := len(self.ys)
+		if  l >  0 {
+			choice = float64(start) + (float64(balance)/float64(self.ys[l-1]))
+		}
+	}
+	
+	// Return choice if we have made one or otherwise return
+	// an answer assuming horizontal line.
+	if choice == math.MaxFloat64 {
+		return epochDays(choice), ENOVALIDPREDICTION
 	} else {
 		return epochDays(math.Ceil(choice)), nil
 	}

@@ -62,11 +62,13 @@ func (self *Traveller) keep() bool {
 	if self.MidTrip() {
 		p,err := self.Promises.keep(self.tripHistory.tripStartEndLength())
 		if err == nil {
-			err = logError(self.EndTrip())
+			err = self.EndTrip()
 			if err == nil {
 				logDebug("Kept promise for", self.passport.ToString(), ". Clearance set to",self.kept.Clearance.ToTime())
 				self.kept=p
 				kept = true
+			} else  {
+				logError(err)
 			}
 		}
 	}

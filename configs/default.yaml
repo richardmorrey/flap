@@ -1,17 +1,22 @@
 # Core FLAP Parameters
 flapparams:
   # Maximum length of a Trip, in days
-  triplength: 365
+  triplength: 90
   # Maximum number of flights in a Trip
   flightsintrip: 50
   # Maximum gap between flights in a single Journey, in days
   flightinterval: 1
   # Promises algo to use. 0 = promises not enabled, 1 = linear best fit
   promisesalgo: 1
+  # Number of data points to maintain for promisesalgo
+  promisesmaxpoints: 100
   # Maximum days ahead to allow a promise trip to end
-  promisesmaxlength: 100
+  promisesmaxdays: 180
 # Parameters controlling flapmodel
 modelparams:
+  # Logging level 0 - off, 1 - errors only, 2 - info,
+  # 3 - debug. Log output to <workingfolder>/flap.log
+  loglevel: 2
   # Folder to hold working databases and all output files
   workingfolder: ./working
   # Folder to place input data files
@@ -55,10 +60,13 @@ modelparams:
   - 28
   # The date of the first day in the run, in Epoch Time seconds - see
   # https://en.wikipedia.org/wiki/Unix_time
-  startday: 1609459200
+  #startday: 1609459200
   # Factor to multiply the Daily Total by each day. Does not apply
   # during trial days.
-  dailytotalfactor: 0.9995
+  dailytotalfactor: 0.999
+  # Delta to add to the Daily Total each day. Does not apply during trial days
+  # Expressed as a percentage of the Daily Total on Day One.
+  #dailytotaldelta: -0.025
   # Delta to report for. A row is written to summary.csv and bands.csv
   # every reportdaydelta days. A KML file including all flights taken
   # is written out every reportdaydelta days.

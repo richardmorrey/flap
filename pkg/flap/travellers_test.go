@@ -102,6 +102,26 @@ func TestCleared2Default(t *testing.T) {
 	}
 }
 
+func TestClearedByPromise(t *testing.T) {
+	var tr Traveller
+	tr.balance=-1
+	tr.kept=Promise{TripStart:SecondsInDay,TripEnd:SecondsInDay*2,Clearance:SecondsInDay*4,Distance:10}
+	tr.Promises.entries[0]=tr.kept
+	tr.tripHistory.entries[0] = *createFlight(1,SecondsInDay,SecondsInDay*2)
+	tr.tripHistory.entries[0].distance=10
+	tr.tripHistory.entries[0].et = etTravellerTripEnd
+	if (!tr.Cleared(4*SecondsInDay)) {
+		t.Error("Traveller not cleared with valid clearance date",tr.kept)
+	}
+	if (tr.Cleared(3*SecondsInDay)) {
+		t.Error("Traveller cleared with early clearance date",tr.kept)
+	}
+	tr.Promises.entries[0].Clearance = SecondsInDay*3
+	if (!tr.Cleared(3*SecondsInDay)) {
+		t.Error("Traveller not cleared when clearance date changed",tr.kept)
+	}
+}
+
 func TestSubmitFlight(t *testing.T) {
 	var traveller Traveller
 	traveller.kept.Clearance=2
