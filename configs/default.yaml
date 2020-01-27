@@ -63,7 +63,7 @@ modelparams:
   #startday: 1609459200
   # Factor to multiply the Daily Total by each day. Does not apply
   # during trial days.
-  dailytotalfactor: 0.999
+  dailytotalfactor: 0.9995
   # Delta to add to the Daily Total each day. Does not apply during trial days
   # Expressed as a percentage of the Daily Total on Day One.
   #dailytotaldelta: -0.025

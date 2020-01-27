@@ -203,18 +203,17 @@ func (self* bestFit) backfilled(start epochDays,end epochDays) (Kilometres,error
 		return 0,ENOTENOUGHDATAPOINTS
 	}
 
-	// Calc intergral for start and end date
+	// Assumme a horizontal line if it dips under zero
+	// during the given period ...
 	d1 := float64(start)
-	if self.calcY(d1) < 0 {
-		return 0, logError(ENOVALIDPREDICTION)
-	}
 	d2 := float64(end)
-	if self.calcY(d2) < 0 {
-		return 0, logError(ENOVALIDPREDICTION)
+	if self.calcY(d1) < 0  || self.calcY(d2) <0 {
+		logDebug("using horizontal line")
+		return Kilometres(end-start) * self.ys[len(self.ys)-1],nil
 	}
 
-	// Backfilled between start and end is the difference between
-	// the two integrals
+	// ... otherwise return difference between the integrals
+	// for the given dates
 	return Kilometres(self.integral(d2)-self.integral(d1)),nil
 }
 

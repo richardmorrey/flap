@@ -108,7 +108,7 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	if err == nil {
 		return &pp,nil
 	} else {
-		return nil,logError(err)
+		return nil,err
 	}
 }
 
@@ -157,10 +157,10 @@ func (self* Promises) updateStackEntry(i int, predictor predictor) error {
 	
 	// Validate args
 	if i==0 || i > MaxPromises-1 {
-		return EINVALIDARGUMENT
+		return logError(EINVALIDARGUMENT)
 	}
 	if predictor == nil {
-		return EINVALIDARGUMENT
+		return logError(EINVALIDARGUMENT)
 	}
 
 	// Set clearance date to start of day of next trip
@@ -172,6 +172,7 @@ func (self* Promises) updateStackEntry(i int, predictor predictor) error {
 	var lastIndex StackIndex
 	if i < MaxPromises-1 {
 		if self.entries[i+1].StackIndex >= MaxStackSize {
+			logDebug("exceeded max stack size")
 			return EEXCEEDEDMAXSTACKSIZE
 		}
 		lastIndex = self.entries[i+1].StackIndex
@@ -208,7 +209,7 @@ func (self* Promises) restack(i int, predictor predictor) error {
 	if  i < MaxPromises -1 && self.entries[i+1].Clearance >= self.entries[i].TripStart {
 		err := self.updateStackEntry(i+1,predictor)
 		if err != nil {
-			return logError(err)
+			return err
 		}
 	}
 
@@ -219,7 +220,7 @@ func (self* Promises) restack(i int, predictor predictor) error {
 		// Update
 		err := self.updateStackEntry(j,predictor)
 		if err != nil {
-			return logError(err)
+			return err
 		}
 	}
 	return nil

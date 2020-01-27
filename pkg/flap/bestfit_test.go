@@ -221,9 +221,13 @@ func TestBackfilledSlope(t *testing.T) {
 	if d != 4 {
 		t.Error("backfilled returned wrong prediction for sloping line", d)
 	}
+	bf.add(11,13)
 	d,err = bf.backfilled(4,5)
-	if err ==  nil {
-		t.Error("predicted end date for line sloping below zero",d)
+	if err !=  nil {
+		t.Error("backfilled failed for line sloping below zero",d)
+	}
+	if d != 13 {
+		t.Error("backfilled returned unexpected value for line sloping below zero",d)
 	}
 }
 
