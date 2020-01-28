@@ -125,7 +125,8 @@ func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,now flap.Ep
 	// Obtain promise
 	proposal,err := fe.Propose(pp,plannedflights[:],0,now)
 	if (err != nil) {
-		return 0,logError(err)
+		logDebug("Propose failed with error",err)
+		return 0,err
 	}
 	err = fe.Make(pp,proposal)
 	if err == nil {
