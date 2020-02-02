@@ -4,6 +4,7 @@ import (
 	"github.com/richardmorrey/flap/pkg/flap"
 	"errors"
 	"math/rand"
+	"sync"
 )
 
 var  EDAYTOOFARAHEAD = errors.New("Value for days is too far ahead")
@@ -32,6 +33,7 @@ type plannerDay []journey
 
 type journeyPlanner struct{
 	days []plannerDay
+	mux  sync.Mutex
 }
 
 var ENOJOURNEYSPLANNED = errors.New("No journeys have been planned for today")
@@ -48,12 +50,22 @@ func NewJourneyPlanner(planningDays flap.Days) (*journeyPlanner,error) {
 
 // Adds journey to a day. Day is 0-indexed with 0 meaning "today"
 func (self *journeyPlanner) addJourney(j journey, day flap.Days) error {
+
+	// Prevent mult-threaded write to self.days
+	self.mux.Lock()
+	defer self.mux.Unlock()
+
+	// Check day isnt too far ahead
 	if day >= flap.Days(len(self.days)) {
 		return logError(EDAYTOOFARAHEAD)
 	}
+
+	// Make slice if this is the first journey on specified day
 	if self.days[day] == nil {
 		self.days[day] = make([]journey,0,100)
 	}
+
+	// Add the journey
 	self.days[day] = append(self.days[day],j)
 	logDebug("Added journey. Day +",day," now has ", len(self.days[day]), " journeys.")
 	return nil
@@ -121,7 +133,10 @@ func (self *journeyPlanner) buildFlight(jf *journeyFlight, startOfDay flap.Epoch
 // If the journey is outbound and the submission succeeds then the inbound
 // journey is planned
 func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, startOfDay flap.EpochTime, fp *flightPaths, debit bool) error {
-	
+
+	// Prevent mult-threaded write to self.days
+	self.mux.Lock()
+	defer self.mux.Unlock()
 	logInfo("submitFlights processing ", len(self.days[0])," journeys")
 
 	// Iterate through all journeys for today

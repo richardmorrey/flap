@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"os"
 	"strings"
+	"sync"
 )
 
 var ECOULDNTFINDWEIGHT= errors.New("Couldnt find country weight for bot")
@@ -50,11 +51,14 @@ type botStats struct {
 	flightsRefused   uint64
 	tripsCancelled   uint64
 	tripsPlanned	 uint64
+	mux		 sync.Mutex
 }
 
 // Submitted updates stats to reflect fact a journey
 // has been successfully submitted
 func (self *botStats) Submitted(dist flap.Kilometres) {
+	self.mux.Lock()
+	defer self.mux.Unlock()
 	self.flightsTaken++
 	self.distance += dist
 }
@@ -62,25 +66,34 @@ func (self *botStats) Submitted(dist flap.Kilometres) {
 // Refused updates stats to relect fact a journey 
 // submission has been refused by flap
 func (self  *botStats) Refused() {
+	self.mux.Lock()
+	defer self.mux.Unlock()
 	self.flightsRefused++
-	//panic(nil)
 }
 
 // Canclled updates stats to relect fact a promise
 // request has been refused by flap
 func (self  *botStats) Cancelled() {
+	self.mux.Lock()
+	defer self.mux.Unlock()
 	self.tripsCancelled++
 }
 
 // Planned updates stats to relect fact a promise
 // request has been refused by flap
 func (self  *botStats) Planned() {
+	self.mux.Lock()
+	defer self.mux.Unlock()
 	self.tripsPlanned++
 }
 
 // Report writes a single CSV row with stats
 func (self *travellerBot) ReportDay(rdd flap.Days) string {
 	
+	// One thread at a time
+	self.stats.mux.Lock()
+	defer self.stats.mux.Unlock()
+
 	// Format stats
 	line := fmt.Sprintf("%f,%f,%f,",
 		(float64(self.stats.flightsRefused)/float64(self.stats.flightsTaken+self.stats.flightsRefused))*100,
@@ -102,7 +115,7 @@ type TravellerBots struct {
 	fh		*os.File
 	statsFolder    string
 	tripLengths	[]flap.Days
-	bp		*botPromises
+	promisesMaxDays   flap.Days
 }
 
 func NewTravellerBots(cw *CountryWeights, params flap.FlapParams) *TravellerBots {
@@ -110,7 +123,7 @@ func NewTravellerBots(cw *CountryWeights, params flap.FlapParams) *TravellerBots
 	tbs.bots = make([]travellerBot,0,10)
 	tbs.countryWeights=cw
 	if params.PromisesAlgo != 0 {
-		tbs.bp = newBotPromises(params.PromisesMaxDays)
+		tbs.promisesMaxDays = params.PromisesMaxDays
 	}
 	return tbs
 }
@@ -190,7 +203,7 @@ func (self *TravellerBots) Build(modelParams *ModelParams) error {
 func (self *TravellerBots) planningAllowed(pp flap.Passport,fe *flap.Engine) bool {
 
 	// If we are using promises then planning is always allowed ...
-	if self.bp != nil {
+	if self.promisesMaxDays != 0 {
 		return true
 	}
 
@@ -204,12 +217,39 @@ func (self *TravellerBots) planningAllowed(pp flap.Passport,fe *flap.Engine) boo
 // planTrips "throws dice" for every traveller bot in every band according to probability
 // of travellers in the band travelling on any one day. If the dice comes up and the
 // travellerbot is not in the middle of a trip, a new trip is planned using weighted 
-// country-airpots-routes model
-func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyPlanner, fe *flap.Engine,currentDay flap.EpochTime,deterministic bool) error {
+// country-airports-routes model
+func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyPlanner, fe *flap.Engine,currentDay flap.EpochTime,deterministic bool, threads uint) error {
+	
+	// Create configured number of threads to plan trips and wait for them to finish
+	perrs := make(chan error, threads)
+	var wg sync.WaitGroup
+	for i := uint(0); i < threads; i++ {
+		wg.Add(1)
+		t :=  func () {perrs <- self.doPlanTrips(cars,jp,fe,currentDay,deterministic,threads,i);wg.Done()}
+		go t()
+	}
+	wg.Wait()
+
+	// Return first error reported
+	close(perrs)
+	for elem := range perrs {
+		if elem != nil {
+			return elem
+		}
+	}
+	return nil
+}
+func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journeyPlanner, fe *flap.Engine,currentDay flap.EpochTime,deterministic bool,threads uint, offset uint) error {
+
+	// Create bot promises instance if we need one
+	var bp *botPromises
+	if self.promisesMaxDays != 0 {
+		bp = newBotPromises(self.promisesMaxDays)
+	}
 
 	// Iterate through each bot in each band
 	for i:=bandIndex(0); i < bandIndex(len(self.bots)); i++ {
-		for j:=botIndex(0); j < self.bots[i].numInstances; j++ {
+		for j:=botIndex(offset); j < self.bots[i].numInstances; j+=botIndex(threads) {
 			dice:=Probability(rand.Float64())
 			if dice <= self.bots[i].flyProb {
 
@@ -251,8 +291,8 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 					// If we are running with promise then choose which date to plan trip
 					// consistent with current promises
 					startday := flap.Days(0)
-					if self.bp != nil {
-						startday,err = self.bp.getPromise(fe,p,currentDay,tripLength,airport.Code,to,deterministic) 
+					if bp != nil {
+						startday,err = bp.getPromise(fe,p,currentDay,tripLength,airport.Code,to,deterministic) 
 						if err != nil && err != ENOSPACEFORTRIP {
 							self.bots[i].stats.Cancelled() 
 						}

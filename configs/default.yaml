@@ -71,3 +71,4 @@ modelparams:
   # every reportdaydelta days. A KML file including all flights taken
   # is written out every reportdaydelta days.
   reportdaydelta: 100
+  threads: 2 

@@ -45,6 +45,7 @@ type ModelParams struct {
 	ReportDayDelta		flap.Days
 	LogLevel		logLevel
 	Deterministic		bool
+	Threads			uint
 }
 
 type plannedFlight struct {
@@ -82,10 +83,16 @@ func NewEngine(configFilePath string) (*Engine,error) {
 	if err != nil {
 		return nil,logError(err)
 	}
+
+	// Set default config values
 	if e.ModelParams.ReportDayDelta == 0 {
 		e.ModelParams.ReportDayDelta = 1
 	}
+	if e.ModelParams.Threads == 0 {
+		e.ModelParams.Threads = 1
+	}
 		
+	// Validate config
 	for _,length := range(e.ModelParams.TripLengths) {
 		if length < 2 {
 			return nil,logError(flap.EINVALIDARGUMENT)
@@ -234,7 +241,7 @@ func (self *Engine) Run() error {
 		// Plan flights for all travellers
 		logInfo("DAY", currentDay/flap.SecondsInDay, currentDay.ToTime())
 		fmt.Printf("\rDay %d: Planning Flights",i)
-		err = travellerBots.planTrips(cars,jp,fe,currentDay,self.ModelParams.Deterministic)
+		err = travellerBots.planTrips(cars,jp,fe,currentDay,self.ModelParams.Deterministic,self.ModelParams.Threads)
 		if err != nil {
 			return logError(err)
 		}
