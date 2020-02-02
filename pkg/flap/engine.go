@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"math"
 	"errors"
+	"sync"
 )
 
 var EPROMISESNOTENABLED = errors.New("Promises not enabled")
@@ -246,15 +247,53 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 		}
 	}
 
-	// Iterate through travellers
-	var newGrounded uint64
-	it,err := self.Travellers.NewIterator(nil)
+	// Update all travellers
+	threads := uint(1)
+	stats := make(chan updateStats, threads)
+	var wg sync.WaitGroup
+	for i := uint(0); i < threads; i++ {
+		wg.Add(1)
+		t :=  func () {stats <- self.updateSomeTravellers(nil,share,now);wg.Done()}
+		go t()
+	}
+	wg.Wait()
+
+	// Add up the stats
+	var ut updateStats 
+	close(stats)
+	for elem := range stats {
+		ut.grounded += elem.grounded
+		ut.travellers += elem.travellers
+		ut.distance += elem.distance
+		if (elem.err != nil) {
+			ut.err = elem.err
+		}
+	}
+
+	// Update total grounded and return
+	self.totalGrounded=ut.grounded
+	return ut.travellers,ut.distance,self.totalGrounded,ut.err
+}
+
+type updateStats struct {
+	grounded uint64
+	travellers uint64
+	distance  Kilometres
+	err	error
+}
+
+func (self *Engine) updateSomeTravellers(prefix []byte, share Kilometres,now EpochTime) updateStats {
+
+	// Create Iterator
+	var us updateStats
+	it,err := self.Travellers.NewIterator(prefix)
 	if err != nil {
-		return 0,0,0,err
+		us.err=err
+		return us
 	}
 	defer it.Release()
-	var totalTravellersYesterday uint64
-	var totalDistanceYesterday Kilometres
+
+	// Initialize totals
 	for it.Next() {
 
 		// Retrieve traveller
@@ -265,8 +304,8 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 		distanceYesterday,err := traveller.tripHistory.Update(&self.Administrator.params,now) 
 		if err == nil {
 			if distanceYesterday > 0 {
-				totalDistanceYesterday += distanceYesterday
-				totalTravellersYesterday++
+				us.distance += distanceYesterday
+				us.travellers ++
 			}
 			changed = true
 		}
@@ -278,7 +317,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 		// Backfill if not travelling and balance is negative
 		if !traveller.MidTrip() && traveller.balance < 0 {
 			traveller.balance += share
-			newGrounded++
+			us.grounded++
 			changed = true
 		}
 
@@ -287,10 +326,8 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 			self.Travellers.PutTraveller(traveller)
 		}
 	}
-
-	// Update total grounded
-	self.totalGrounded=newGrounded
-	return totalTravellersYesterday, totalDistanceYesterday,self.totalGrounded, it.Error()
+	us.err = it.Error()
+	return us
 }
 
 // Propose returns a proposal for change to the given traveller's set of clearance promises to
