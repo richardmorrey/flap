@@ -29,6 +29,7 @@ type FlapParams struct
 	PromisesAlgo		PromisesAlgo
 	PromisesMaxPoints	uint32
 	PromisesMaxDays		Days
+	Threads			byte
 }
 
 type Administrator struct {
@@ -91,6 +92,9 @@ func (self *Administrator) SetParams(params FlapParams) error {
 		return EINVALIDFLAPPARAMS
 	}
 	if (params.PromisesAlgo != paNone && params.PromisesMaxPoints <=0) {
+		return EINVALIDFLAPPARAMS
+	}
+	if params.Threads % 2 != 0 {
 		return EINVALIDFLAPPARAMS
 	}
 
@@ -243,17 +247,22 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 		if self.Administrator.validPredictor() {
 			self.Administrator.predictor.add(now.toEpochDays(false),share)
 			self.Administrator.predictor.put(self.Administrator.table)
-			logDebug("Added predictior data point:",now.toEpochDays(false),share)
+			logInfo("Added predictior data point:",now.toEpochDays(false),share)
 		}
 	}
 
 	// Update all travellers
-	threads := uint(1)
+	threads := uint(self.Administrator.params.Threads)
+	if threads == 0 {
+		threads = 1
+	}
 	stats := make(chan updateStats, threads)
 	var wg sync.WaitGroup
-	for i := uint(0); i < threads; i++ {
+	for i := uint(0); i < math.MaxUint8; i+= math.MaxUint8/threads {
 		wg.Add(1)
-		t :=  func () {stats <- self.updateSomeTravellers(nil,share,now);wg.Done()}
+		end:= (i+(math.MaxUint8/threads)) // start/end have to be define locally or closure in gorouting will use current value for i
+		start:=i
+		t :=  func () {stats <- self.updateSomeTravellers(byte(start),byte(end),share,now);wg.Done()}
 		go t()
 	}
 	wg.Wait()
@@ -282,51 +291,63 @@ type updateStats struct {
 	err	error
 }
 
-func (self *Engine) updateSomeTravellers(prefix []byte, share Kilometres,now EpochTime) updateStats {
+func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share Kilometres,now EpochTime) updateStats {
 
-	// Create Iterator
 	var us updateStats
-	it,err := self.Travellers.NewIterator(prefix)
-	if err != nil {
-		us.err=err
-		return us
-	}
-	defer it.Release()
+	var prefix [1]byte
 
-	// Initialize totals
-	for it.Next() {
+	// Iterate through all keys with a first byte in the given
+	// range
+	for pc:=int(prefixStart); pc <= int(prefixEnd); pc++ {
 
-		// Retrieve traveller
-		changed:=false
-		traveller := it.Value()
+		// Iterate over current start byte
+		prefix[0]=byte(pc)
+		it,err := self.Travellers.NewIterator(prefix[:])
+		if err != nil {
+			us.err=err
+			return us
+		}
+		//fmt.Printf("Iterating over %d\n",prefix)
+		for it.Next() {
 
-		// Update trip history
-		distanceYesterday,err := traveller.tripHistory.Update(&self.Administrator.params,now) 
-		if err == nil {
-			if distanceYesterday > 0 {
-				us.distance += distanceYesterday
-				us.travellers ++
+			// Retrieve traveller
+			changed:=false
+			traveller := it.Value()
+
+			// Update trip history
+			distanceYesterday,err := traveller.tripHistory.Update(&self.Administrator.params,now) 
+			if err == nil {
+				if distanceYesterday > 0 {
+					us.distance += distanceYesterday
+					us.travellers ++
+				}
+				changed = true
 			}
-			changed = true
+
+			// Check for a promise to keep
+			kept := traveller.keep()
+			changed = changed || kept
+
+			// Backfill if not travelling and balance is negative
+			if !traveller.MidTrip() && traveller.balance < 0 {
+				traveller.balance += share
+				us.grounded++
+				changed = true
+			}
+
+			// Save changes if necessary
+			if changed {
+				self.Travellers.PutTraveller(traveller)
+			}
 		}
 
-		// Check for a promise to keep
-		kept := traveller.keep()
-		changed = changed || kept
-
-		// Backfill if not travelling and balance is negative
-		if !traveller.MidTrip() && traveller.balance < 0 {
-			traveller.balance += share
-			us.grounded++
-			changed = true
-		}
-
-		// Save changes if necessary
-		if changed {
-			self.Travellers.PutTraveller(traveller)
+		// Release interface
+		us.err = it.Error()
+		it.Release()
+		if us.err != nil {
+			return us
 		}
 	}
-	us.err = it.Error()
 	return us
 }
 
