@@ -12,6 +12,8 @@ flapparams:
   promisesmaxpoints: 100
   # Maximum days ahead to allow a promise trip to end
   promisesmaxdays: 180
+  # Number of threads to use for backfilling. Must be power of 2. Defaults to 1.
+  threads: 1
 # Parameters controlling flapmodel
 modelparams:
   # Logging level 0 - off, 1 - errors only, 2 - info,
@@ -71,4 +73,5 @@ modelparams:
   # every reportdaydelta days. A KML file including all flights taken
   # is written out every reportdaydelta days.
   reportdaydelta: 100
-  threads: 2 
+  # Number of threads to use for planning. Defaults to 1.
+  threads: 1 

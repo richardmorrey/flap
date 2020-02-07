@@ -110,7 +110,7 @@ func (self* botPromises) getPromise(fe *flap.Engine,pp flap.Passport,now flap.Ep
 	var plannedflights [2]flap.Flight
 	sds:=flap.EpochTime(ts*flap.SecondsInDay)
 	ede:=sds + flap.EpochTime(length*flap.SecondsInDay)
-	f,err := flap.NewFlight(fromAirport,sds+1,toAirport,sds+2)
+	f,err := flap.NewFlight(fromAirport,sds,toAirport,sds+1)
 	if (err != nil) {
 		return 0, logError(err)
 	}

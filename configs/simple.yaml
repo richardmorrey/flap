@@ -5,6 +5,7 @@ flapparams:
   promisesalgo: 1
   promisesmaxpoints: 100
   promisesmaxdays: 10
+  threads: 2
 modelparams:
   loglevel: 3
   workingfolder: ./working
@@ -21,3 +22,4 @@ modelparams:
   startday: 0
   dailytotalfactor: 0.99
   deterministic: false
+  threads: 2

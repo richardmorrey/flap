@@ -58,7 +58,7 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	if distance <= 0 {
 		return nil,logError(EINVALIDARGUMENT)
 	}
-	if tripStart <= now {
+	if tripStart < now {
 		return nil,logError(EINVALIDARGUMENT)
 	}
 	if tripStart == 0 {

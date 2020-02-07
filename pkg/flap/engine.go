@@ -7,6 +7,7 @@ import (
 	"math"
 	"errors"
 	"sync"
+	//"fmt"
 )
 
 var EPROMISESNOTENABLED = errors.New("Promises not enabled")
@@ -94,7 +95,11 @@ func (self *Administrator) SetParams(params FlapParams) error {
 	if (params.PromisesAlgo != paNone && params.PromisesMaxPoints <=0) {
 		return EINVALIDFLAPPARAMS
 	}
-	if params.Threads % 2 != 0 {
+	var bits int
+	for n:=params.Threads; n != 0 ; n=n & (n-1) {
+		bits++;
+	}
+	if bits >  1 {
 		return EINVALIDFLAPPARAMS
 	}
 
@@ -258,12 +263,11 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 	}
 	stats := make(chan updateStats, threads)
 	var wg sync.WaitGroup
-	for i := uint(0); i < math.MaxUint8; i+= math.MaxUint8/threads {
+	delta := (math.MaxUint8+1)/threads
+	for i := uint(0); i < math.MaxUint8; i+=delta {
 		wg.Add(1)
-		end:= (i+(math.MaxUint8/threads)) // start/end have to be define locally or closure in gorouting will use current value for i
-		start:=i
-		t :=  func () {stats <- self.updateSomeTravellers(byte(start),byte(end),share,now);wg.Done()}
-		go t()
+		t :=  func(s byte,e byte) {stats <- self.updateSomeTravellers(s,e,share,now);wg.Done()}
+		go t(byte(i),byte(i+delta-1))
 	}
 	wg.Wait()
 
@@ -313,7 +317,6 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 			// Retrieve traveller
 			changed:=false
 			traveller := it.Value()
-
 			// Update trip history
 			distanceYesterday,err := traveller.tripHistory.Update(&self.Administrator.params,now) 
 			if err == nil {

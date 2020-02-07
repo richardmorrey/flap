@@ -5,6 +5,7 @@ import (
 	"os"
 	"github.com/richardmorrey/flap/pkg/db"
 	"reflect"
+	//"fmt"
 )
 
 var ENGINETESTFOLDER="travellerstest"
@@ -270,16 +271,25 @@ func TestUpdateTripsAndBackfillOne(t  *testing.T) {
 
 }
 
-func TestUpdateTripsAndBackfillThree(t  *testing.T) {
+func TestUpdateTripsAndBackfillThreaded(t *testing.T) {
+	for threads:=1; threads <= 256; threads *=2 {
+		testUpdateTripsThreaded(t,threads)
+	}
+}
+
+func testUpdateTripsThreaded(t *testing.T,threads int) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
 	engine := NewEngine(db,0,"")
-	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365}
-	engine.Administrator.SetParams(paramsIn)
+	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,Threads:byte(threads)}
+	err := engine.Administrator.SetParams(paramsIn)
+	if err != nil {
+		t.Error("SetParams failed",err)
+	}
 	var flights13,flights2 []Flight
 	passport1 := NewPassport("111111111","uk")
 	flights13 = append(flights13,*createFlight(1,SecondsInDay,SecondsInDay+1),*createFlight(1,SecondsInDay*3,SecondsInDay*3+1))
-	err := engine.SubmitFlights(passport1,flights13,SecondsInDay,true)
+	err = engine.SubmitFlights(passport1,flights13,SecondsInDay,true)
 	passport2 := NewPassport("222222222","uk")
 	flights2 = append(flights2,*createFlight(10,SecondsInDay,SecondsInDay+1),*createFlight(11,SecondsInDay*4,SecondsInDay*4+1))
 	err = engine.SubmitFlights(passport2,flights2,SecondsInDay,true)
@@ -295,7 +305,7 @@ func TestUpdateTripsAndBackfillThree(t  *testing.T) {
 	}
 	expectedBalance := 100 - (flights13[0].distance+flights13[1].distance)
 	if traveller.balance !=  expectedBalance {
-		t.Error("UpdateTripsAndBackfill didnt backfill traveller 1correctly", traveller.balance)
+		t.Error("UpdateTripsAndBackfill didnt backfill traveller 1correctly", expectedBalance,traveller.balance)
 	}
 	traveller,_ = engine.Travellers.GetTraveller(passport3) 
 	if traveller.tripHistory.entries[0].et != etTripEnd {
