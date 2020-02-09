@@ -225,8 +225,8 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 	var wg sync.WaitGroup
 	for i := uint(0); i < threads; i++ {
 		wg.Add(1)
-		t :=  func () {perrs <- self.doPlanTrips(cars,jp,fe,currentDay,deterministic,threads,i);wg.Done()}
-		go t()
+		t :=  func (step uint,offset uint) {perrs <- self.doPlanTrips(cars,jp,fe,currentDay,deterministic,step,offset);wg.Done()}
+		go t(threads,i)
 	}
 	wg.Wait()
 
@@ -246,9 +246,9 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 	if self.promisesMaxDays != 0 {
 		bp = newBotPromises(self.promisesMaxDays)
 	}
-
 	// Iterate through each bot in each band
 	for i:=bandIndex(0); i < bandIndex(len(self.bots)); i++ {
+		logInfo("PLANNING: band",i,"start",offset,"step",threads)
 		for j:=botIndex(offset); j < self.bots[i].numInstances; j+=botIndex(threads) {
 			dice:=Probability(rand.Float64())
 			if dice <= self.bots[i].flyProb {

@@ -48,7 +48,7 @@ func NewJourneyPlanner(planningDays flap.Days) (*journeyPlanner,error) {
 	return jp,nil
 }
 
-// Adds journey to a day. Day is 0-indexed with 0 meaning "today"
+// Adds journey to a day. Day is 0-indexed with 0 meaning "today". Thread-safe.
 func (self *journeyPlanner) addJourney(j journey, day flap.Days) error {
 
 	// Prevent mult-threaded write to self.days
@@ -131,12 +131,9 @@ func (self *journeyPlanner) buildFlight(jf *journeyFlight, startOfDay flap.Epoch
 
 // Attempts to submit all flights in all journeys for the current day.
 // If the journey is outbound and the submission succeeds then the inbound
-// journey is planned
+// journey is planned. Not thread-safe
 func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, startOfDay flap.EpochTime, fp *flightPaths, debit bool) error {
 
-	// Prevent mult-threaded write to self.days
-	self.mux.Lock()
-	defer self.mux.Unlock()
 	logInfo("submitFlights processing ", len(self.days[0])," journeys")
 
 	// Iterate through all journeys for today
