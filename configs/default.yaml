@@ -18,7 +18,7 @@ flapparams:
 modelparams:
   # Logging level 0 - off, 1 - errors only, 2 - info,
   # 3 - debug. Log output to <workingfolder>/flap.log
-  loglevel: 2
+  loglevel: 3
   # Folder to hold working databases and all output files
   workingfolder: ./working
   # Folder to place input data files
