@@ -4,39 +4,62 @@
 }
 
 body {
-	  margin: auto;
-	  width: 50%;
+	  margin: 0;
+	  width: 100%;
           font-family: Arial, Helvetica, sans-serif;
+}
+
+.logo {
+	float:left;
+	display:block;
+	font-size: large;
+	padding: 20px;
 }
 
 /* Style the top navigation bar */
 .topnav {
 	  overflow: hidden;
-		    background-color: #333;
+	  margin: auto;
+	  width: 50%;
+}
+
+header {
+	border-top: 5px solid #424242;
+	border-bottom: 1px solid #e8e8e8;
+	min-height: 55.95px;
+	position: relative;
 
 }
 
 /* Style the topnav links */
 .topnav a {
 	  float: left;
-		    display: block;
-			      color: #f2f2f2;
-				        text-align: center;
-						  padding: 14px 16px;
-							    text-decoration: none;
+          display: block;
+	  text-align: center;
+          padding: 50px 14px;
+	  text-decoration: none;
+	  color: black;
 }
-
-
+ 
 /* Change color on hover */
 .topnav a:hover {
-	  background-color: #f1f1f1;
-		    color: black;
+	text-decoration: underline
 }
 
-/* Selected link */
-.topnavcurrent a {
-	  	background-color: #ddd;
-		    color: black;
+.topnav img {
+	float:left;
+	width: 100px;
+    	height: 100px;
+ 	display: block;
+	padding: 10px 10px;
+}
+
+.topnav b {
+	color: red;
+}
+
+.menubar{
+	float:right;
 }
 
 .topnav .icon {
@@ -75,15 +98,11 @@ body {
 
 /* Style the banner */
 .banner {
-	  background-color: #ddd;
-		    padding: 20px;
+		padding: 20px;
 		line-height: 0.8;
-
-			      
-}
-/* Style the tagline */
-.tagline {
-	font-style: oblique;      
+		text-align: center;
+	  	margin: auto;
+	  	width: 50%;
 }
 
 /* Title formatting */
@@ -96,16 +115,15 @@ h1.normalchar {
 
 /* Style the content */
 .content {
-	  background-color: #f1f1f1;
-		padding: 20px;
+		padding: 0px;
 		text-align: justify;
 		line-height: 1.8;
-
+	  	margin: auto;
+	  	width: 50%;
 }
 
 /* Element to hold a chart.js chart */
 .chart-holder {
-	  background-color: #f1f1f1;
 		position: absolute;
 		top: 8px;
 		left: 8px;
