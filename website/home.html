@@ -30,7 +30,7 @@
 		</header>
 
 		<div class="banner">
-			<h1 class="normalchar">Home</h1>
+			<h1 class="boldchar">HOME</h1>
 		</div>
 
 		<div class="content">
@@ -50,17 +50,17 @@
 				<li>FLAP maintains a distance account, analogous to a bank account, for every "Traveller". Each account has a balance
 				in kilometres, which starts at zero.</li>
 				<li>Airlines withdraw the distance of each flight from the Traveller's distance account at check-in.</li>
-				<li>The "Daily Total" defines a total distance in kilometres. Every day FLAP credits the account for
-				each overdrawn Traveller with an equal share of the Daily Total.</li>
+				<li>The "Daily Allowance" defines a total distance in kilometres. Every day FLAP credits the account for
+				each overdrawn Traveller with an equal share of the Daily Allowance.</li>
 				<li>Overdrawn Travellers are not allowed to start a new trip, by the airline refusing check-in if necessary.</li>
 			</ul>
-			Thus the total distance flown is restricted by the Daily Total, which can be decreased over time.
+			Thus the total distance flown is restricted by the Daily Allowance, which can be decreased over time.
 			<p>
 			<h3>Is that it? My &lt;insert-single-digit-number-here&gt; year old could have come up with that.&nbsp;</h3>
-			<p>It was much more complicated to begin with. I kept removing bits until it didn't work any
-			more and then reinstated the last bit I removed. In other words I put a lot of effort into getting it that simple.</p>
+			<p>It was much more complicated to begin with. We kept removing bits until it didn't work any
+			more and then reinstated the last bit we removed. In other words we put a lot of effort into getting it that simple.</p>
 			<h3>Oh dear. I think you may have been wasting your time. You said FLAP is "non-judgemental". What do you mean by that?&nbsp;</h3>
-			<p>I mean that FLAP does not aim to judge, stigmatise or penalise those who fly. Instead it aims to engage
+			<p>We mean that FLAP does not aim to judge, stigmatise or penalise those who fly. Instead it aims to engage
 			positively with them to achieve the necessary goal of reducing air travel. Most significantly:
 			<ul>
 				<li>No financial penalty or incentive is involved - a key benefit over frequent flyer tax schemes
@@ -69,22 +69,22 @@
 				<li>No restriction is placed on the amount any one person can fly.</li> 
 			</ul></p>
 			<h3>Well all I see is a few bullet points in a dull colour scheme. How can you be so sure how this thing would pan out in practice?</h3>
-			<p>Because I have wasted more of my time implementing it, implementing a global air traffic model to exercise it, and
+			<p>Because we have wasted more of our time implementing it, implementing a global air traffic model to exercise it, and
 				analysing the results. The system and model code are <a href="https://github.com/richardmorrey/flap">
 				available on Github</a>. Go to <a href="./modelling.html">Modelling</a> for a summary of the findings.
 			<h3>Hang on minute. I have to fly frequently for my work and family reasons.
 				These results prove your scheme is unfairly targetting people like me.&nbsp;</h3>
-			<p>As I have explained FLAP is non-judgemental and does not target any particular category of traveller. However the fact is
+			<p>As we have explained FLAP is non-judgemental and does not target any particular category of traveller. However the fact is
 			   <a href="http://afreeride.org/about/">70% of flights are taken by 15% of travellers</a>, meaning air travel can only be
 			   signficiantly reduced through a change in behaviour of that 15%. This is not unfair targetting but basic arithmetic.</p>
 			<h3>Look stop now. This just won't work. You can't realistically expect airlines to report every single check-in across
 				the whole world. Even if they could thousands of people will end up stranded in airports far from
 				home. And how on earth can I make firm travel plans when I could be turned away at check-in at any point.
 				And what about blah, and blah, and blah blah blah?&nbsp;</h3>
-			<p>Well I wasted even more of my time writing <a href="./doc/flapwhitepaper.pdf">this white paper</a> considering these
+			<p>Well we wasted even more of our time writing <a href="./doc/flapwhitepaper.pdf">this white paper</a> considering these
 				and many other aspects, which you are welcome to read, but specifically:
 				<ul>
-					<li>I know airlines can report all check-ins back to a central system
+					<li>We know airlines can report all check-ins back to a central system
 						because <a href="https://en.wikipedia.org/wiki/Advance_Passenger_Information_System">
 						they are already doing it!</a></li>
 					<li>FLAP only refuses check-ins at the start of a "Trip", and its definition of what constitutes a Trip
@@ -92,9 +92,7 @@
 						at any risk of becoming stranded.
 					</li>
 					</li>
-					<li>Yes there clearly needs to be more certainty for the traveller to make this a practical scheme. For
-						this reason I am currently implementing a new feature, based on the ideas discussed in 5.2 of the
-						white paper, called "Clearance Promises", which will make FLAP much easier to use.
+					<li>A feature called "Clearance Promises" provides certainty about when the next Trip can begin, allows for Trips to be bunched together and genearlly makes FLAP very easy to use.
 					</li>
 				</ul>
 				You can find out more about Trips and Clearance Promises <a href="./experience.html">here</a>.
@@ -102,8 +100,7 @@
 			<h3>My you have been busy. But really, you're focussing on the wrong thing here. Figure 8.1 clearly shows road
 				travel is a far bigger problem that air travel.&nbsp</h3>
 			<p>They are both a problem, but yes you are right. We desperately need a practical plan for reducing road travel too.
-				I believe that the principles guiding FLAP can be applied, but it is a bit trickier. If someone (anyone!)
-				shows some interest I may have a go at coming up with something.</p>
+				We believe that the principles guiding FLAP can be applied, but it is a bit trickier.</p>
 		</div>
 
 	</body>

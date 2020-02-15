@@ -9,7 +9,7 @@ var goal1 = new Chart(ctx, {
 	  	labels: [day(100),day(200),day(300),day(400),day(500),day(600),day(700),day(800),day(900),day(1000),day(1100),day(1200),day(1300),day(1400),day(1500),day(1600),day(1700),day(1800),day(1900),day(2000)],
 		
 		 datasets: [{
-				label: 'Daily Total',
+				label: 'Daily Allowance',
 				data: [
 					null,
 					12030027,
