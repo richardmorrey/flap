@@ -121,6 +121,10 @@ h1.normalchar {
 	  	margin: auto;
 	  	width: 50%;
 }
+.newsbold {
+	font-weight: 800;
+	color:red;
+}
 
 /* Element to hold a chart.js chart */
 .chart-holder {
