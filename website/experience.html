@@ -36,19 +36,19 @@
 			<h3>Trips and Clearance Promises</h3>
 			<p>
 			A Trip is simply a sequence of consecutive flights by a single Traveller with a maximum length
-			of 90 days from the start of the first flight to the end of the last. The start of a Trip is enforced by FLAP but the ending
-			of a Trip is controlled by the Traveller. FLAP only enforces the end of a Trip if the 90 day limit is reached.
+			of 90 days from the start of the first flight to the end of the last. The start of a Trip is enforced by FLAP but
+			the Traveller controls when a Trip ends - FLAP only forces a Trip to end if the 90 day limit is reached.
 			</p>
 			<p>
-			Travellers (or the airlines they fly with) are able to submit Trips to FLAP in advance - a sequence of one or more flights -
-			and obtain a "Clearance Promise": a date after the completion of the Trip when the Traveller is allowed to fly again. This
+			Travellers (or the airlines they fly with) are able to submit Trip plans to FLAP in advance and obtain a "Clearance Promise":
+		       	a committed date after the completion of the Trip when the Traveller will be allowed to fly again. This
 			promise holds regardless of the Traveller's Distance Balance at the time, and allows subsequent Trips to be planned in
 			advance with certainty.
 			</p>
 			<p>
 			Up to three consecutive Clearance Promises can be "stacked". A stacked promise has a date that is brought forward
 		       	to be the start date of the next planned Trip. This allows Travellers to bunch up to four Trips close together, but
-			there is a cost. The date of the promise immediately following the end of the stack is pushed further into the future to
+			at a cost. The date of the promise immediately following the end of the stack is pushed further into the future to
 			allow for the backfilling of the distance defict accrued over the period of the stack.	
 			</p>
 

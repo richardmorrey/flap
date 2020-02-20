@@ -19,7 +19,7 @@
 			  <a href="news.html">News</a>
 			  <a href="modelling.html">Modelling</a>
 			  <a href="explore.html">Explore</a>
-			  <a href="experience.html">Traveller Experience</a>
+			  <a href="experience.html">Experience</a>
 			  <a href="resources.html">Resources</a>
 			  <a href="about.html">About</a>
 			  <a href="javascript:void(0);" class="icon" onclick="switchMenu()">
@@ -34,10 +34,10 @@
 		</div>
 
 		<div class="content">
-			<h3>Overview&nbsp;</h3>
-			<p>Following is a summary of the findings of a modelling exercise simulating air travel by 1 million people
-			over a period of 2000 days with FLAP in place. Travellers were split into two bands to repesent the real-world balance
-			between frequent and infrequent flyers discussed
+			<h3>Simulating One Million People</h3>
+			<p>Following is a summary of the findings of a modelling exercise simulating air travel by one million people
+			over a period of two thousand days with FLAP in place. Travellers were split into two bands to repesent the real-world
+			balance between frequent and infrequent flyers discussed
 			<a href="http://afreeride.org/">here</a> and
 			<a href="https://www.inequalityintransport.org.uk/exploring-transport-inequality/who-travels-air">here</a> as follows:
 			<ul>
@@ -51,22 +51,23 @@
 			</p>
 			<p>The source code for the FLAP implementation and modelling tool used is available
 				<a href="https://github.com/richardmorrey/flap">here</a> to download and use.</p>
-			<h3>Global air travel is reduced</h3>
+			<h3>Global Air Travel is Reduced</h3>
 			<div id=chart-holder><canvas id="goal1chart"></canvas></div>
 			<p>This chart shows how the Daily Allowance and the total daily distance travelled varies over time. Air travel is
-			halved over the course of 5 years. You can see a visualization of flights contribution to each data point on this graph
-			<a href="./explore.html">here.</a>
+			reduced by 40% over the course of 5 years. You can see a visualization of flights contribution to each data point on this
+			graph <a href="./explore.html">here.</a>
 
-			<h3>Frequent flyers can still fly more</h3>
+			<h3>Frequent Flyers Can Still Fly More</h3>
 			<div id=chart-holder><canvas id="goal2chart"></canvas></div>
 			<p>This chart shows how the average distance travelled every 100 days by frequent and infrequent travellers compares over
 			time. Frequent traveller flying is reduced whilst infrequent traveller flying remains steady, but
 			despite this frequent flyers fly more throughout the 2000 day period.
-			<h3>Infrequent flyers are impacted less</h3>
+			<h3>Infrequent Flyers are Impacted Less</h3>
 			<div id=chart-holder><canvas id="goal3chart"></canvas></div>
-			<p>This chart shows the percentage of trips that are rejected by FLAP for frequent and infrequent travellers.
-			Infrequent flyers suffer far less disruption to their travel plans than frequent flyers.
-			<h3>Opportunities for improvement</h3>
+			<p>This chart shows the percentage of trips that frequent and infrequent flyers are forced to cancel at the planning
+			stage (see <a href="./experience.html">Experience</a> for an explanation of how this works in practice). Infrequent flyers
+			suffer far less disruption to their travel plans than frequent flyers.
+			<h3>Opportunities for Improvement</h3>
 			The model used to generate these results is basic. Whilst it does simulate global air traffic on geniune routes between
 			genuine airports it diverges from real-world flying patterns in many ways, including:
 			<ul>
