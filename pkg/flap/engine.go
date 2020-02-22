@@ -261,6 +261,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 	if threads == 0 {
 		threads = 1
 	}
+	logInfo("Backfilling with", threads,"threads")
 	stats := make(chan updateStats, threads)
 	var wg sync.WaitGroup
 	delta := (math.MaxUint8+1)/threads
@@ -302,6 +303,7 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 
 	// Iterate through all keys with a first byte in the given
 	// range
+	logInfo("Backfilling from",prefixStart,"to",prefixEnd)
 	for pc:=int(prefixStart); pc <= int(prefixEnd); pc++ {
 
 		// Iterate over current start byte
@@ -351,6 +353,7 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 			return us
 		}
 	}
+	logInfo("Finished backfilling from",prefixStart,"to",prefixEnd)
 	return us
 }
 

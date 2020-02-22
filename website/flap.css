@@ -188,4 +188,8 @@ footer {
 	.topnav {width:100%}
 	.content {width:100%}
 	.site-footer {width:100%}
+	.banner {width:100%}
+	.menubar {
+		  display:block;
+		 }
 }

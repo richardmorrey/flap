@@ -13,7 +13,7 @@ flapparams:
   # Maximum days ahead to allow a promise trip to end
   promisesmaxdays: 180
   # Number of threads to use for backfilling. Must be power of 2. Defaults to 1.
-  threads: 1
+  threads: 4
 # Parameters controlling flapmodel
 modelparams:
   # Logging level 0 - off, 1 - errors only, 2 - info,
