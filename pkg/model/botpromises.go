@@ -8,6 +8,9 @@ import (
 var ENOSPACEFORTRIP = errors.New("No space for trip")
 var ETOOMANYDAYSTOCHOOSEFROM = errors.New("Too many days to choose from")
 
+type dayProbs float64
+type yearProbs  [366]dayProb
+
 type botPromises struct {
 	Weights
 	totalDays flap.Days

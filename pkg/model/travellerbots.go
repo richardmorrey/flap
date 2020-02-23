@@ -18,7 +18,7 @@ type botIndex uint32
 type travellerBot struct {
 	countryStep    float64
 	numInstances   botIndex
-	flyProb	       Probability
+	probs	       yearProbs
 	stats	       botStats
 }
 
@@ -262,37 +262,17 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 				// Check bot is allowed to travel
 				if self.planningAllowed(p,fe) {
 
-					// Retrieve source country record for traveller
-					car,err := cars.getCountry(p.Issuer)
+					// Choose a trip
+					from,to,tripLength,err := self.chooseTrip(p,cars)
 					if err != nil {
 						return logError(err)
 					}
 
-					// Choose source airport
-					ap,err := car.choose()
-					if err != nil {
-						return logError(err)
-					}
-					airport := car.Airports[ap]
-
-					// Choose route (destination airport)
-					route,err := airport.choose()
-					if err != nil {
-						return logError(err)
-					}
-					to := airport.Routes[route].To
-
-					// Choose trip length (in days, from start of outbound to end of inbound)
-					tripLength := self.tripLengths[0]
-					if len(self.tripLengths) > 1 {
-						tripLength = self.tripLengths[rand.Intn(len(self.tripLengths)-1)]
-					}
-					
 					// If we are running with promise then choose which date to plan trip
 					// consistent with current promises
 					startday := flap.Days(0)
 					if bp != nil {
-						startday,err = bp.getPromise(fe,p,currentDay,tripLength,airport.Code,to,deterministic) 
+						startday,err = bp.getPromise(fe,p,currentDay,tripLength,from,to,deterministic) 
 						if err != nil && err != ENOSPACEFORTRIP {
 							self.bots[i].stats.Cancelled() 
 						}
@@ -300,7 +280,7 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 					
 					// Plan trip if allowed
 					if err == nil {
-						err = jp.planTrip(airport.Code,to,tripLength, botId{i,j},startday)
+						err = jp.planTrip(from,to,tripLength, botId{i,j},startday)
 						if err != nil {
 							return logError(err)
 						} else {
@@ -314,3 +294,35 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 	}
 	return nil
 } 
+
+// chooseTrip chooses a trip destination source and length for given bot
+func (self *TravellerBots) chooseTrip(p flap.Passport, cars *CountriesAirportsRoutes) (flap.ICAOCode,flap.ICAOCode,flap.Days,error) {
+
+	// Retrieve source country record for traveller
+	var empty flap.ICAOCode
+	car,err := cars.getCountry(p.Issuer)
+	if err != nil {
+		return empty,empty,0,logError(err)
+	}
+
+	// Choose source airport
+	ap,err := car.choose()
+	if err != nil {
+		return empty,empty,0,logError(err)
+	}
+	airport := car.Airports[ap]
+
+	// Choose route (destination airport)
+	route,err := airport.choose()
+	if err != nil {
+		return empty,empty,0,logError(err)
+	}
+	to := airport.Routes[route].To
+
+	// Choose trip length (in days, from start of outbound to end of inbound)
+	tripLength := self.tripLengths[0]
+	if len(self.tripLengths) > 1 {
+		tripLength = self.tripLengths[rand.Intn(len(self.tripLengths)-1)]
+	}
+	return airport.Code,to,tripLength,nil
+}
