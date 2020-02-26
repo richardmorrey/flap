@@ -18,7 +18,7 @@ type botIndex uint32
 type travellerBot struct {
 	countryStep    float64
 	numInstances   botIndex
-	probs	       yearProbs
+	probs	       *yearProbs
 	stats	       botStats
 }
 
@@ -189,7 +189,7 @@ func (self *TravellerBots) Build(modelParams *ModelParams) error {
 		if (bot.numInstances > 0) {
 			bot.countryStep= float64(topWeight)/float64(bot.numInstances)
 		}
-		bot.flyProb = botspec.PlanProbability
+		bot.probs = newYearProbs(&botspec)
 		self.bots  = append(self.bots,bot)
 	}
 
@@ -198,20 +198,19 @@ func (self *TravellerBots) Build(modelParams *ModelParams) error {
 	return nil
 }
 
-// planningAllowed determines whether planning is allowed for given
-// traveller at this point
-func (self *TravellerBots) planningAllowed(pp flap.Passport,fe *flap.Engine) bool {
+// flyingToday returns true if  the given travellerbot has decided to 
+// start a trip today. Not used if promises are enabled.
+func (self *TravellerBots) flyingToday(pp flap.Passport,fe *flap.Engine, bot *travellerBot,currentDay flap.EpochTime) bool {
 
-	// If we are using promises then planning is always allowed ...
-	if self.promisesMaxDays != 0 {
-		return true
+	// Confirm not mid-trip
+	t,err := fe.Travellers.GetTraveller(pp)
+	if  (err == nil) && t.MidTrip() {
+		return false
 	}
 
-	// ... otherwise we can only plan if we are not currently travelling,
-	// indicated by the traveller record not existing at all or it existing
-	// and "MidTrip" not being true.
-	t,err := fe.Travellers.GetTraveller(pp)
-	return (err != nil) || !t.MidTrip() 	
+	// Decide whether to fly
+	dice:=Probability(rand.Float64())
+	return dice <= bot.probs.getDayProb(currentDay) 
 }
 
 // planTrips "throws dice" for every traveller bot in every band according to probability
@@ -246,50 +245,48 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 	if self.promisesMaxDays != 0 {
 		bp = newBotPromises(self.promisesMaxDays)
 	}
+
 	// Iterate through each bot in each band
 	for i:=bandIndex(0); i < bandIndex(len(self.bots)); i++ {
 		logInfo("PLANNING: band",i,"start",offset,"step",threads)
 		for j:=botIndex(offset); j < self.bots[i].numInstances; j+=botIndex(threads) {
-			dice:=Probability(rand.Float64())
-			if dice <= self.bots[i].flyProb {
 
-				// Retrieve passport
-				p,err := self.getPassport(botId{i,j})
+			// Retrieve passport
+			p,err := self.getPassport(botId{i,j})
+			if err != nil {
+				return logError(err)
+			}
+
+			// Choose a trip
+			from,to,tripLength,err := self.chooseTrip(p,cars)
+			if err != nil {
+				return logError(err)
+			}
+
+			// Decide whether to plan a trip, using promises to plan ahead if they are enabled
+			planTrip:= false
+			startday := flap.Days(0)
+			if bp != nil {
+				startday,err = bp.getPromise(fe,p,currentDay,tripLength,from,to,deterministic) 
+				if err != nil && err != ENOSPACEFORTRIP {
+					self.bots[i].stats.Cancelled() 
+				}
+				planTrip = err != nil
+			} else {
+				planTrip = self.flyingToday(p,fe, &(self.bots[i]),currentDay)
+			}
+					
+			// Plan the chosen trip
+			if planTrip {
+				err = jp.planTrip(from,to,tripLength, botId{i,j},startday)
 				if err != nil {
 					return logError(err)
-				}
-
-				// Check bot is allowed to travel
-				if self.planningAllowed(p,fe) {
-
-					// Choose a trip
-					from,to,tripLength,err := self.chooseTrip(p,cars)
-					if err != nil {
-						return logError(err)
-					}
-
-					// If we are running with promise then choose which date to plan trip
-					// consistent with current promises
-					startday := flap.Days(0)
-					if bp != nil {
-						startday,err = bp.getPromise(fe,p,currentDay,tripLength,from,to,deterministic) 
-						if err != nil && err != ENOSPACEFORTRIP {
-							self.bots[i].stats.Cancelled() 
-						}
-					}
-					
-					// Plan trip if allowed
-					if err == nil {
-						err = jp.planTrip(from,to,tripLength, botId{i,j},startday)
-						if err != nil {
-							return logError(err)
-						} else {
-							logDebug("planned trip in ",startday," days")
-							self.bots[i].stats.Planned()
-						}
-					}
+				} else {
+					logDebug("planned trip in ",startday," days")
+					self.bots[i].stats.Planned()
 				}
 			}
+				
 		}
 	}
 	return nil

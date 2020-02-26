@@ -30,11 +30,11 @@ func logError(e error, a ...interface{}) error {
 }
 
 func logInfo(a ...interface{}) {
-	_log(llInfo,a)
+	_log(llInfo,a...)
 }
 
 func logDebug(a ...interface{}) {
-	_log(llDebug,a)
+	_log(llDebug,a...)
 }
 
 func NewLogger(ll LogLevel, logFolder string) {
