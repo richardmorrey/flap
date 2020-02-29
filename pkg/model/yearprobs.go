@@ -31,15 +31,14 @@ func newYearProbs(bs *BotSpec) (*yearProbs,error) {
 	if len(bs.MonthWeights) == 12 {
 		
 		// Calculate totals for the year
-		yearProb:=bs.PlanProbability*366
 		var yearWeight Probability
-		for  _,w := range(bs.MonthWeights) {
-			yearWeight += Probability(w)
+		for yr := time.Date(2020, time.January, 1, 1, 0, 0, 0, time.UTC);yr.Year()==2020; yr=yr.Add(time.Hour*24) {
+			yearWeight +=  Probability(bs.MonthWeights[yr.Month()-1])
 		}
 
 		// Set day probs for each day in a leap year
-		for yr := time.Date(2020, time.January, 1, 1, 0, 0, 0, time.UTC);yr.Year()==2020; yr.Add(time.Hour*24) {
-			yp.days[yr.YearDay()-1]=(Probability(bs.MonthWeights[yr.Month()-1])/yearWeight)*yearProb
+		for yr := time.Date(2020, time.January, 1, 1, 0, 0, 0, time.UTC);yr.Year()==2020; yr=yr.Add(time.Hour*24) {
+			yp.days[yr.YearDay()-1]=(Probability(bs.MonthWeights[yr.Month()-1])/yearWeight)*bs.PlanProbability*366
 		}
 		return yp,nil
 	}

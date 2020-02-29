@@ -7,7 +7,7 @@ flapparams:
   # Maximum gap between flights in a single Journey, in days
   flightinterval: 1
   # Promises algo to use. 0 = promises not enabled, 1 = linear best fit
-  promisesalgo: 1
+  promisesalgo: 0
   # Number of data points to maintain for promisesalgo
   promisesmaxpoints: 100
   # Maximum days ahead to allow a promise trip to end
@@ -36,14 +36,44 @@ modelparams:
   totaltravellers: 1000
   # Defininition of one or more "bands" of travellers, with
   # different travel probabilities. Each band has values as follows
-  # planprobability - Probability of traveller starting a trip each day
-  # weight - Defines number of travellers in band, calculated as 
-  #          totaltravllers*weight/sum(weights)
+  #    flyprobability  - Probability of traveller starting a trip each day
+  #    weight          - Defines number of travellers in band, calculated as 
+  #                      totaltravllers*weight/sum(weights)
+  #    monthweights    - Weights that define how planprobability is distributed over
+  #                      the course of a calendar year. Exactly 12 values, one for
+  #                      each month. Distribution applied such that average probability
+  #                      over the course of each calendar year equals planprobability
   botspecs:
-  - planprobability: 0.01
+  - flyprobability: 0.01
     weight: 15
-  - planprobability: 0.002
+    monthweights:
+    - 200
+    - 190
+    - 220
+    - 200
+    - 220
+    - 230
+    - 240
+    - 230
+    - 210
+    - 220
+    - 190
+    - 190
+  - flyprobability: 0.002
     weight: 85
+    monthweights:
+    - 200
+    - 190
+    - 220
+    - 200
+    - 220
+    - 230
+    - 240
+    - 230
+    - 210
+    - 220
+    - 190
+    - 190
   # List of possible lengths for trips in days. For each trip an entry
   # is chosen at random from the list. To make a length more frequent
   # add it multiple times.
@@ -74,4 +104,4 @@ modelparams:
   # is written out every reportdaydelta days.
   reportdaydelta: 100
   # Number of threads to use for planning. Defaults to 1.
-  threads: 1 
+  threads: 4 
