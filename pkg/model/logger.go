@@ -25,22 +25,26 @@ func _log(ll logLevel,a ...interface{}) {
 }
 
 func logError(e error, a ...interface{}) error {
-	_log(llError,e,a)
+	if a==nil {
+		_log(llError,e)
+	} else {
+		_log(llError,e,a)
+	}
 	return e
 }
 
 func logInfo(a ...interface{}) {
-	_log(llInfo,a)
+	_log(llInfo,a...)
 }
 
 func logDebug(a ...interface{}) {
-	_log(llDebug,a)
+	_log(llDebug,a...)
 }
 
 func NewLogger(ll logLevel, logFolder string) {
 	logpath := filepath.Join(logFolder,"flap.log")
 	f, _ := os.OpenFile(logpath,os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	glogger = log.New(f, "flap ", log.LstdFlags | log.Lshortfile)
+	glogger = log.New(f, "model ", log.LstdFlags | log.Lshortfile)
 	gLogLevel = ll
 }
 

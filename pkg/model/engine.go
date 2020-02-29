@@ -25,9 +25,8 @@ type Probability float64
 
 type BotSpec struct {
 	PlanProbability		Probability
-	//planEarliest		flap.Days
-	//planPeriod		flap.Days
 	Weight			weight
+	MonthWeights		[]weight
 }
 
 type ModelParams struct {

@@ -10,7 +10,7 @@ import (
 var EWEIGHTNOTFOUND = errors.New("Weight not found")
 var ENOWEIGHTSDEFINED = errors.New("No Weights defined")
 
-type weight float64
+type weight int
 
 type ScaleEntry struct {
 	I int
