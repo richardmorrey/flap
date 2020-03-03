@@ -8,7 +8,7 @@ import (
 )
 
 func TestNotEnoughMonths(t *testing.T) {
-	bs := BotSpec{PlanProbability:0.1,MonthWeights:[]weight{1,2,3,4,5,6,7,8,9,10,11}}
+	bs := BotSpec{FlyProbability:0.1,MonthWeights:[]weight{1,2,3,4,5,6,7,8,9,10,11}}
 	_,err := newYearProbs(&bs)
 	if err != ENOVALIDPROBABILITYINBOTSPEC {
 		t.Error("newYearProbs succeeded with eleven months")
@@ -16,7 +16,7 @@ func TestNotEnoughMonths(t *testing.T) {
 }
 
 func TestTooManyMonths(t *testing.T) {
-	bs := BotSpec{PlanProbability:0.1,MonthWeights:[]weight{1,2,3,4,5,6,7,8,9,10,11,12,13}}
+	bs := BotSpec{FlyProbability:0.1,MonthWeights:[]weight{1,2,3,4,5,6,7,8,9,10,11,12,13}}
 	_,err := newYearProbs(&bs)
 	if err != ENOVALIDPROBABILITYINBOTSPEC {
 		t.Error("newYearProbs succeeded with thirteen months")
@@ -34,7 +34,7 @@ func TestMissingProb(t *testing.T) {
 func TestMonthlyProbs(t *testing.T) {
 	
 	// Create year probs 
-	bs := BotSpec{PlanProbability:0.1,MonthWeights:[]weight{1,2,3,4,5,6,7,8,9,10,11,12}}
+	bs := BotSpec{FlyProbability:0.1,MonthWeights:[]weight{1,2,3,4,5,6,7,8,9,10,11,12}}
 	yp,err := newYearProbs(&bs)
 	if err != nil {
 		t.Error("newYearProbs faied with valid monthly probs")
@@ -59,7 +59,7 @@ func TestMonthlyProbs(t *testing.T) {
 
 func TestDayProb(t *testing.T) {
 	
-	bs := BotSpec{PlanProbability:0.1,MonthWeights:[]weight{1,2,3,4,5,6,7,8,9,10,11,12}}
+	bs := BotSpec{FlyProbability:0.1,MonthWeights:[]weight{1,2,3,4,5,6,7,8,9,10,11,12}}
 	yp,err := newYearProbs(&bs)
 	if err != nil {
 		t.Error("newYearProbs faied with valid monthly probs")

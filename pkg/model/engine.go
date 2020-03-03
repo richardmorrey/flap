@@ -24,7 +24,7 @@ var ENOSUCHTRAVELLER = errors.New("No such traveller")
 type Probability float64
 
 type BotSpec struct {
-	PlanProbability		Probability
+	FlyProbability		Probability
 	Weight			weight
 	MonthWeights		[]weight
 }

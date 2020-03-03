@@ -6,7 +6,7 @@ import (
 	"errors"
 )
 
-var ENOVALIDPROBABILITYINBOTSPEC = errors.New("No such traveller")
+var ENOVALIDPROBABILITYINBOTSPEC = errors.New("Invalid BotSpec configuration")
 
 type yearProbs struct {
 	days [366]Probability
@@ -20,11 +20,11 @@ func newYearProbs(bs *BotSpec) (*yearProbs,error) {
 	yp := new(yearProbs)
 	
 	// Validate config
-	if bs.PlanProbability == 0.0 || bs.PlanProbability > 1 {
-		return nil,ENOVALIDPROBABILITYINBOTSPEC
+	if bs.FlyProbability == 0.0 || bs.FlyProbability > 1 {
+		return nil,logError(ENOVALIDPROBABILITYINBOTSPEC,bs.FlyProbability)
 	}
 	if bs.MonthWeights != nil && len(bs.MonthWeights) != 12 {
-		return nil,ENOVALIDPROBABILITYINBOTSPEC
+		return nil,logError(ENOVALIDPROBABILITYINBOTSPEC,len(bs.MonthWeights))
 	}
 
 	// If there is a valid list of month probabilities use that
@@ -38,14 +38,15 @@ func newYearProbs(bs *BotSpec) (*yearProbs,error) {
 
 		// Set day probs for each day in a leap year
 		for yr := time.Date(2020, time.January, 1, 1, 0, 0, 0, time.UTC);yr.Year()==2020; yr=yr.Add(time.Hour*24) {
-			yp.days[yr.YearDay()-1]=(Probability(bs.MonthWeights[yr.Month()-1])/yearWeight)*bs.PlanProbability*366
+			yp.days[yr.YearDay()-1]=(Probability(bs.MonthWeights[yr.Month()-1])/yearWeight)*bs.FlyProbability*366
 		}
+		logInfo("Set daily probabilities:",yp.days)
 		return yp,nil
 	}
 
 	// Default to simple probability 
 	for  i:=0; i < 366; i++ {
-		yp.days[i]=bs.PlanProbability
+		yp.days[i]=bs.FlyProbability
 	}
 	return yp,nil
 }

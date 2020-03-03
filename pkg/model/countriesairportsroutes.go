@@ -244,6 +244,32 @@ func (self *CountriesAirportsRoutes) Build(dataFolder string, workingFolder stri
 	return nil
 }
 
+// chooseTrip chooses a trtip start and end airport for given traveller
+func (self *CountriesAirportsRoutes) chooseTrip(p flap.Passport) (flap.ICAOCode,flap.ICAOCode,error) {
+
+	// Retrieve source country record for traveller
+	var empty flap.ICAOCode
+	car,err := self.getCountry(p.Issuer)
+	if err != nil {
+		return empty,empty,logError(err)
+	}
+
+	// Choose source airport
+	ap,err := car.choose()
+	if err != nil {
+		return empty,empty,logError(err)
+	}
+	airport := car.Airports[ap]
+
+	// Choose route (destination airport)
+	route,err := airport.choose()
+	if err != nil {
+		return empty,empty,logError(err)
+	}
+
+	return airport.Code,airport.Routes[route].To,nil
+}
+
 // getAirport returns reference to airport with given code.If airport
 // doesnt exist it is created.
 func (self *Country) getAirport(code flap.ICAOCode) *Airport {
