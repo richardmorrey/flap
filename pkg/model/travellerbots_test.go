@@ -37,11 +37,12 @@ func TestOneSpec(t *testing.T) {
 	if (len(ts.bots) != 1) {
 		t.Error("Failed to Create 1 bot from 1 bot spec",err)
 	}
-	yps,err := newYearProbs(&(params.BotSpecs[0]))
+	var p botSimple
+	err = p.build(&(params.BotSpecs[0]))
 	if err != nil {
-		t.Error("Failed to create year probabilities",err)
+		t.Error("Failed to build planner",err)
 	}
-	expected := travellerBot{countryStep:5,numInstances:2,probs:yps}
+	expected := travellerBot{countryStep:5,numInstances:2,planner:&p}
 	if !reflect.DeepEqual(ts.bots[0],expected) {
 		t.Error("traveller bot has incorrect value",ts.bots[0],expected)
 	}
@@ -59,12 +60,13 @@ func TestTwoSpecs(t *testing.T) {
 	}
 	if (len(ts.bots) != 2) {
 		t.Error("Failed to create 2 bots from 2 bot specs",ts.bots)
-	}
-	yps,err := newYearProbs(&(params.BotSpecs[0]))
+	}	
+	var p botSimple
+	err = p.build(&(params.BotSpecs[0]))
 	if err != nil {
-		t.Error("Failed to create year probabilities",err)
+		t.Error("Failed to build planner",err)
 	}
-	expected := travellerBot{countryStep:10,numInstances:1,probs:yps}
+	expected := travellerBot{countryStep:10,numInstances:1,planner:&p}
 	if !reflect.DeepEqual(ts.bots[0],expected) {
 		t.Error("traveller bot has incorrect value",ts.bots[0],expected)
 	}
@@ -86,28 +88,29 @@ func TestThreeSpecs(t *testing.T) {
 	}
 	if (len(ts.bots) != 3) {
 		t.Error("Failed to create 2 bots from 2 bot specs",ts.bots)
-	}	
-	yps,err := newYearProbs(&(params.BotSpecs[0]))
-	if err != nil {
-		t.Error("Failed to create year probabilities",err)
 	}
-	expected := travellerBot{countryStep:60,numInstances:1,probs:yps}
+	var p botSimple
+	err = p.build(&(params.BotSpecs[0]))
+	if err != nil {
+		t.Error("Failed to build planner",err)
+	}
+	expected := travellerBot{countryStep:60,numInstances:1,planner:&p}
 	if !reflect.DeepEqual(ts.bots[0],expected) {
 		t.Error("traveller bot has incorrect value",ts.bots[0],expected)
 	}
-	yps,err = newYearProbs(&(params.BotSpecs[1]))
+	err = p.build(&(params.BotSpecs[1]))
 	if err != nil {
-		t.Error("Failed to create year probabilities",err)
+		t.Error("Failed to build planner",err)
 	}
-	expected = travellerBot{countryStep:30,numInstances:2,probs:yps}
+	expected = travellerBot{countryStep:30,numInstances:2,planner:&p}
 	if !reflect.DeepEqual(ts.bots[1],expected) {
 		t.Error("traveller bot has incorrect value",ts.bots[1],expected)
 	} 
-	yps,err = newYearProbs(&(params.BotSpecs[2]))
+	err = p.build(&(params.BotSpecs[2]))
 	if err != nil {
-		t.Error("Failed to create year probabilities",err)
+		t.Error("Failed to build planner",err)
 	}
-	expected = travellerBot{countryStep:7.5,numInstances:8,probs:yps}
+	expected = travellerBot{countryStep:7.5,numInstances:8,planner:&p}
 	if !reflect.DeepEqual(ts.bots[2],expected) {
 		t.Error("traveller bot has incorrect value",ts.bots[2],expected)
 	}

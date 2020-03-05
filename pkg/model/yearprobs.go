@@ -65,11 +65,11 @@ func (self* yearProbs) getDayProb(date flap.EpochTime) Probability {
 
 	// Calculate day of year, adjusting for non-leap years
 	yd := t.YearDay()
-	if self.isLeap(t) && yd > (31+28) {
+	if !self.isLeap(t) && yd > (31+28) {
 		yd++
 	}
 
 	// Return probability of flying on that day
-	return self.days[t.YearDay()-1]
+	return self.days[yd-1]
 }
 

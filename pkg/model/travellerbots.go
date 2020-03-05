@@ -189,8 +189,8 @@ func (self *TravellerBots) Build(modelParams *ModelParams) error {
 		if (bot.numInstances > 0) {
 			bot.countryStep= float64(topWeight)/float64(bot.numInstances)
 		}
-		bot.planner = botSimple{}
-		err = bot.planner.build(&botspec)
+		bot.planner = new(botSimple)
+		bot.planner.build(&botspec)
 		if (err != nil) {
 			return logError(err)
 		}
@@ -230,16 +230,10 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 
 func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journeyPlanner, fe *flap.Engine,currentDay flap.EpochTime,deterministic bool,threads uint, offset uint) error {
 
-	// Create bot promises instance if we need one
-	var bp *botPromises
-	if self.promisesMaxDays != 0 {
-		bp = newBotPromises(self.promisesMaxDays)
-	}
-
 	// Iterate through each bot in each band
 	for i:=bandIndex(0); i < bandIndex(len(self.bots)); i++ {
 		logInfo("Started planning  band",i,"start",offset,"step",threads)
-		planner := self.bots[i].planner
+		planner := self.bots[i].planner.clone()
 		for j:=botIndex(offset); j < self.bots[i].numInstances; j+=botIndex(threads) {
 
 			// Retrieve passport
@@ -270,7 +264,7 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 				}
 		
 				// Plan the trip
-				if (err != nil) {
+				if (err == nil) {
 					err = jp.planTrip(from,to,tripLength, botId{i,j},startday)
 					if err != nil {
 						return logError(err)
