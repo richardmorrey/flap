@@ -105,7 +105,11 @@ func NewEngine(configFilePath string) (*Engine,error) {
 	e.db = db.NewLevelDB(e.ModelParams.WorkingFolder)
 
 	// Seed Random Number Generator
-	rand.Seed(time.Now().UTC().UnixNano())
+	if e.ModelParams.Deterministic {
+		rand.Seed(0) 
+	} else {
+		rand.Seed(time.Now().UTC().UnixNano())
+	}
 	return e,nil
 }
 
@@ -198,11 +202,11 @@ func (self *Engine) Run() error {
 	}
 	
 	// Build flight plans for traveller bots
-	travellerBots := NewTravellerBots(&countryWeights, self.FlapParams)
+	travellerBots := NewTravellerBots(&countryWeights)
 	if travellerBots == nil {
 		return EFAILEDTOCREATETRAVELLERBOTS
 	}
-	err = travellerBots.Build(&(self.ModelParams))
+	err = travellerBots.Build(self.ModelParams,self.FlapParams)
 	if (err != nil) {
 		return logError(err)
 	}
@@ -315,11 +319,11 @@ func (self *Engine) ShowTraveller(band uint64,bot uint64) (flap.Passport,string,
 	}
 
 	// Create travellerbots struct
-	travellerBots := NewTravellerBots(&countryWeights,self.FlapParams)
+	travellerBots := NewTravellerBots(&countryWeights)
 	if travellerBots == nil {
 		return p,"","","",logError(EFAILEDTOCREATETRAVELLERBOTS)
 	}
-	err = travellerBots.Build(&(self.ModelParams))
+	err = travellerBots.Build(self.ModelParams,self.FlapParams)
 	if (err != nil) {
 		return p,"","","",logError(err)
 	}

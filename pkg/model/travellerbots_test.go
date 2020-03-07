@@ -16,29 +16,29 @@ func buildCountryWeights(nEntries int) *CountryWeights{
 }
 
 func TestEmptySpecs(t *testing.T) {
-	ts := NewTravellerBots(buildCountryWeights(1),flap.FlapParams{})
+	ts := NewTravellerBots(buildCountryWeights(1))
 	params := ModelParams{TotalTravellers:0}
 	params.BotSpecs= make([]BotSpec,0,10)
-	err := ts.Build(&params)
+	err := ts.Build(params,flap.FlapParams{})
 	if (err == nil) {
 		t.Error("Accepted zero bot specs",err)
 	}
 }
 
 func TestOneSpec(t *testing.T) {
-	ts := NewTravellerBots(buildCountryWeights(1),flap.FlapParams{})
+	ts := NewTravellerBots(buildCountryWeights(1))
 	params := ModelParams{TotalTravellers:2}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:12345})
-	err := ts.Build(&params)
+	err := ts.Build(params,flap.FlapParams{})
 	if (err != nil) {
 		t.Error("Failed b:uild from one bot spec",err)
 	}
 	if (len(ts.bots) != 1) {
 		t.Error("Failed to Create 1 bot from 1 bot spec",err)
 	}
-	var p botSimple
-	err = p.build(&(params.BotSpecs[0]))
+	var p simplePlanner
+	err = p.build((params.BotSpecs[0]),flap.FlapParams{})
 	if err != nil {
 		t.Error("Failed to build planner",err)
 	}
@@ -49,20 +49,20 @@ func TestOneSpec(t *testing.T) {
 }
 
 func TestTwoSpecs(t *testing.T) {
-	ts := NewTravellerBots(buildCountryWeights(1),flap.FlapParams{})
+	ts := NewTravellerBots(buildCountryWeights(1))
 	params := ModelParams{TotalTravellers:2}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:1})
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:1})
-	err := ts.Build(&params)
+	err := ts.Build(params,flap.FlapParams{})
 	if (err != nil) {
 		t.Error("Failed build from one bot spec",err)
 	}
 	if (len(ts.bots) != 2) {
 		t.Error("Failed to create 2 bots from 2 bot specs",ts.bots)
 	}	
-	var p botSimple
-	err = p.build(&(params.BotSpecs[0]))
+	var p simplePlanner
+	err = p.build((params.BotSpecs[0]),flap.FlapParams{})
 	if err != nil {
 		t.Error("Failed to build planner",err)
 	}
@@ -76,21 +76,21 @@ func TestTwoSpecs(t *testing.T) {
 }
 
 func TestThreeSpecs(t *testing.T) {
-	ts := NewTravellerBots(buildCountryWeights(3),flap.FlapParams{})
+	ts := NewTravellerBots(buildCountryWeights(3))
 	params := ModelParams{TotalTravellers:11}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:1})
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.2,Weight:2})
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.3,Weight:8})
-	err := ts.Build(&params)
+	err := ts.Build(params,flap.FlapParams{})
 	if (err != nil) {
 		t.Error("Failed build from three bot specs",err)
 	}
 	if (len(ts.bots) != 3) {
 		t.Error("Failed to create 2 bots from 2 bot specs",ts.bots)
 	}
-	var p botSimple
-	err = p.build(&(params.BotSpecs[0]))
+	var p simplePlanner
+	err = p.build(params.BotSpecs[0],flap.FlapParams{})
 	if err != nil {
 		t.Error("Failed to build planner",err)
 	}
@@ -98,7 +98,7 @@ func TestThreeSpecs(t *testing.T) {
 	if !reflect.DeepEqual(ts.bots[0],expected) {
 		t.Error("traveller bot has incorrect value",ts.bots[0],expected)
 	}
-	err = p.build(&(params.BotSpecs[1]))
+	err = p.build(params.BotSpecs[1],flap.FlapParams{})
 	if err != nil {
 		t.Error("Failed to build planner",err)
 	}
@@ -106,7 +106,7 @@ func TestThreeSpecs(t *testing.T) {
 	if !reflect.DeepEqual(ts.bots[1],expected) {
 		t.Error("traveller bot has incorrect value",ts.bots[1],expected)
 	} 
-	err = p.build(&(params.BotSpecs[2]))
+	err = p.build(params.BotSpecs[2],flap.FlapParams{})
 	if err != nil {
 		t.Error("Failed to build planner",err)
 	}
@@ -117,12 +117,12 @@ func TestThreeSpecs(t *testing.T) {
 }
 
 func TestGetBot(t *testing.T) {
-	ts := NewTravellerBots(buildCountryWeights(2),flap.FlapParams{})
+	ts := NewTravellerBots(buildCountryWeights(2))
 	params := ModelParams{TotalTravellers:10}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:1})
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.2,Weight:9})
-	ts.Build(&params)
+	ts.Build(params,flap.FlapParams{})
 	p,_ := ts.getPassport(botId{0,0})
 	if p != flap.NewPassport("000000000","A")  {
 		t.Error("getPassport returned wrong passport for 0,0 ",p)

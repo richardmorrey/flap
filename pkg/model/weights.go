@@ -4,13 +4,12 @@ import (
 	"errors"
 	"sort"
 	"math/rand"
-	//"fmt"
 )
 
 var EWEIGHTNOTFOUND = errors.New("Weight not found")
 var ENOWEIGHTSDEFINED = errors.New("No Weights defined")
 
-type weight int
+type weight int64
 
 type ScaleEntry struct {
 	I int
@@ -19,7 +18,6 @@ type ScaleEntry struct {
 type Weights struct
 {
 	Scale []ScaleEntry
-	deterministic int
 }
 
 // add adds a new entry to the end of a scale of accummulating Weights
@@ -67,21 +65,7 @@ func (self *Weights) choose() (int,error) {
 	if tw == 0 {
 		return -1,EWEIGHTNOTFOUND
 	}
-	return self.find(weight(rand.Intn(int(tw))))
-}
-
-// choosedeterministic chooses an entry based on an incrementing counter
-// Not thread safe and for testing purposes only
-func (self *Weights) choosedeterministic() (int,error) {
-	tw,err := self.topWeight()
-	if err != nil {
-		return -1,ENOWEIGHTSDEFINED
-	}
-	if tw == 0 {
-		return -1,EWEIGHTNOTFOUND
-	}
-	self.deterministic += 1
-	return  self.deterministic % int(tw), nil
+	return self.find(weight(rand.Int63n(int64(tw))))
 }
 
 // topWeight returns the highest weight value

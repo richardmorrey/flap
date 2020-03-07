@@ -115,16 +115,12 @@ type TravellerBots struct {
 	fh		*os.File
 	statsFolder    string
 	tripLengths	[]flap.Days
-	promisesMaxDays   flap.Days
 }
 
-func NewTravellerBots(cw *CountryWeights, params flap.FlapParams) *TravellerBots {
+func NewTravellerBots(cw *CountryWeights) *TravellerBots {
 	tbs := new(TravellerBots)
 	tbs.bots = make([]travellerBot,0,10)
 	tbs.countryWeights=cw
-	if params.PromisesAlgo != 0 {
-		tbs.promisesMaxDays = params.PromisesMaxDays
-	}
 	return tbs
 }
 
@@ -164,7 +160,7 @@ func (self *TravellerBots) ReportDay(day flap.Days, rdd flap.Days) {
 }
 
 // Build constructs bot configurations for each band from provided model params
-func (self *TravellerBots) Build(modelParams *ModelParams) error {
+func (self *TravellerBots) Build(modelParams ModelParams,flapParams flap.FlapParams) error {
 
 	// Check arguments
 	if (len(modelParams.BotSpecs) == 0) {
@@ -189,8 +185,13 @@ func (self *TravellerBots) Build(modelParams *ModelParams) error {
 		if (bot.numInstances > 0) {
 			bot.countryStep= float64(topWeight)/float64(bot.numInstances)
 		}
-		bot.planner = new(botSimple)
-		bot.planner.build(&botspec)
+		switch(flapParams.PromisesAlgo) {
+			case 1:
+				bot.planner = new(promisesPlanner)
+			default:
+				bot.planner = new(simplePlanner)
+		}
+		bot.planner.build(botspec,flapParams)
 		if (err != nil) {
 			return logError(err)
 		}
@@ -249,23 +250,22 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 			}
 
 			// Decide whether to plan a trip
-			if planner.areWePlanning(fe,p,currentDay,tripLength) {
-			
+			startday :=  planner.areWePlanning(fe,p,currentDay,tripLength)
+			if startday >= 0 {
+
 				// Choose trip
 				from,to,err := cars.chooseTrip(p)
 				if err != nil {
 					return logError(err)
 				}
 
-				// Decide if the trip is allowed
-				startday,err := planner.canWePlan(fe,p,currentDay,from,to,tripLength) 
-				if err != nil && err != ENOSPACEFORTRIP {
+				// Decide if the trip is allowed ...
+				err = planner.canWePlan(fe,p,currentDay,from,to,tripLength,flap.Days(startday)) 
+				if err != nil {
 					self.bots[i].stats.Cancelled() 
-				}
-		
-				// Plan the trip
-				if (err == nil) {
-					err = jp.planTrip(from,to,tripLength, botId{i,j},startday)
+				} else {
+					// .. if it is plan the trip
+					err = jp.planTrip(from,to,tripLength, botId{i,j},flap.Days(startday))
 					if err != nil {
 						return logError(err)
 					} else {
@@ -274,8 +274,7 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 					}
 				}
 			}
-				
-		}	
+		}
 		logInfo("Finished planning  band",i,"start",offset,"step",threads)
 	}
 	return nil
