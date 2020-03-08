@@ -32,8 +32,8 @@ func (self *promisesPlanner) build(bs BotSpec, fp flap.FlapParams) error {
 	return self.simplePlanner.build(bs,fp)
 } 
 
-const TENPOWERNINE=Probability(10^9)
-const NOTPLANNING=math.MaxInt64
+const TENPOWERNINE=Probability(1000*1000*1000)
+const NOTPLANNING=math.MaxInt32
 // calcDayProb derives the probability of a flight starting on given day
 // by dividing the probability of flying on a given calendar year by
 // the number of days to choose from for the current planning decision
@@ -85,13 +85,14 @@ func (self* promisesPlanner) prepareWeights(fe *flap.Engine,pp flap.Passport,cur
 	for  ; cd <= to ; cd ++ {
 		self.addDayProb(cd,availableDays)
 	}
-
+	
 	// Add a final weight for "not planning" to make the total probability up to 1
 	tw,err := self.topWeight()
 	if err != nil {
 		return logError(err)
 	}
 	self.addIndexWeight(NOTPLANNING, weight(TENPOWERNINE)-tw)
+	//logDebug("flyprob=",tw,"notflyprob=",weight(TENPOWERNINE)-tw)
 	return nil
 }
 
@@ -111,11 +112,15 @@ func (self* promisesPlanner) areWePlanning(fe *flap.Engine,pp flap.Passport,now 
 	// Attempt to choose start day.
 	var ts int 
 	ts,err = self.choose()
-	
+	if err != nil {
+		logError(err)
+		return -1
+	}
+
 	// If a valid day has been chosen then return it ...
-	if (err != nil && ts != NOTPLANNING) {
+	if (ts != NOTPLANNING) {
 		logDebug("trip start day =",ts)
-		return ts
+		return ts-int(nowInDays)
 	} else {
 	// ... otherwise return -1 to indicate no trip should be planned.
 		return -1
