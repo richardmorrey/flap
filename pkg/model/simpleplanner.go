@@ -9,8 +9,8 @@ type botPlanner interface
 {
 	clone() botPlanner
 	build(BotSpec,flap.FlapParams) error
-	areWePlanning(*flap.Engine,flap.Passport,flap.EpochTime,flap.Days) int
-	canWePlan(*flap.Engine,flap.Passport,flap.EpochTime,flap.ICAOCode,flap.ICAOCode,flap.Days,flap.Days) error
+	areWePlanning(*flap.Engine,flap.Passport,flap.EpochTime,flap.Days) bool
+	whenWillWeFly(*flap.Engine,flap.Passport,flap.EpochTime,flap.ICAOCode,flap.ICAOCode,flap.Days) (int,error)
 }
 
 type simplePlanner struct {
@@ -40,24 +40,20 @@ func (self *simplePlanner) build(bs BotSpec,fp flap.FlapParams) error {
 
 // areWePlanning returns 0-indexed day offset from today to plan to fly or
 // -1 if we are not planning today
-func (self *simplePlanner) areWePlanning(fe *flap.Engine,pp flap.Passport, currentDay flap.EpochTime, tripLength flap.Days) int {
+func (self *simplePlanner) areWePlanning(fe *flap.Engine,pp flap.Passport, currentDay flap.EpochTime, tripLength flap.Days) bool {
 
 	// Confirm not mid-trip
 	t,err := fe.Travellers.GetTraveller(pp)
 	if  (err == nil) && t.MidTrip() {
-		return -1
+		return false
 	}
 
 	// Decide whether to fly
 	dice:=Probability(rand.Float64())
-	if dice <= self.probs.getDayProb(currentDay) {
-		logDebug("Travelling today", pp.ToString())
-		return 0
-	}
-	return -1
+	return  dice <= self.probs.getDayProb(currentDay) 
 }
 
 // canWePlan confirms whether traveller can plan the proposed trip on the given day
-func (self *simplePlanner) canWePlan(fe *flap.Engine,pp flap.Passport,now flap.EpochTime,from flap.ICAOCode,to flap.ICAOCode,tripLength flap.Days, ts flap.Days) (error) {
-	return nil
+func (self *simplePlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now flap.EpochTime,from flap.ICAOCode,to flap.ICAOCode,tripLength flap.Days) (int,error) {
+	return 0,nil
 }

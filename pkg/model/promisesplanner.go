@@ -4,15 +4,18 @@ import (
 	"github.com/richardmorrey/flap/pkg/flap"
 	"errors"
 	"math"
+	"math/rand"
 )
 
 var ENOSPACEFORTRIP = errors.New("No space for trip")
 var ETOOMANYDAYSTOCHOOSEFROM = errors.New("Too many days to choose from")
+var ENOTPLANNINGTODAY = errors.New("Not planning today")
 
 type promisesPlanner struct {
 	simplePlanner
 	Weights
-	totalDays flap.Days
+	totalDays  	flap.Days
+	chosenWeight	weight
 }
 
 // makes a clone of given planner (not a deep copy)
@@ -96,67 +99,86 @@ func (self* promisesPlanner) prepareWeights(fe *flap.Engine,pp flap.Passport,cur
 	return nil
 }
 
-// areWePlanning chooses whether to plan a trip with given lenght and if so to start on which day
-// Returns 0-indexed day offset from current day when trip can start or -1
-// if we are  not planning.
-func (self* promisesPlanner) areWePlanning(fe *flap.Engine,pp flap.Passport,now flap.EpochTime,length flap.Days) int {
+// areWePlanning makes a decision on whether we are planning today based on the calendar day probabilities
+// for the planning period. It is only an approximation as, for speed reasons, the current plans of the
+// traveller are not considered. Note in case of a decsion to (probably) fly the dice roll is cached
+// to use when actually planning.
+func (self* promisesPlanner) areWePlanning(fe *flap.Engine,pp flap.Passport,now flap.EpochTime,length flap.Days) bool {
+
+	// Calculate probability of planning today
+	var planProb Probability
+	availableDays := self.totalDays-length
+	lastDay := now + (flap.EpochTime(availableDays)*flap.SecondsInDay)
+	for cd := now; cd <  lastDay; cd+=flap.SecondsInDay {
+		planProb += self.probs.getDayProb(cd)/Probability(availableDays)
+	}
+
+	// Roll the dice and store it as a weight if we are planning
+	dice:=Probability(rand.Float64())
+	if dice <= planProb {
+		self.chosenWeight= weight(dice*TENPOWERNINE)
+		return true
+	}
+	self.chosenWeight=0
+	return false
+}
+
+// whenWillWeFly tries to obtain a promise
+// for the new trip and if successful returns start day of  the trip for planning
+// and otherwise an error
+func (self *promisesPlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now flap.EpochTime,from flap.ICAOCode,to flap.ICAOCode,length flap.Days) (int,error) {
+
+	// Make sure we have chosen to plan
+	if self.chosenWeight==0 {
+		return -1, logError(ENOTPLANNINGTODAY)
+	}
 
 	// Build weights to use to choose trip start day
 	nowInDays := flap.Days(now/flap.SecondsInDay)
 	err := self.prepareWeights(fe,pp,nowInDays,length)
 	if err != nil {
-		logError(err)
-		return -1
+		return -1,logError(err)
 	}
 
 	// Attempt to choose start day.
-	var ts int 
-	ts,err = self.choose()
+	logInfo("choosing weight",self.chosenWeight)
+	ts,err := self.find(self.chosenWeight)
 	if err != nil {
-		logError(err)
-		return -1
+		return -1, logError(err)
 	}
 
-	// If a valid day has been chosen then return it ...
-	if (ts != NOTPLANNING) {
-		logDebug("trip start day =",ts)
-		return ts-int(nowInDays)
-	} else {
-	// ... otherwise return -1 to indicate no trip should be planned.
-		return -1
-	}
-}
-
-// canWePlan tries to obtain a promise
-// for the new trip and if successful returns start day of  the trip for planning
-// and otherwise an error
-func (self *promisesPlanner) canWePlan(fe *flap.Engine,pp flap.Passport,now flap.EpochTime,from flap.ICAOCode,to flap.ICAOCode,length flap.Days,ts flap.Days) error {
+	// If the top weight (indicated we are not plannign) has
+	// been chosen then return
+	if (ts == NOTPLANNING) {
+		logDebug("not planning after all")
+		return -1,ENOTPLANNINGTODAY
+	} 
 
 	// Create airports
 	fromAirport,err := fe.Airports.GetAirport(from)
 	if (err != nil) {
-		return logError(err)
+		return -1,logError(err)
 	}
 	toAirport,err := fe.Airports.GetAirport(to)
 	if (err != nil) {
-		return logError(err)
+		return -1,logError(err)
 	}
 
 	// Build trip flights. Note flight times do not need to be accurate for promises as long as the
 	// start of first flight is earlier than the start of the first flight in the actual trip 
 	// and the end of the last flight is later than the end of the last flight in the actual trip.
 	var plannedflights [2]flap.Flight
-	epochStartDay := flap.Days(now/flap.SecondsInDay)+ts
+	epochStartDay := flap.Days(ts)
 	sds:=flap.EpochTime(epochStartDay*flap.SecondsInDay)
 	ede:=sds + flap.EpochTime(length*flap.SecondsInDay)
 	f,err := flap.NewFlight(fromAirport,sds,toAirport,sds+1)
 	if (err != nil) {
-		return logError(err)
+		return -1,logError(err)
 	}
 	plannedflights[0]=*f
 	f,err = flap.NewFlight(toAirport,ede-2,fromAirport,ede-1)
 	if (err != nil) {
-		return logError(err)
+		return -1,logError(err)
 	}
 	plannedflights[1]=*f
 	logDebug("plannedflights:",plannedflights)
@@ -164,15 +186,17 @@ func (self *promisesPlanner) canWePlan(fe *flap.Engine,pp flap.Passport,now flap
 	// Obtain promise
 	proposal,err := fe.Propose(pp,plannedflights[:],0,now)
 	if (err != nil) {
-		logDebug("Propose failed with error",err)
-		return err
+		logError(err)
+		return -1,ENOSPACEFORTRIP
 	}
+
+	// Make promise
 	err = fe.Make(pp,proposal)
 	if err == nil {
 		logDebug("Made promise for trip on Day ",epochStartDay)
 	} else {
-		logInfo("Failed to make promises ", err)
+		return -1, logError(err)
 	}
-	return err
+	return ts-int(nowInDays),err
 }
 

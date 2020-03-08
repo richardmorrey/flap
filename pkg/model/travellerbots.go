@@ -250,8 +250,7 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 			}
 
 			// Decide whether to plan a trip
-			startday :=  planner.areWePlanning(fe,p,currentDay,tripLength)
-			if startday >= 0 {
+			if planner.areWePlanning(fe,p,currentDay,tripLength) {
 
 				// Choose trip
 				from,to,err := cars.chooseTrip(p)
@@ -260,18 +259,22 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 				}
 
 				// Decide if the trip is allowed ...
-				err = planner.canWePlan(fe,p,currentDay,from,to,tripLength,flap.Days(startday)) 
-				if err != nil {
-					self.bots[i].stats.Cancelled() 
-				} else {
-					// .. if it is plan the trip
-					err = jp.planTrip(from,to,tripLength, botId{i,j},flap.Days(startday))
-					if err != nil {
+				ts,err := planner.whenWillWeFly(fe,p,currentDay,from,to,tripLength)
+				switch (err) {
+					case nil: 
+						err = jp.planTrip(from,to,tripLength, botId{i,j},flap.Days(ts))
+						if err != nil {
+							return logError(err)
+						} else {
+							logDebug("planned trip in ",ts," days")
+							self.bots[i].stats.Planned()
+						}
+					case ENOSPACEFORTRIP:
+						self.bots[i].stats.Cancelled() 
+					case ENOTPLANNINGTODAY:
+						break
+					default:
 						return logError(err)
-					} else {
-						logDebug("planned trip in ",startday," days")
-						self.bots[i].stats.Planned()
-					}
 				}
 			}
 		}
