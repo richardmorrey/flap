@@ -235,4 +235,42 @@ func (self *Travellers) NewIterator(prefix []byte) (*TravellersIterator,error) {
 	return iter,err
 }
 
+type TravellersSnapshot struct {
+	ss db.Snapshot
+}
+
+func (self *TravellersSnapshot) Get(pp Passport) (Traveller,error) {
+	key,err := pp.generateKey()
+	if err != nil {
+		return Traveller{},err
+	}
+	blob, err := self.ss.Get(key[:])
+	if err != nil {
+		return Traveller{},err
+	}
+	return (*(*Traveller)(unsafe.Pointer(&blob[0]))), err
+}
+
+func (self* TravellersSnapshot) Release() error {
+	return self.ss.Release()
+}
+
+func (self *TravellersSnapshot) NewIterator(prefix []byte) (*TravellersIterator,error) {
+	iter := new(TravellersIterator)
+	var err error
+	if prefix != nil {
+		iter.iterator,err=self.ss.NewIterator(prefix)
+	} else {
+		iter.iterator,err=self.ss.NewIterator(nil)
+	}
+	return iter,err
+}
+
+func (self *Travellers) TakeSnapshot() (*TravellersSnapshot,error) {
+	snapshot := new(TravellersSnapshot)
+	var err error
+	snapshot.ss,err = self.table.TakeSnapshot()
+	return snapshot,err
+}
+
 

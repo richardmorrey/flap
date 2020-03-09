@@ -77,6 +77,32 @@ func TestPutGetFullTraveller(t  *testing.T) {
 	}
 }
 
+func TestPutGetSnapshot(t  *testing.T) {
+	db:= travellerssetup(t)
+	defer travellersteardown(db)
+	travellers := NewTravellers(db)
+	passport := NewPassport("012345678","uk")
+	var travellerin  Traveller
+	travellerin.passport = passport
+	populateFlights(&(travellerin.tripHistory),150,1)
+	err := travellers.PutTraveller(travellerin)
+	if err != nil {
+		t.Error("PutTraveller failed",err)
+	}
+	ss,err := travellers.TakeSnapshot()
+	if err != nil {
+		t.Error("Failed to take snapshot")
+	}
+	defer ss.Release()
+	travellerout,err := ss.Get(passport)
+	if err != nil {
+		t.Error("GetTraveller failed with snapshot", err)
+	}
+	if !(reflect.DeepEqual(travellerin,travellerout)) {
+		t.Error("Got traveller doesnt equal put traveller with snapshot", travellerout)
+	}
+}
+
 func TestCleared0(t *testing.T) {
 	var traveller Traveller
 	if (!traveller.Cleared(0)) {

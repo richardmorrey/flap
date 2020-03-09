@@ -256,6 +256,13 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 		}
 	}
 
+	// Create snapshot for faster multithreaded reads
+	ss,err := self.Travellers.TakeSnapshot()
+	if err != nil {
+		return 0,0,0,logError(err)
+	}
+	defer ss.Release()
+
 	// Update all travellers
 	threads := uint(self.Administrator.params.Threads)
 	if threads == 0 {
@@ -267,7 +274,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 	delta := (math.MaxUint8+1)/threads
 	for i := uint(0); i < math.MaxUint8; i+=delta {
 		wg.Add(1)
-		t :=  func(s byte,e byte) {stats <- self.updateSomeTravellers(s,e,share,now);wg.Done()}
+		t :=  func(s byte,e byte) {stats <- self.updateSomeTravellers(s,e,share,now,ss);wg.Done()}
 		go t(byte(i),byte(i+delta-1))
 	}
 	wg.Wait()
@@ -296,7 +303,7 @@ type updateStats struct {
 	err	error
 }
 
-func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share Kilometres,now EpochTime) updateStats {
+func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share Kilometres,now EpochTime, ss *TravellersSnapshot) updateStats {
 
 	var us updateStats
 	var prefix [1]byte
@@ -308,7 +315,7 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 
 		// Iterate over current start byte
 		prefix[0]=byte(pc)
-		it,err := self.Travellers.NewIterator(prefix[:])
+		it,err := ss.NewIterator(prefix[:])
 		if err != nil {
 			us.err=err
 			return us
