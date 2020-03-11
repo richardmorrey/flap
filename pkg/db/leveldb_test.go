@@ -169,6 +169,35 @@ func TestIterate(t *testing.T) {
 	}
 }
 
+func TestIterateSnapshot(t *testing.T) {
+	db := NewLevelDB(LEVELDBFOLDER)
+	defer teardown(db)
+	table,_ := db.CreateTable("songs")
+	songlist:= map[string]string{
+		"The Kinks": "Sitting in My Hotel",
+		"Sacred Paws": "Wet Graffiti",
+		"The Go-betweens": "Born to a Family",
+	}
+	for artist, song := range(songlist) {
+		table.Put([]byte(artist), []byte(song))
+	}
+	songlistretrieved := map[string]string{}
+	ss,err := table.TakeSnapshot()
+	if err != nil {
+		t.Error("Failed to create snapshot")
+	}
+	iterator,err := ss.NewIterator(nil)
+	if err != nil {
+		t.Error("Failed to create iterator from snapshot", err)
+	}
+	for iterator.Next() {
+		songlistretrieved[string(iterator.Key())] = string(iterator.Value())
+	}
+	if !reflect.DeepEqual(songlistretrieved,songlist) {
+		t.Error("Retrieved song list doesnt match", songlist, songlistretrieved)
+	}
+}
+
 func TestIteratePrefix(t *testing.T) {
 	db := NewLevelDB(LEVELDBFOLDER)
 	defer teardown(db)
@@ -197,4 +226,35 @@ func TestIteratePrefix(t *testing.T) {
 		t.Error("Retrieved song lists dont match", songlist, songlistretrieved)
 	}
 }
+
+func TestBatchWrite(t *testing.T) {
+	db := NewLevelDB(LEVELDBFOLDER)
+	defer teardown(db)
+	table,_ := db.CreateTable("songs")
+	songlist:= map[string]string{
+		"The Kinks": "Sitting in My Hotel",
+		"Sacred Paws": "Wet Graffiti",
+		"The Go-betweens": "Born to a Family",
+	}
+	bw,err := table.MakeBatch(2)
+	if err != nil {
+		t.Error("Failed to create BatchWrite")
+	}
+	for artist, song := range(songlist) {
+		err := bw.Put([]byte(artist), []byte(song))
+		if err != nil {
+			t.Error("BatchWrite put failed with error",err)
+		}
+	}
+	bw.Release()
+	songlistretrieved := map[string]string{}
+	iterator,err := table.NewIterator(nil)
+	for iterator.Next() {
+		songlistretrieved[string(iterator.Key())] = string(iterator.Value())
+	}
+	if !reflect.DeepEqual(songlistretrieved,songlist) {
+		t.Error("BatchWrite didnt write full song list", songlist, songlistretrieved)
+	}
+}
+
 

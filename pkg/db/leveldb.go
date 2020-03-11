@@ -33,6 +33,22 @@ type Table interface
 	Put([]byte, []byte) error
 	Delete([]byte) error
 	NewIterator([]byte) (Iterator,error)
+	TakeSnapshot() (Snapshot,error)
+	MakeBatch(int) (BatchWrite,error)
+}
+
+type Snapshot interface
+{
+	Get([]byte) ([]byte, error)
+	Release() error
+	NewIterator([]byte) (Iterator,error)
+}
+
+type BatchWrite interface
+{
+	Put([]byte, []byte) error
+	Delete([]byte) error
+	Release() error
 }
 
 type Iterator interface {
@@ -78,6 +94,68 @@ func (self *LevelIterator) Release() error {
 	return self.iterator.Error()
 }
 
+type LevelSnapshot struct {
+	snapshot *leveldb.Snapshot
+}
+
+// Release is thin wrapper on LevelDB method
+func (self *LevelSnapshot) Release() error {
+	self.snapshot.Release()
+	return nil
+}
+
+// Get is thin wrapper on LevelDB.Get
+func (self *LevelSnapshot) Get(key []byte) (value []byte,err error) {
+	return self.snapshot.Get(key,nil)
+}
+
+// NewIterator creates a thin wrapper around leveldb.Iterator
+// It is effectively the factory function for the LevelIterator
+// struct.
+func (self *LevelSnapshot) NewIterator(prefix []byte) (Iterator,error) {
+	iter := new(LevelIterator)
+	if prefix != nil {
+		iter.iterator=self.snapshot.NewIterator(util.BytesPrefix(prefix),nil)
+	} else {
+		iter.iterator=self.snapshot.NewIterator(nil,nil)
+	}
+	return iter,nil
+}
+
+// Thin wrapper on LevelDB batch writer
+type LevelBatchWrite struct {
+	batch *leveldb.Batch
+	table *LevelTable
+	batchSize int
+}
+
+// Put is thin wrapper on leveldb Batch put 
+func (self *LevelBatchWrite) Put(key []byte, value []byte) error {
+	self.batch.Put(key,value)
+	return self.write(false)
+}
+
+// Delete is thin wrapper on leveldb Batch put
+func (self* LevelBatchWrite) Delete(key [] byte) error {
+	self.batch.Delete(key)
+	return self.write(false)
+}
+
+// Release forces write of any remaining data in the current batch
+func (self* LevelBatchWrite) Release() error {
+	return self.write(true)
+}
+
+// write provides convenient way to write in batches of fixed size
+func (self* LevelBatchWrite) write(flush bool) error {
+	var err error
+	if flush || ((self.batch.Len() % self.batchSize)==0) {
+		err = self.table.db.Write(self.batch,nil)
+		self.batch.Reset()
+	}
+	return err
+}
+
 // newLevelTable creates a new LevelTable struct, to support Table
 // operations for a LevelDB implementation.
 // As each LevelDB instance only supports one key-vale store it is
@@ -119,6 +197,24 @@ func (self *LevelTable) NewIterator(prefix []byte) (Iterator,error) {
 		iter.iterator=self.db.NewIterator(nil,nil)
 	}
 	return iter,nil
+}
+
+// TakeSnapshot creates a thin wrapper around leveldb.Iterator
+// It is effectively the factory function for the LevelSnapshot
+func (self *LevelTable) TakeSnapshot() (Snapshot,error) {
+	ss := new(LevelSnapshot)
+	var err error
+	ss.snapshot,err = self.db.GetSnapshot()
+	return ss,err
+}
+
+// MakeBatch creates a new LevelDB batch object for batch writes
+func (self* LevelTable) MakeBatch(batchSize int) (BatchWrite,error) {
+	lb := new(LevelBatchWrite)
+	lb.batch = leveldb.MakeBatch(batchSize)
+	lb.table=self
+	lb.batchSize=batchSize
+	return lb,nil
 }
 
 func (self *LevelTable) close() {
