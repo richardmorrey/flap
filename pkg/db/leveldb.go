@@ -27,11 +27,21 @@ type Database interface
 	CreateTable(string) (Table,error)
 }
 
-type Table interface
+type Reader interface 
 {
 	Get([]byte) ([]byte, error)
+}
+
+type Writer interface
+{
 	Put([]byte, []byte) error
 	Delete([]byte) error
+}
+
+type Table interface
+{
+	Reader
+	Writer
 	NewIterator([]byte) (Iterator,error)
 	TakeSnapshot() (Snapshot,error)
 	MakeBatch(int) (BatchWrite,error)
@@ -39,15 +49,14 @@ type Table interface
 
 type Snapshot interface
 {
-	Get([]byte) ([]byte, error)
+	Reader
 	Release() error
 	NewIterator([]byte) (Iterator,error)
 }
 
 type BatchWrite interface
 {
-	Put([]byte, []byte) error
-	Delete([]byte) error
+	Writer
 	Release() error
 }
 

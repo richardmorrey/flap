@@ -163,18 +163,21 @@ func dropTravellers(database db.Database) error {
 // give passport details in the current table.
 func (self *Travellers) GetTraveller(passport Passport) (Traveller,error) {
 	
-	// Retrieve record
 	if self.table == nil {
 		return Traveller{},ETABLENOTOPEN
 	}
+	return getTraveller(passport,self.table)
+}
+func getTraveller(passport Passport, reader db.Reader) (Traveller,error) {
 
-	it,err := self.NewIterator(nil)
-	defer it.Release()
+	// Create key
 	key,err := passport.generateKey()
 	if err != nil {
 		return Traveller{},err
 	}
-	blob, err := self.table.Get(key[:])
+
+	// Retrieve value
+	blob, err := reader.Get(key[:])
 	if err != nil {
 		return Traveller{},err
 	}
@@ -187,19 +190,26 @@ func (self *Travellers) GetTraveller(passport Passport) (Traveller,error) {
 // current table. Any existing record is overwritten.
 var sizeOfTraveller = unsafe.Sizeof(Traveller{})
 func (self  *Travellers) PutTraveller(traveller Traveller) error {
-	
+
 	// Serialize record
 	if self.table == nil {
 		return ETABLENOTOPEN
 	}
+	return putTraveller(traveller,self.table)
+}
+func putTraveller(traveller Traveller, writer db.Writer) error {
+
+	// Serialize data
 	data := (*(*[1<<31 - 1]byte)(unsafe.Pointer(&traveller)))[:sizeOfTraveller]
 
-	// Put record
+	// Generate key
 	key,err := traveller.passport.generateKey()
 	if err != nil {
 		return err
 	}
-	return self.table.Put(key[:], data);
+
+	// Put record
+	return writer.Put(key[:], data);
 }
 
 type TravellersIterator struct {
@@ -240,15 +250,7 @@ type TravellersSnapshot struct {
 }
 
 func (self *TravellersSnapshot) Get(pp Passport) (Traveller,error) {
-	key,err := pp.generateKey()
-	if err != nil {
-		return Traveller{},err
-	}
-	blob, err := self.ss.Get(key[:])
-	if err != nil {
-		return Traveller{},err
-	}
-	return (*(*Traveller)(unsafe.Pointer(&blob[0]))), err
+	return getTraveller(pp,self.ss)
 }
 
 func (self* TravellersSnapshot) Release() error {
@@ -273,4 +275,22 @@ func (self *Travellers) TakeSnapshot() (*TravellersSnapshot,error) {
 	return snapshot,err
 }
 
+type TravellersBatchWrite struct {
+	bw db.BatchWrite
+}
+
+func (self *TravellersBatchWrite) Put(traveller Traveller) error {
+	return putTraveller(traveller,self.bw)
+}
+
+func (self TravellersBatchWrite) Release() error {
+	return self.bw.Release()
+}
+
+func (self *Travellers) MakeBatch(size int) (*TravellersBatchWrite,error) {
+	bw := new(TravellersBatchWrite)
+	var err error
+	bw.bw,err = self.table.MakeBatch(size)
+	return bw,err
+}
 

@@ -311,6 +311,13 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 	// Iterate through all keys with a first byte in the given
 	// range
 	logInfo("Backfilling from",prefixStart,"to",prefixEnd)
+	bw,err := self.Travellers.MakeBatch(256)
+	if err != nil {
+		us.err = logError(err)
+		return us
+	}
+	defer bw.Release();
+
 	for pc:=int(prefixStart); pc <= int(prefixEnd); pc++ {
 
 		// Iterate over current start byte
@@ -349,7 +356,7 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 
 			// Save changes if necessary
 			if changed {
-				self.Travellers.PutTraveller(traveller)
+				bw.Put(traveller)
 			}
 		}
 

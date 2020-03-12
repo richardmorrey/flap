@@ -7,7 +7,7 @@ flapparams:
   # Maximum gap between flights in a single Journey, in days
   flightinterval: 1
   # Promises algo to use. 0 = promises not enabled, 1 = linear best fit
-  promisesalgo: 0
+  promisesalgo: 1
   # Number of data points to maintain for promisesalgo
   promisesmaxpoints: 100
   # Maximum days ahead to allow a promise trip to end
@@ -18,7 +18,7 @@ flapparams:
 modelparams:
   # Logging level 0 - off, 1 - errors only, 2 - info,
   # 3 - debug. Log output to <workingfolder>/flap.log
-  loglevel: 3
+  loglevel: 2
   # Folder to hold working databases and all output files
   workingfolder: ./working
   # Folder to place input data files
@@ -29,12 +29,12 @@ modelparams:
   # The number of trial days to run the model for initially. During
   # these days flights are logged but no  deductions are made from
   # distance balances.
-  trialdays: 100
+  trialdays: 365
   # Total days for which to run the model, including trial days.
   daystorun: 2000
   # Total number of travellers to simulate
-  totaltravellers: 1000
-  # Defininition of one or more "bands" of travellers, with
+  totaltravellers: 10000
+  # Definition of one or more "bands" of travellers, with
   # different travel probabilities. Each band has values as follows
   #    flyprobability  - Probability of traveller starting a trip each day
   #    weight          - Defines number of travellers in band, calculated as 
