@@ -22,6 +22,14 @@ type Airport struct {
 	Loc  LatLon
 }
 
+func (self *Airport) To(buff *bytes.Buffer) error {
+	return binary.Write(buff, binary.LittleEndian,self.Loc)
+}
+
+func (self* Airport) From(buff *bytes.Buffer) error {
+	return binary.Read(buff,binary.LittleEndian,&self.Loc)
+}
+
 func NewICAOCode(codestring string) ICAOCode {
 	var code ICAOCode
 	copy(code[:],codestring)
@@ -75,18 +83,16 @@ func (self  *Airports) LoadAirports(filepath string) error {
 		}
 		
 		// Add record as binary
-		var loc LatLon
-		var buf bytes.Buffer
-		loc.Lat,err=strconv.ParseFloat(line[6],64)
+		var ap Airport
+		ap.Loc.Lat,err=strconv.ParseFloat(line[6],64)
 		if err != nil {
 			return err
 		}
-		loc.Lon,err=strconv.ParseFloat(line[7],64)
+		ap.Loc.Lon,err=strconv.ParseFloat(line[7],64)
 		if err != nil {
 			return err
 		}
-		binary.Write(&buf, binary.LittleEndian,loc)
-		err = self.table.Put([]byte(line[5]),buf.Bytes())
+		err = self.table.Put([]byte(line[5]),&ap)
 		if (err != nil) {
 			return err
 		} 
@@ -99,22 +105,16 @@ func (self  *Airports) LoadAirports(filepath string) error {
 // doesnt contain an entry for the given ICAOCode an empty Airport and error is returned.
 func (self *Airports) GetAirport(code  ICAOCode) (Airport,error) {
 	
-	// Retrieve raw record
 	var airport Airport
 	if  self.table == nil {
 		return Airport{},ETABLENOTOPEN
 	}
-	blob,err := self.table.Get(code[:])
+
+	err := self.table.Get(code[:],&airport)
 	if (err != nil) {
 		return Airport{},err
 	}
 
-	// Deserialize to struct
-	buf := bytes.NewReader(blob)
-	err = binary.Read(buf,binary.LittleEndian,&airport.Loc)
-	if (err !=nil) {
-		return Airport{},err
-	}
 	airport.Code=code
 	return airport,nil
 }

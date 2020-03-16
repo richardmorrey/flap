@@ -33,6 +33,16 @@ type FlapParams struct
 	Threads			byte
 }
 
+// To implements db/Serialize
+func (self *FlapParams) To(buff *bytes.Buffer) error {
+	return binary.Write(buff, binary.LittleEndian,self)
+}
+
+// From implemments db/Serialize
+func (self *FlapParams) From(buff *bytes.Buffer) error {
+	return binary.Read(buff,binary.LittleEndian,self)
+}
+
 type Administrator struct {
 	table db.Table
 	params FlapParams
@@ -57,11 +67,7 @@ func newAdministrator(flapdb db.Database) *Administrator {
 	administrator.table  = table
 
 	// Read any parameter settings held in table
-	blob,err := administrator.table.Get([]byte(adminRecordKey))
-	if (err == nil) {
-		buf := bytes.NewReader(blob)
-		err = binary.Read(buf,binary.LittleEndian,&(administrator.params))
-	}
+	administrator.table.Get([]byte(adminRecordKey),&administrator.params)
 
 	// Create predictor for promises
 	administrator.createPredictor(true)
@@ -104,12 +110,7 @@ func (self *Administrator) SetParams(params FlapParams) error {
 	}
 
 	// Write record as binary
-	var buf bytes.Buffer
-	err := binary.Write(&buf, binary.LittleEndian,(&params))
-	if (err != nil) {
-		return err
-	}
-	err = self.table.Put([]byte(adminRecordKey),buf.Bytes())
+	err := self.table.Put([]byte(adminRecordKey),&(self.params))
 
 	// Check for promises config change and create new predictor
 	if err == nil {

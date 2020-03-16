@@ -58,25 +58,26 @@ func newBestFit(maxpoints uint32) (*bestFit,error) {
 	return bf,nil
 }
 
+// To implemented as part of db/Serialize
+func (self *bestFit) To(buff *bytes.Buffer) error {
+	dec := gob.NewDecoder(buff)
+	return dec.Decode(self)
+}
+
+// From implemented as part of db/Serialize
+func (self *bestFit) From(buff *bytes.Buffer) error {
+	enc := gob.NewEncoder(buff) 
+	return enc.Encode(self)
+}
+
 // get reads state from given table
 func (self *bestFit) get(t db.Table) error {
-	blob, err := t.Get([]byte(predictorRecordKey))
-	if err != nil {
-		return err
-	}
-	dec := gob.NewDecoder(bytes.NewBuffer(blob))
-	return dec.Decode(self)
+	return t.Get([]byte(predictorRecordKey),self)
 }
 
 // put saves state to given table
 func (self *bestFit) put(t db.Table) error {
-	var b bytes.Buffer
-	enc := gob.NewEncoder(&b) 
-	err := enc.Encode(self)
-	if err != nil {
-		return err
-	}
-	return t.Put([]byte(predictorRecordKey), b.Bytes())
+	return t.Put([]byte(predictorRecordKey), self)
 }
 
 // version returns number indicating current version of the best fit line.

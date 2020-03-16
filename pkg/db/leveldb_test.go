@@ -5,10 +5,25 @@ import (
 	"os"
 	"reflect"
 	"path/filepath"
+	"bytes"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 )
 var LEVELDBFOLDER="leveldbtest"
+
+type Song struct {
+	title string
+}
+
+func (self *Song) To(buff *bytes.Buffer) error {
+	buff.WriteString(self.title)
+	return nil
+}
+
+func (self *Song) From(buff *bytes.Buffer) error {
+	self.title,_ = buff.ReadString(0)
+	return nil
+}
 
 func teardown(db *LevelDB) {
 	db.Release()
@@ -71,16 +86,18 @@ func TestPutGet(t *testing.T) {
 	db := NewLevelDB(LEVELDBFOLDER)
 	defer teardown(db)
 	table,_ := db.CreateTable("songs")
-	err := table.Put([]byte("The Mountain Goats"), []byte("Waylon Jennings Live"))
+	sIn := Song{title:"Waylon Jennings Live"}
+	err := table.Put([]byte("The Mountain Goats"), &sIn)
 	if err  != nil {
 		t.Error("Failed to put entry",err)
 	}
-	value, err := table.Get([]byte("The Mountain Goats"))
+	var sOut Song
+	err = table.Get([]byte("The Mountain Goats"),&sOut)
 	if  err != nil {
 		t.Error("Failed to get entry", err)
 	}
-	if string(value) != "Waylon Jennings Live" {
-		t.Error("Failed to get entry", string(value))
+	if sOut.title != "Waylon Jennings Live" {
+		t.Error("Failed to get entry", sOut.title)
 	}
 }
 
@@ -88,10 +105,11 @@ func TestDropTable(t *testing.T) {
 	db := NewLevelDB(LEVELDBFOLDER)
 	defer teardown(db)
 	table,_ := db.CreateTable("songs")
-	err := table.Put([]byte("The Mountain Goats"), []byte("Waylon Jennings Live"))
+	sIn := Song{title:"Waylon Jennings Live"}
+	table.Put([]byte("The Mountain Goats"), &sIn)
 	db.CloseTable("songs")
 
-	err = db.DropTable("labels")
+	err := db.DropTable("labels")
 	if err == nil {
 		t.Error("Dropped non-existent table")
 	}
@@ -120,27 +138,30 @@ func TestDelete(t *testing.T) {
 	db  := NewLevelDB(LEVELDBFOLDER)
 	defer teardown(db)
 	table,_ := db.CreateTable("songs")
-		err := table.Put([]byte("The Mountain Goats"), []byte("Waylon Jennings Live"))
+	sIn := Song{title:"Waylon Jennings Live"}
+	err := table.Put([]byte("The Mountain Goats"), &sIn)
 	if err  != nil {
 		t.Error("Failed to put entry",err)
 	}
-	value, err := table.Get([]byte("The Mountain Goats"))
+	var sOut Song
+	err = table.Get([]byte("The Mountain Goats"),&sOut)
 	if  err != nil {
 		t.Error("Failed to get entry", err)
 	}
-	if string(value) != "Waylon Jennings Live" {
-		t.Error("Failed to get entry", string(value))
+	if sOut.title != "Waylon Jennings Live" {
+		t.Error("Failed to get entry", sOut.title)
 	}
 	err = table.Delete([]byte("The Mountain Goats"))
 	if err != nil {
 		t.Error("Failed to delete entry", err)
 	}
-	value, err = table.Get([]byte("The Mountain Goats"))
+	sOut.title=""
+	err = table.Get([]byte("The Mountain Goats"),&sOut)
 	if  err == nil {
 		t.Error("Succeded in geting deleted entry", err)
 	}
-	if string(value) != "" {
-		t.Error("Value returned for a deleted entry", string(value))
+	if sOut.title != "" {
+		t.Error("Value returned for a deleted entry", sOut.title)
 	}
 }
 
@@ -148,21 +169,23 @@ func TestIterate(t *testing.T) {
 	db := NewLevelDB(LEVELDBFOLDER)
 	defer teardown(db)
 	table,_ := db.CreateTable("songs")
-	songlist:= map[string]string{
-		"The Kinks": "Sitting in My Hotel",
-		"Sacred Paws": "Wet Graffiti",
-		"The Go-betweens": "Born to a Family",
+	songlist:= map[string]Song{
+		"The Kinks": Song{title:"Sitting in My Hotel"},
+		"Sacred Paws": Song{title:"Wet Graffiti"},
+		"The Go-betweens": Song{title:"Born to a Family"},
 	}
 	for artist, song := range(songlist) {
-		table.Put([]byte(artist), []byte(song))
+		table.Put([]byte(artist), &song)
 	}
-	songlistretrieved := map[string]string{}
+	songlistretrieved := map[string]Song{}
 	iterator,err := table.NewIterator(nil)
 	if err != nil {
 		t.Error("Failed to create Iterator", err)
 	}
+	var sOut Song
 	for iterator.Next() {
-		songlistretrieved[string(iterator.Key())] = string(iterator.Value())
+		iterator.Value(&sOut)
+		songlistretrieved[string(iterator.Key())] = sOut
 	}
 	if !reflect.DeepEqual(songlistretrieved,songlist) {
 		t.Error("Retrieved song list doesnt match", songlist, songlistretrieved)
@@ -173,15 +196,16 @@ func TestIterateSnapshot(t *testing.T) {
 	db := NewLevelDB(LEVELDBFOLDER)
 	defer teardown(db)
 	table,_ := db.CreateTable("songs")
-	songlist:= map[string]string{
-		"The Kinks": "Sitting in My Hotel",
-		"Sacred Paws": "Wet Graffiti",
-		"The Go-betweens": "Born to a Family",
+	songlist:= map[string]Song{
+		"The Kinks": Song{title:"Sitting in My Hotel"},
+		"Sacred Paws": Song{title:"Wet Graffiti"},
+		"The Go-betweens": Song{title:"Born to a Family"},
 	}
 	for artist, song := range(songlist) {
-		table.Put([]byte(artist), []byte(song))
+		table.Put([]byte(artist), &song)
 	}
-	songlistretrieved := map[string]string{}
+
+	songlistretrieved := map[string]Song{}
 	ss,err := table.TakeSnapshot()
 	if err != nil {
 		t.Error("Failed to create snapshot")
@@ -190,8 +214,10 @@ func TestIterateSnapshot(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create iterator from snapshot", err)
 	}
+	var sOut Song
 	for iterator.Next() {
-		songlistretrieved[string(iterator.Key())] = string(iterator.Value())
+		iterator.Value(&sOut)
+		songlistretrieved[string(iterator.Key())] = sOut
 	}
 	if !reflect.DeepEqual(songlistretrieved,songlist) {
 		t.Error("Retrieved song list doesnt match", songlist, songlistretrieved)
@@ -202,21 +228,24 @@ func TestIteratePrefix(t *testing.T) {
 	db := NewLevelDB(LEVELDBFOLDER)
 	defer teardown(db)
 	table,_ := db.CreateTable("songs")
-	songlist:= map[string]string{
-		"The Kinks": "Sitting in My Hotel",
-		"Sacred Paws": "Wet Graffiti",
-		"The Go-betweens": "Born to a Family",
+	songlist:= map[string]Song{
+		"The Kinks": Song{title:"Sitting in My Hotel"},
+		"Sacred Paws": Song{title:"Wet Graffiti"},
+		"The Go-betweens": Song{title:"Born to a Family"},
 	}
 	for artist, song := range(songlist) {
-		table.Put([]byte(artist), []byte(song))
+		table.Put([]byte(artist), &song)
 	}
-	songlistretrieved := map[string]string{}
+
+	songlistretrieved := map[string]Song{}
 	iterator,err := table.NewIterator([]byte("The"))
 	if err != nil {
 		t.Error("Failed to create Iterator", err)
 	}
+	var sOut Song
 	for iterator.Next() {
-		songlistretrieved[string(iterator.Key())] = string(iterator.Value())
+		iterator.Value(&sOut)
+		songlistretrieved[string(iterator.Key())] = sOut
 	}
 	if reflect.DeepEqual(songlistretrieved,songlist) {
 		t.Error("Retrieved song list matches", songlist, songlistretrieved)
@@ -231,26 +260,28 @@ func TestBatchWrite(t *testing.T) {
 	db := NewLevelDB(LEVELDBFOLDER)
 	defer teardown(db)
 	table,_ := db.CreateTable("songs")
-	songlist:= map[string]string{
-		"The Kinks": "Sitting in My Hotel",
-		"Sacred Paws": "Wet Graffiti",
-		"The Go-betweens": "Born to a Family",
+	songlist:= map[string]Song{
+		"The Kinks": Song{title:"Sitting in My Hotel"},
+		"Sacred Paws": Song{title:"Wet Graffiti"},
+		"The Go-betweens": Song{title:"Born to a Family"},
 	}
 	bw,err := table.MakeBatch(2)
 	if err != nil {
 		t.Error("Failed to create BatchWrite")
 	}
 	for artist, song := range(songlist) {
-		err := bw.Put([]byte(artist), []byte(song))
+		table.Put([]byte(artist), &song)
 		if err != nil {
 			t.Error("BatchWrite put failed with error",err)
 		}
 	}
 	bw.Release()
-	songlistretrieved := map[string]string{}
+	songlistretrieved := map[string]Song{}
 	iterator,err := table.NewIterator(nil)
+	var sOut Song
 	for iterator.Next() {
-		songlistretrieved[string(iterator.Key())] = string(iterator.Value())
+		iterator.Value(&sOut)
+		songlistretrieved[string(iterator.Key())] = sOut
 	}
 	if !reflect.DeepEqual(songlistretrieved,songlist) {
 		t.Error("BatchWrite didnt write full song list", songlist, songlistretrieved)

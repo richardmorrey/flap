@@ -166,50 +166,56 @@ func (self *Travellers) GetTraveller(passport Passport) (Traveller,error) {
 	if self.table == nil {
 		return Traveller{},ETABLENOTOPEN
 	}
-	return getTraveller(passport,self.table)
+	var t Traveller
+	err := t.get(passport,self.table)
+	return t,err
 }
-func getTraveller(passport Passport, reader db.Reader) (Traveller,error) {
+func (self* Traveller) get(passport Passport, reader db.Reader) (error) {
 
 	// Create key
 	key,err := passport.generateKey()
 	if err != nil {
-		return Traveller{},err
+		return err
 	}
 
 	// Retrieve value
-	blob, err := reader.Get(key[:])
-	if err != nil {
-		return Traveller{},err
-	}
-
-	// Deserialize and return struct
-	return (*(*Traveller)(unsafe.Pointer(&blob[0]))), err
+	return reader.Get(key[:],self)
 }
 
 // PutTraveller stores a record for the given Traveller in the
 // current table. Any existing record is overwritten.
-var sizeOfTraveller = unsafe.Sizeof(Traveller{})
+const sizeOfTraveller = unsafe.Sizeof(Traveller{})
 func (self  *Travellers) PutTraveller(traveller Traveller) error {
-
-	// Serialize record
 	if self.table == nil {
 		return ETABLENOTOPEN
 	}
-	return putTraveller(traveller,self.table)
+	return traveller.put(self.table)
 }
-func putTraveller(traveller Traveller, writer db.Writer) error {
-
-	// Serialize data
-	data := (*(*[1<<31 - 1]byte)(unsafe.Pointer(&traveller)))[:sizeOfTraveller]
+func (self* Traveller) put(writer db.Writer) error {
 
 	// Generate key
-	key,err := traveller.passport.generateKey()
+	key,err := self.passport.generateKey()
 	if err != nil {
 		return err
 	}
 
 	// Put record
-	return writer.Put(key[:], data);
+	return writer.Put(key[:], self);
+}
+
+func (self *Traveller) To(buff *bytes.Buffer) error {
+	data := (*(*[1<<31 - 1]byte)(unsafe.Pointer(self)))[:sizeOfTraveller]
+	_,err := buff.Write(data)
+	return err
+}
+
+func (self *Traveller) From(buff * bytes.Buffer) error {	
+	var blob [sizeOfTraveller]byte
+	_,err := buff.Read(blob[:])
+	if err == nil {
+		*self = (*(*Traveller)(unsafe.Pointer(&blob[0])))
+	}
+	return err
 }
 
 type TravellersIterator struct {
@@ -221,8 +227,9 @@ func (self *TravellersIterator) Next() (bool) {
 }
 
 func (self *TravellersIterator) Value() Traveller {
-	blob  := self.iterator.Value()
-	return (*(*Traveller)(unsafe.Pointer(&blob[0])))
+	var t Traveller
+	self.iterator.Value(&t)
+	return t
 }
 
 func (self *TravellersIterator) Error() error {
@@ -250,7 +257,9 @@ type TravellersSnapshot struct {
 }
 
 func (self *TravellersSnapshot) Get(pp Passport) (Traveller,error) {
-	return getTraveller(pp,self.ss)
+	var t Traveller
+	err := t.get(pp,self.ss)
+	return t,err
 }
 
 func (self* TravellersSnapshot) Release() error {
@@ -280,7 +289,7 @@ type TravellersBatchWrite struct {
 }
 
 func (self *TravellersBatchWrite) Put(traveller Traveller) error {
-	return putTraveller(traveller,self.bw)
+	return traveller.put(self.bw)
 }
 
 func (self TravellersBatchWrite) Release() error {
