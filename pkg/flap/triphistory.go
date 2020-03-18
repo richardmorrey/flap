@@ -6,6 +6,7 @@ import (
 	"math"
 	"sort"
 	"encoding/json"
+	"encoding/binary"
 	"time"
 	"github.com/twpayne/go-kml"
 	"bytes"
@@ -92,6 +93,56 @@ func (self *Flight) setType(ft flightType, respectful bool) {
 	}
 	self.et = ft
 	return
+}
+
+// To implements db/Serialize
+func (self *Flight) To(buff *bytes.Buffer) error {
+	err:= binary.Write(buff,binary.LittleEndian,&self.et)
+	if err != nil {
+		return logError(err)
+	}
+	err = binary.Write(buff,binary.LittleEndian,&self.start)
+	if err != nil {
+		return logError(err)
+	}
+	err = binary.Write(buff,binary.LittleEndian,&self.end)
+	if err != nil {
+		return logError(err)
+	}
+	err = binary.Write(buff,binary.LittleEndian,&self.from)
+	if err != nil {
+		return logError(err)
+	}
+	err = binary.Write(buff,binary.LittleEndian,&self.to)
+	if err != nil {
+		return logError(err)
+	}
+	return binary.Write(buff,binary.LittleEndian,&self.distance)
+}
+
+// From implemments db/Serialize
+func (self *Flight) From(buff *bytes.Buffer) error {
+	err:= binary.Read(buff,binary.LittleEndian,&self.et)
+	if err != nil {
+		return logError(err)
+	}
+	err = binary.Read(buff,binary.LittleEndian,&self.start)
+	if err != nil {
+		return logError(err)
+	}
+	err = binary.Read(buff,binary.LittleEndian,&self.end)
+	if err != nil {
+		return logError(err)
+	}
+	err = binary.Read(buff,binary.LittleEndian,&self.from)
+	if err != nil {
+		return logError(err)
+	}
+	err = binary.Read(buff,binary.LittleEndian,&self.to)
+	if err != nil {
+		return logError(err)
+	}
+	return binary.Read(buff,binary.LittleEndian,&self.distance)
 }
 
 // NewFlight constructs a new flight from one airpot to another and
@@ -562,4 +613,36 @@ func (self *TripHistory) MidTrip() bool {
 	return false
 }
 
+// To implements db/Serialize
+func (self *TripHistory) To(buff *bytes.Buffer) error {
+	n := int32(sort.Search(MaxFlights,  func(i int) bool {return self.entries[i].start==0}))
+	err := binary.Write(buff, binary.LittleEndian,&n)
+	if err != nil {
+		return logError(err)
+	}
+	logDebug("processing ",n," trips")
+	for i:=int32(0); i < n; i++ {
+		err = self.entries[i].To(buff)
+		if (err !=nil) {
+			return logError(err)
+		}
+	}
 
+	return binary.Write(buff,binary.LittleEndian,&(self.oldestChange))
+}
+
+// From implemments db/Serialize
+func (self *TripHistory) From(buff *bytes.Buffer) error {
+	var n int32
+	err := binary.Read(buff,binary.LittleEndian,&n)
+	if err != nil {
+		return logError(err)
+	}
+	for  i:=int32(0); i < n; i++ {
+		err =  self.entries[i].From(buff)
+		if err != nil {
+			return logError(err)
+		}
+	}
+	return binary.Read(buff,binary.LittleEndian,&(self.oldestChange))
+}

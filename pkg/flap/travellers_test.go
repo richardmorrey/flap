@@ -15,8 +15,9 @@ func travellerssetup(t *testing.T) *db.LevelDB{
 	if err := os.Mkdir(TRAVELLERSTESTFOLDER, 0700); err != nil {
 		t.Error("Failed to create test dir", err)
 	}
+	NewLogger(llDebug,".")
 	return db.NewLevelDB(TRAVELLERSTESTFOLDER)
-} 
+}
 
 func travellersteardown(db *db.LevelDB) {
 	db.Release()
@@ -73,7 +74,7 @@ func TestPutGetFullTraveller(t  *testing.T) {
 		t.Error("GetTraveller failed", err)
 	}
 	if !(reflect.DeepEqual(travellerin,travellerout)) {
-		t.Error("Got traveller doesnt equal put traveller", travellerout)
+		t.Error("Got traveller doesnt equal put traveller", travellerin,travellerout)
 	}
 }
 

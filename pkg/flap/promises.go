@@ -3,6 +3,8 @@ package flap
 import (
 	"errors"
 	"sort"
+	"encoding/binary"
+	"bytes"
 	//"fmt"
 )
 
@@ -33,6 +35,15 @@ func (self *Promise) tobackfill() Kilometres {
 	return self.Distance + self.CarriedOver
 }
 
+// To implements db/Serialize
+func (self *Promise) To(buff *bytes.Buffer) error {
+	return binary.Write(buff, binary.LittleEndian,self)
+}
+
+// From implemments db/Serialize
+func (self *Promise) From(buff *bytes.Buffer) error {
+	return binary.Read(buff,binary.LittleEndian,self)
+}
 const MaxPromises=10
 
 type Promises struct {
@@ -271,3 +282,35 @@ func (self* Promises) match(p Promise) (EpochTime,error) {
 	return 0, EPROMISENOTFOUND
 }
 
+// To implements db/Serialize
+func (self *Promises) To(buff *bytes.Buffer) error {
+	n := int32(sort.Search(MaxPromises,  func(i int) bool {return self.entries[i].TripStart==0}))
+	err := binary.Write(buff, binary.LittleEndian,&n)
+	if err != nil {
+		return err
+	}
+	
+	for i:=int32(0); i < n; i++ {
+		err = self.entries[i].To(buff)
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}
+
+// From implemments db/Serialize
+func (self *Promises) From(buff *bytes.Buffer) error {
+	var n int32
+	err := binary.Read(buff,binary.LittleEndian,&n)
+	if err != nil {
+		return err
+	}
+	for  i:=int32(0); i < n; i++ {
+		err = self.entries[i].From(buff)
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}

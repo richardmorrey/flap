@@ -307,19 +307,12 @@ func (self* CountriesAirportsRoutes) getAirportDetails(id uint64) (weightCountry
 // getCounty finds and returns a record matching the given country code
 func (self *CountriesAirportsRoutes) getCountry(countryCode flap.IssuingCountry) (Country,error) {
 	
-	// Retrieve record
 	if self.table == nil {
 		return Country{},flap.ETABLENOTOPEN
 	}
-	blob, err := self.table.Get(countryCode[:])
-	if err != nil {
-		return Country{},err
-	}
 
-	// Deserialize and return struct
-	buff := bytes.NewBuffer(blob)
 	var country Country
-	err = country.From(buff)
+	err := self.table.Get(countryCode[:],&country)
 	return country,err
 }
 
@@ -341,15 +334,8 @@ func (self  *CountriesAirportsRoutes) putCountry(cs countryState) error {
 		return flap.ETABLENOTOPEN
 	}
 
-	// Serialize record to binary
-	var buff bytes.Buffer
-	err := cs.country.To(&buff)
-	if err != nil {
-		return logError(err)
-	}
-
 	// Put record
-	err = self.table.Put(cs.countryCode[:], buff.Bytes())
+	err := self.table.Put(cs.countryCode[:], cs.country)
 	if err != nil {
 		return logError(err)
 	}

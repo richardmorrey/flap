@@ -312,7 +312,7 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 	// Iterate through all keys with a first byte in the given
 	// range
 	logInfo("Backfilling from",prefixStart,"to",prefixEnd)
-	bw,err := self.Travellers.MakeBatch(256)
+	bw,err := self.Travellers.MakeBatch(10000)
 	if err != nil {
 		us.err = logError(err)
 		return us

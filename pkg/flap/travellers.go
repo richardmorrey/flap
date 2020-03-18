@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 	"bytes"
 	"errors"
-	"unsafe"
+	//"unsafe"
 	//"fmt"
 )
 
@@ -184,7 +184,7 @@ func (self* Traveller) get(passport Passport, reader db.Reader) (error) {
 
 // PutTraveller stores a record for the given Traveller in the
 // current table. Any existing record is overwritten.
-const sizeOfTraveller = unsafe.Sizeof(Traveller{})
+//const sizeOfTraveller = unsafe.Sizeof(Traveller{})
 func (self  *Travellers) PutTraveller(traveller Traveller) error {
 	if self.table == nil {
 		return ETABLENOTOPEN
@@ -204,18 +204,50 @@ func (self* Traveller) put(writer db.Writer) error {
 }
 
 func (self *Traveller) To(buff *bytes.Buffer) error {
-	data := (*(*[1<<31 - 1]byte)(unsafe.Pointer(self)))[:sizeOfTraveller]
-	_,err := buff.Write(data)
-	return err
+	//data := (*(*[1<<31 - 1]byte)(unsafe.Pointer(self)))[:sizeOfTraveller]
+	//_,err := buff.Write(data)
+	err := binary.Write(buff,binary.LittleEndian,&(self.passport))
+	if err != nil {
+		return logError(err)
+	}
+	err = self.tripHistory.To(buff)
+	if err != nil {
+		return logError(err)
+	}
+	err = self.Promises.To(buff)
+	if err != nil {
+		return logError(err)
+	}
+	err = self.kept.To(buff)
+	if err != nil {
+		return logError(err)
+	}
+	return binary.Write(buff,binary.LittleEndian,&(self.balance))
 }
 
-func (self *Traveller) From(buff * bytes.Buffer) error {	
-	var blob [sizeOfTraveller]byte
-	_,err := buff.Read(blob[:])
-	if err == nil {
-		*self = (*(*Traveller)(unsafe.Pointer(&blob[0])))
+func (self *Traveller) From(buff *bytes.Buffer) error {	
+	//var blob [sizeOfTraveller]byte
+	//_,err := buff.Read(blob[:])
+	//if err == nil {
+	//	*self = (*(*Traveller)(unsafe.Pointer(&blob[0])))
+	//}
+	err := binary.Read(buff,binary.LittleEndian,&(self.passport))
+	if err != nil {
+		return logError(err)
 	}
-	return err
+	err = self.tripHistory.From(buff)
+	if err != nil {
+		return logError(err)
+	}
+	err = self.Promises.From(buff)
+	if err != nil {
+		return logError(err)
+	}
+	err = self.kept.From(buff)
+	if err != nil {
+		return logError(err)
+	}
+	return binary.Read(buff,binary.LittleEndian,&(self.balance))
 }
 
 type TravellersIterator struct {
