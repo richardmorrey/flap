@@ -7,7 +7,6 @@ import (
 	"math"
 	"errors"
 	"sync"
-	//"fmt"
 )
 
 var EPROMISESNOTENABLED = errors.New("Promises not enabled")
@@ -30,6 +29,7 @@ type FlapParams struct
 	PromisesAlgo		PromisesAlgo
 	PromisesMaxPoints	uint32
 	PromisesMaxDays		Days
+	TaxiOverhead		Kilometres
 	Threads			byte
 }
 
@@ -217,7 +217,7 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 	
 	// Add flights to traveller's flight history
 	for _,flight := range flights {
-		err := t.submitFlight(&flight,now,debit)
+		err := t.submitFlight(&flight,now,self.Administrator.params.TaxiOverhead,debit)
 		if err != nil {
 			return err
 
@@ -389,12 +389,14 @@ func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTi
 		return nil,EPROMISESNOTENABLED
 	}
 
-	// Determine trip start, end, and distance
-	var td Kilometres
+	// Determine trip start, end, distance to backfill and distance travelled
+	var distance Kilometres
+	var travelled Kilometres
 	ts := MaxEpochTime
 	te := tripEnd
 	for i:=0; i < len(flights); i++ {
-		td += flights[i].distance
+		travelled += flights[i].distance
+		distance += flights[i].distance + self.Administrator.params.TaxiOverhead
 		if flights[i].start < ts {
 			ts=flights[i].start
 		}
@@ -409,7 +411,7 @@ func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTi
 	}
 
 	// Ask for proposal and return the result
-	return self.getCreateTraveller(passport).Promises.propose(ts,te,td,now,self.Administrator.predictor)
+	return self.getCreateTraveller(passport).Promises.propose(ts,te,distance,travelled,now,self.Administrator.predictor)
 }
 
 // Make attempts to apply a proposal for changes to a traveller's set of clearance promises.

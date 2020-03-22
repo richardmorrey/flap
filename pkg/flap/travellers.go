@@ -103,7 +103,7 @@ func (self *Traveller) AsKML(a *Airports) string {
 // submitFlight adds given flight to trip history and if traveller is cleared for travel.
 // Also, If "debit" is true, the flight distance  is subtracted from the traveller's distance balance.
 // If traveller is not cleared for travel no action is taken and an error is returned.
-func (self *Traveller) submitFlight(flight *Flight,now EpochTime, debit bool) error {
+func (self *Traveller) submitFlight(flight *Flight,now EpochTime, taxiOH Kilometres, debit bool) error {
 	if !self.Cleared(now) {
 		logDebug("balance:",self.balance,"cleared:",self.kept.Clearance.ToTime())
 		return EGROUNDED
@@ -113,7 +113,7 @@ func (self *Traveller) submitFlight(flight *Flight,now EpochTime, debit bool) er
 		return err
 	}
 	if debit {
-		self.balance -= flight.distance
+		self.balance -= (flight.distance + taxiOH)
 	}
 
 	// Make sure clearance promise only gets applied once

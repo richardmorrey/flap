@@ -155,19 +155,19 @@ func TestSubmitFlight(t *testing.T) {
 	traveller.balance=0
 	oneflight := *createFlight(1,1,2)
 	oneflight.distance=1
-	err:=traveller.submitFlight(&oneflight,2,true)
+	err:=traveller.submitFlight(&oneflight,2,10,true)
 	if err != nil {
 		t.Error("submitFlight failed for cleared traveller",traveller)
 	}
-	if (traveller.balance !=-1) {
+	if (traveller.balance !=-11) {
 		t.Error("submitFlight didnt update balance",traveller.balance)
 	}
 	traveller.EndTrip()
-	err=traveller.submitFlight(&oneflight,1,true)
+	err=traveller.submitFlight(&oneflight,1,10,true)
 	if err == nil {
 		t.Error("submitFlight accepted flight when grounded",traveller)
 	}
-	if (traveller.balance !=-1) {
+	if (traveller.balance !=-11) {
 		t.Error("submitFlight changed balance when grounded",traveller)
 	}
 }
@@ -178,7 +178,7 @@ func TestSubmitFlightNoDebit(t *testing.T) {
 	traveller.balance=0
 	oneflight := *createFlight(1,1,2)
 	oneflight.distance=1
-	err:=traveller.submitFlight(&oneflight,2,false)
+	err:=traveller.submitFlight(&oneflight,2,10,false)
 	if err != nil {
 		t.Error("submitFlight failed for cleared traveller",traveller)
 	}
@@ -206,7 +206,7 @@ func TestKeepMatchingPromise(t *testing.T) {
 	var tr Traveller
 	tr.tripHistory.entries[0] = *createFlight(1,1,2)
 	tr.tripHistory.entries[0].distance=55
-	tr.Promises.entries[0]=Promise{TripStart:1,TripEnd:2,Clearance: epochDays(88).toEpochTime(), Distance:55}
+	tr.Promises.entries[0]=Promise{TripStart:1,TripEnd:2,Clearance: epochDays(88).toEpochTime(), Travelled:55}
 	if ! tr.keep()  {
 		t.Error("keep didnt keep matching  promise")
 	}
@@ -222,7 +222,7 @@ func TestKeepNonMatchingPromise(t *testing.T) {
 	var tr Traveller
 	tr.tripHistory.entries[0] = *createFlight(1,1,2)
 	tr.tripHistory.entries[0].distance=54
-	tr.Promises.entries[0]=Promise{TripStart:1,TripEnd:2,Clearance: epochDays(88).toEpochTime(), Distance:55}
+	tr.Promises.entries[0]=Promise{TripStart:1,TripEnd:2,Clearance: epochDays(88).toEpochTime(), Travelled:55}
 	if tr.keep()  {
 		t.Error("keep kept promise that didnt match")
 	}

@@ -5,7 +5,6 @@ import (
 	"sort"
 	"encoding/binary"
 	"bytes"
-	//"fmt"
 )
 
 var EINTERNAL			 = errors.New("Reached internal state that shouldn't be possible")
@@ -19,12 +18,13 @@ var EPROPOSALEXPIRED		 = errors.New("Proposal has expired")
 
 type StackIndex int8
 type Promise struct {
-	TripStart 	EpochTime
-	TripEnd	  	EpochTime
-	Distance	Kilometres
-	Clearance	EpochTime
-	StackIndex	StackIndex
-	CarriedOver	Kilometres
+	TripStart 		EpochTime
+	TripEnd	  		EpochTime
+	Distance		Kilometres
+	Travelled		Kilometres
+	Clearance		EpochTime
+	StackIndex		StackIndex
+	CarriedOver		Kilometres
 }
 
 func (self *Promise) older (p Promise) bool {
@@ -57,7 +57,9 @@ type Proposal struct {
 
 // Propose returns a proposal for a clearance promise date for a Trip with given
 // start and end dates and schedule. The promise is not made at this point
-func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kilometres, now EpochTime, predictor predictor) (*Proposal,error) {
+// "distance" is the distance to backfill and "travelled" is the distance
+// travelled. This are different if a Taxi Overhead is set.
+func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kilometres,travelled Kilometres, now EpochTime, predictor predictor) (*Proposal,error) {
 
 	// Check args
 	if predictor == nil {
@@ -93,7 +95,7 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 		clearance = tripEnd.toEpochDays(false)+1
 		logDebug("predict failed: ",err)
 	}
-	p = Promise{TripStart:tripStart,TripEnd:tripEnd,Distance:distance,Clearance:clearance.toEpochTime()}
+	p = Promise{TripStart:tripStart,TripEnd:tripEnd,Distance:distance,Travelled:travelled,Clearance:clearance.toEpochTime()}
 	
 	// Find index to add promise
 	i := sort.Search(MaxPromises, func(i int) bool { return self.entries[i].older(p)})
@@ -146,14 +148,14 @@ func (self* Promises) keep(tripStart EpochTime, tripEnd EpochTime, distance Kilo
 	// Look from oldest to newest promise looking for first entry where:
 	// 1) Start time given is greater than or equal to entry start time
 	// 2) End time given is less than or equal to entry end time
-	// 3) Distance given is equal to entry distance
+	// 3) Distance given is equal to distance actually travelled
 	it:=self.NewIterator()
 	for it.Next() {
 		p := it.Value()
 		if (tripStart < p.TripStart) {
 			continue
 		}
-		if tripEnd <= p.TripEnd && p.Distance == distance {
+		if tripEnd <= p.TripEnd && p.Travelled == distance {
 			logDebug("keeping",p.TripStart.ToTime(),p.TripEnd.ToTime(),p.Clearance.ToTime())
 			return p,nil
 		} 

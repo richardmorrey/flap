@@ -99,6 +99,28 @@ func TestEngineSubmitFlightsEmpty(t *testing.T) {
 	}
 }
 
+func TestEngineSubmitFlightsTaxiOverhead(t *testing.T) {
+	db:= enginesetup(t)
+	defer engineteardown(db)
+	engine := NewEngine(db,0,"")
+	engine.Administrator.SetParams(FlapParams{TaxiOverhead:100})
+	var flights []Flight
+	flights = append(flights,*createFlight(1,1,2))
+	flights[0].distance = 10
+	passport := NewPassport("987654321","uk")
+	err := engine.SubmitFlights(passport,flights,SecondsInDay,true)
+	if err != nil {
+		t.Error("SubmitFlights failed")
+	}
+	traveller,err := engine.Travellers.GetTraveller(passport) 
+	if err != nil {
+		t.Error("SubmitFlights failed to create traveller")
+	}
+	if traveller.balance != -110 {
+		t.Error("SubmitFlights didnt result in correct balance for traveller",traveller.balance)
+	}
+}
+
 func TestEngineSubmitFlights(t *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
@@ -382,7 +404,7 @@ func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
 	defer engineteardown(db)
 	engine := NewEngine(db,0,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:5,FlightInterval:1,FlightsInTrip:50,TripLength:365,
-				PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:3}
+			PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:3,TaxiOverhead:100}
 	engine.Administrator.SetParams(paramsIn)
 
 	// Get and make a promise for flights
@@ -397,7 +419,7 @@ func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
 	if err != nil {
 		t.Error("Couldnt make promise for testing keep",err)
 	}
-
+	
 	// Submit flights
 	err = engine.SubmitFlights(passport,flights,SecondsInDay,true)
 
