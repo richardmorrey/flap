@@ -235,21 +235,21 @@ func TestUpdateTripsAndBackfillEmpty(t  *testing.T) {
 	db:= enginesetup(t)
 	defer engineteardown(db)
 	engine := NewEngine(db,0,"")
-	ts,d,g,err := engine.UpdateTripsAndBackfill(1)
+	us,err := engine.UpdateTripsAndBackfill(1)
 	if (err == nil) {
 		t.Error("Update accepted now that isnt the start of a day")
 	}
-	ts,d,g,err = engine.UpdateTripsAndBackfill(SecondsInDay)
+	us,err = engine.UpdateTripsAndBackfill(SecondsInDay)
 	if err != nil {
 		t.Error("Update failed with empty Travellers table",err)
 	}
-	if ts != 0 {
+	if us.Travellers != 0 {
 		t.Error("Update returned some travellers for an empty table",err)
 	}
-	if d != 0 {
+	if us.Distance != 0 {
 		t.Error("Update returned some distance for an empty table",err)
 	}
-	if g != 0 {
+	if us.Grounded != 0 {
 		t.Error("Update returned some grounded travllers  for an empty table",err)
 	}
 
@@ -265,7 +265,7 @@ func TestUpdateTripsAndBackfillOne(t  *testing.T) {
 	flights = append(flights,*createFlight(1,SecondsInDay,SecondsInDay+1),*createFlight(1,SecondsInDay*3,SecondsInDay*3+1))
 	passport := NewPassport("987654321","uk")
 	err := engine.SubmitFlights(passport,flights,SecondsInDay,true)
-	ts,d,g,err := engine.UpdateTripsAndBackfill(SecondsInDay*5)
+	us,err := engine.UpdateTripsAndBackfill(SecondsInDay*5)
 	if err != nil {
 		t.Error("Update failed for one Traveller",err)
 	}
@@ -280,14 +280,14 @@ func TestUpdateTripsAndBackfillOne(t  *testing.T) {
 	if engine.totalGrounded != 1 {
 		t.Error("UpdateTripsAndBackfill set wrong value for totalGrounded", engine.totalGrounded)
 	}
-	if ts != 0 {
+	if us.Travellers != 0 {
 		t.Error("Update returned some travellers when no one travelled yesterday",err)
 	}
-	if d !=0 {
+	if us.Distance !=0 {
 		t.Error("Update returned some distance when no one travelled yesterday",err)
 	}
-	if g != engine.totalGrounded {
-		t.Error("Update returned wroung grounded value",g)
+	if us.Grounded != engine.totalGrounded {
+		t.Error("Update returned wroung grounded value",us.Grounded)
 	}
 
 
@@ -317,7 +317,7 @@ func testUpdateTripsThreaded(t *testing.T,threads int) {
 	err = engine.SubmitFlights(passport2,flights2,SecondsInDay,true)
 	passport3 := NewPassport("333333333","uk")
 	err = engine.SubmitFlights(passport3,flights13,SecondsInDay,true)
-	ts,d,g,err := engine.UpdateTripsAndBackfill(SecondsInDay*5)
+	us,err := engine.UpdateTripsAndBackfill(SecondsInDay*5)
 	if err != nil {
 		t.Error("Update failed for three travellers",err)
 	}
@@ -347,16 +347,15 @@ func testUpdateTripsThreaded(t *testing.T,threads int) {
 	if engine.totalGrounded != 2 {
 		t.Error("UpdateTripsAndBackfill set wrong value for totalGrounded", engine.totalGrounded)
 	}
-	if ts != 1 {
-		t.Error("Update returned no travellers when someone travelled yesterday",ts,flights2[1].start)
+	if us.Travellers != 1 {
+		t.Error("Update returned no travellers when someone travelled yesterday",us.Travellers,flights2[1].start)
 	}
-	if d != flights2[1].distance {
-		t.Error("Update returned no distance when someone travelled yesterday",d)
+	if us.Distance != flights2[1].distance {
+		t.Error("Update returned no distance when someone travelled yesterday",us.Distance)
 	}
-	if g != 2 {
-		t.Error("Update returned wrong value for grounded",g)
+	if us.Grounded != 2 {
+		t.Error("Update returned wrong value for grounded",us.Grounded)
 	}
-
 }
 
 func TestUpdateTripsAndBackfillPromises(t  *testing.T) {
@@ -370,7 +369,7 @@ func TestUpdateTripsAndBackfillPromises(t  *testing.T) {
 	flights = append(flights,*createFlight(1,SecondsInDay,SecondsInDay+1),*createFlight(1,SecondsInDay*3,SecondsInDay*3+1))
 	passport := NewPassport("987654321","uk")
 	err := engine.SubmitFlights(passport,flights,SecondsInDay,true)
-	_,_,_,err = engine.UpdateTripsAndBackfill(SecondsInDay*5)
+	_,err = engine.UpdateTripsAndBackfill(SecondsInDay*5)
 	if err != nil {
 		t.Error("Update failed for one Traveller",err)
 	}
@@ -381,7 +380,7 @@ func TestUpdateTripsAndBackfillPromises(t  *testing.T) {
 		t.Error("predictor has more than one point after one call to Update")
 	}
 	pexpected := engine.Administrator.predictor
-	_,_,_,err = engine.UpdateTripsAndBackfill(SecondsInDay*6)
+	_,err = engine.UpdateTripsAndBackfill(SecondsInDay*6)
 	if err != nil {
 		t.Error("Second Update failed with promises activated",err)
 	}
@@ -404,7 +403,7 @@ func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
 	defer engineteardown(db)
 	engine := NewEngine(db,0,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:5,FlightInterval:1,FlightsInTrip:50,TripLength:365,
-			PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:3,TaxiOverhead:100}
+		PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:3,TaxiOverhead:100}
 	engine.Administrator.SetParams(paramsIn)
 
 	// Get and make a promise for flights
@@ -424,7 +423,7 @@ func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
 	err = engine.SubmitFlights(passport,flights,SecondsInDay,true)
 
 	// Carry out Update on date when promise should be enforced
-	_,_,_,err = engine.UpdateTripsAndBackfill(SecondsInDay*4)
+	_,err = engine.UpdateTripsAndBackfill(SecondsInDay*4)
 	if err != nil {
 		t.Error("Update failed when trying to test keep",err)
 	}
@@ -440,7 +439,7 @@ func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
 
 	// Check traveller is backfilled even though they are cleared to fly
 	startbalance := traveller.balance
-	_,_,_,err = engine.UpdateTripsAndBackfill(SecondsInDay*4)
+	_,err = engine.UpdateTripsAndBackfill(SecondsInDay*4)
 	if err != nil {
 		t.Error("Update failed when trying to test keep",err)
 	}
@@ -451,6 +450,89 @@ func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
 	if traveller.balance != startbalance+20 {
 		t.Error("Failed to backfill cleared traveller with negative balance",startbalance,traveller.balance)
 	}
+}
+
+func TestUpdateTripsAndBackfillGap(t  *testing.T) {
+	
+	// Create engine with promises enabled
+	db:= enginesetup(t)
+	defer engineteardown(db)
+	engine := NewEngine(db,0,"")
+	paramsIn := FlapParams{DailyTotal:100, MinGrounded:5,FlightInterval:1,FlightsInTrip:50,TripLength:365,
+			PromisesAlgo:(paLinearBestFit|pamCorrectBalances),PromisesMaxPoints:10,PromisesMaxDays:3}
+	engine.Administrator.SetParams(paramsIn)
+
+	// Get and make a promise for flights
+	var flights []Flight
+	passport := NewPassport("987654321","uk")
+	flights = append(flights,*createFlight(2,SecondsInDay*2,SecondsInDay*2+1),*createFlight(3,SecondsInDay*3,SecondsInDay*3+1))
+	p,err := engine.Propose(passport,flights,0,SecondsInDay)
+	if err != nil {
+		t.Error("Couldnt propose promise for testing keep",err)
+	}
+	err = engine.Make(passport,p)
+	if err != nil {
+		t.Error("Couldnt make promise for testing keep",err)
+	}
+	
+	// Submit flights
+	err = engine.SubmitFlights(passport,flights,SecondsInDay,true)
+
+	// Get start balance
+	traveller,err := engine.Travellers.GetTraveller(passport)
+	sb := traveller.balance
+
+	// Carry out Update on date when promise should be enforced
+	_,err = engine.UpdateTripsAndBackfill(SecondsInDay*4)
+	if err != nil {
+		t.Error("Update failed when trying to test keep",err)
+	}
+
+	// Confirm traveller now has a clearance date
+	traveller,err = engine.Travellers.GetTraveller(passport)
+	if traveller.kept.Clearance != SecondsInDay*4 {
+		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.kept.Clearance)
+	}
+
+	// Check traveller has balance of zero
+	if traveller.balance != 0 {
+		t.Error("Failed to force cleared traveller's balance to zero")
+	}
+
+	// Check KeptBalance has been changed
+	if (engine.promisesCorrection != sb) {
+		t.Error("Failed to update promisesDeficit", engine.promisesCorrection,sb)
+	}
+}
+
+func TestPromisesCorrectBalances(t *testing.T) {
+	
+	db:= enginesetup(t)
+	defer engineteardown(db)
+	engine := NewEngine(db,0,"")
+	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
+	PromisesAlgo:paLinearBestFit,PromisesMaxPoints:100}
+	engine.Administrator.SetParams(paramsIn)
+	engine.promisesCorrection = -25
+	us,err := engine.UpdateTripsAndBackfill(SecondsInDay*4)
+	if err != nil {
+		t.Error("Update failed when testing promises correction",err)
+	}
+	if us.Share != 100 {
+		t.Error("Miscalculated share when not correcting promises",us.Share)
+	}
+
+	paramsIn.PromisesAlgo = paLinearBestFit | pamCorrectBalances
+	engine.Administrator.SetParams(paramsIn)
+	engine.promisesCorrection = -25
+	us,err = engine.UpdateTripsAndBackfill(SecondsInDay*4)
+	if err != nil {
+		t.Error("Update failed when testing promises correction",err)
+	}
+	if us.Share != 75 {
+		t.Error("Miscalculated share when correcting promises",us.Share)
+	}
+
 }
 
 func TestProposePromisesActive(t *testing.T) {

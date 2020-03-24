@@ -11,12 +11,13 @@ import (
 
 var EPROMISESNOTENABLED = errors.New("Promises not enabled")
 var ETRIPTOOFARAHEAD = errors.New("The Trip is too far ahead")
-type Days 		int64
-type PromisesAlgo	uint8
-
+type Days 			int64
+type PromisesAlgo		uint8
 const (
-	paNone PromisesAlgo  = iota
-	paLinearBestFit
+	paNone PromisesAlgo = 0x00  
+	paLinearBestFit PromisesAlgo = 0x01
+	pamCorrectBalances PromisesAlgo = 0x10
+	paMask PromisesAlgo = 0x15
 )
 
 type FlapParams struct
@@ -125,7 +126,7 @@ func (self *Administrator) SetParams(params FlapParams) error {
 
 // createPredictor creates predictor of the configured type
 func (self* Administrator) createPredictor(load bool) {
-	switch self.params.PromisesAlgo { 
+	switch self.params.PromisesAlgo & paMask { 
 		case paLinearBestFit:
 			self.predictor,_ = newBestFit(self.params.PromisesMaxPoints)
 	}
@@ -151,6 +152,7 @@ type Engine struct
 	Travellers		*Travellers
 	Airports		*Airports
 	totalGrounded		uint64
+	promisesCorrection		Kilometres
 }
 
 // NewEngine creates an instance of an Engine object, which can be used
@@ -236,31 +238,35 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 // Note it counts and stores the total number of grounded travellers over the course of the iteration to use
 // for calculation of the backfill share for the next invocation.
 // It must be invoked once a day with a datetime that is the start of that UTC day.
-func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uint64,error) {
+func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,error) {
 	
 	// Check we are at start of day
+	var ut UpdateBackfillStats
 	if now % SecondsInDay != 0 {
-		return 0,0,0,EINVALIDARGUMENT
+		return ut,EINVALIDARGUMENT
 	}
 
 	// Calculate backfill share
-	var share Kilometres
 	backfillers := 	Kilometres(math.Max(float64(self.Administrator.params.MinGrounded),float64(self.totalGrounded)))
 	if backfillers > 0 {
-		share = self.Administrator.params.DailyTotal / backfillers
+		if self.Administrator.params.PromisesAlgo & pamCorrectBalances > 0 {
+			ut.Share = (self.Administrator.params.DailyTotal+self.promisesCorrection) / backfillers
+		} else {
+			ut.Share = self.Administrator.params.DailyTotal / backfillers
+		}
 
 		// Add calculated share to predictor algorithm
 		if self.Administrator.validPredictor() {
-			self.Administrator.predictor.add(now.toEpochDays(false),share)
+			self.Administrator.predictor.add(now.toEpochDays(false),ut.Share)
 			self.Administrator.predictor.put(self.Administrator.table)
-			logInfo("Added predictior data point:",now.toEpochDays(false),share)
+			logInfo("Added predictior data point:",now.toEpochDays(false),ut.Share)
 		}
 	}
 
 	// Create snapshot for faster multithreaded reads
 	ss,err := self.Travellers.TakeSnapshot()
 	if err != nil {
-		return 0,0,0,logError(err)
+		return UpdateBackfillStats{},logError(err)
 	}
 	defer ss.Release()
 
@@ -270,43 +276,49 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (uint64,Kilometres,uin
 		threads = 1
 	}
 	logInfo("Backfilling with", threads,"threads")
-	stats := make(chan updateStats, threads)
+	stats := make(chan UpdateBackfillStats, threads)
 	var wg sync.WaitGroup
 	delta := (math.MaxUint8+1)/threads
 	for i := uint(0); i < math.MaxUint8; i+=delta {
 		wg.Add(1)
-		t :=  func(s byte,e byte) {stats <- self.updateSomeTravellers(s,e,share,now,ss);wg.Done()}
+		t :=  func(s byte,e byte) {stats <- self.updateSomeTravellers(s,e,ut.Share,now,ss);wg.Done()}
 		go t(byte(i),byte(i+delta-1))
 	}
 	wg.Wait()
 
 	// Add up the stats
-	var ut updateStats 
 	close(stats)
 	for elem := range stats {
-		ut.grounded += elem.grounded
-		ut.travellers += elem.travellers
-		ut.distance += elem.distance
-		if (elem.err != nil) {
-			ut.err = elem.err
+		ut.Grounded += elem.Grounded
+		ut.Travellers += elem.Travellers
+		ut.Distance += elem.Distance
+		ut.KeptBalance += elem.KeptBalance
+		ut.promisesCorrection += elem.promisesCorrection
+		if (elem.Err != nil) {
+			ut.Err = elem.Err
 		}
 	}
 
 	// Update total grounded and return
-	self.totalGrounded=ut.grounded
-	return ut.travellers,ut.distance,self.totalGrounded,ut.err
+	self.totalGrounded=ut.Grounded
+	self.promisesCorrection= ut.promisesCorrection
+	return ut,ut.Err
 }
 
-type updateStats struct {
-	grounded uint64
-	travellers uint64
-	distance  Kilometres
-	err	error
+type UpdateBackfillStats struct {
+	Grounded 	uint64
+	Travellers 	uint64
+	Distance  	Kilometres
+	KeptBalance     Kilometres
+	KeptTravellers  uint64
+	Share		Kilometres
+	promisesCorrection Kilometres
+	Err		error
 }
 
-func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share Kilometres,now EpochTime, ss *TravellersSnapshot) updateStats {
+func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share Kilometres,now EpochTime, ss *TravellersSnapshot) UpdateBackfillStats {
 
-	var us updateStats
+	var us UpdateBackfillStats
 	var prefix [1]byte
 
 	// Iterate through all keys with a first byte in the given
@@ -314,7 +326,7 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 	logInfo("Backfilling from",prefixStart,"to",prefixEnd)
 	bw,err := self.Travellers.MakeBatch(10000)
 	if err != nil {
-		us.err = logError(err)
+		us.Err = logError(err)
 		return us
 	}
 	defer bw.Release();
@@ -325,33 +337,41 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 		prefix[0]=byte(pc)
 		it,err := ss.NewIterator(prefix[:])
 		if err != nil {
-			us.err=err
+			us.Err=err
 			return us
 		}
-		//fmt.Printf("Iterating over %d\n",prefix)
 		for it.Next() {
 
 			// Retrieve traveller
 			changed:=false
 			traveller := it.Value()
+
 			// Update trip history
 			distanceYesterday,err := traveller.tripHistory.Update(&self.Administrator.params,now) 
 			if err == nil {
 				if distanceYesterday > 0 {
-					us.distance += distanceYesterday
-					us.travellers ++
+					us.Distance += distanceYesterday
+					us.Travellers ++
 				}
+				changed = true
+			}
+
+			// Backfill if not travelling and balance is negative
+			if !traveller.MidTrip() && traveller.balance < 0 {
+				traveller.balance += share
+				us.Grounded++
 				changed = true
 			}
 
 			// Check for a promise to keep
 			kept := traveller.keep()
-			changed = changed || kept
-
-			// Backfill if not travelling and balance is negative
-			if !traveller.MidTrip() && traveller.balance < 0 {
-				traveller.balance += share
-				us.grounded++
+			if kept {
+				if traveller.balance < 0 && (self.Administrator.params.PromisesAlgo & pamCorrectBalances == pamCorrectBalances) {
+					us.promisesCorrection += traveller.balance
+					traveller.balance =0
+				}
+				us.KeptBalance += traveller.balance
+				us.KeptTravellers ++
 				changed = true
 			}
 
@@ -362,9 +382,9 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 		}
 
 		// Release interface
-		us.err = it.Error()
+		us.Err = it.Error()
 		it.Release()
-		if us.err != nil {
+		if us.Err != nil {
 			return us
 		}
 	}

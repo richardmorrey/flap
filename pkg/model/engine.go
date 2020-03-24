@@ -57,6 +57,7 @@ type summaryStats struct {
 	travelled	float64
 	travellers	float64
 	grounded	float64
+	keptBalance	float64
 }
 
 type Engine struct {
@@ -261,14 +262,14 @@ func (self *Engine) Run() error {
 		// deficit.
 		fmt.Printf("\rDay %d: Backfilling       ",i)
 		currentDay += flap.SecondsInDay
-		t,d,g,err :=  fe.UpdateTripsAndBackfill(currentDay)
+		us,err :=  fe.UpdateTripsAndBackfill(currentDay)
 		if err != nil {
 			return logError(err)
 		}
 		
 		// Report daily stats
 		travellerBots.ReportDay(i,self.ModelParams.ReportDayDelta)
-		self.reportDay(i,self.FlapParams.DailyTotal,t,d,g)
+		self.reportDay(i,self.FlapParams.DailyTotal,us)
 		if i % self.ModelParams.ReportDayDelta == 0 {
 			flightPaths= reportFlightPaths(flightPaths,currentDay,self.ModelParams.WorkingFolder) 
 		}
@@ -278,15 +279,15 @@ func (self *Engine) Run() error {
 			
 			// Calculate DT as average across trial days if specified, defaulting to minimum
 			if self.ModelParams.DTAlgo=="average" {
-				self.FlapParams.DailyTotal += flap.Kilometres(float64(d)/float64(self.ModelParams.TrialDays))
+				self.FlapParams.DailyTotal += flap.Kilometres(float64(us.Distance)/float64(self.ModelParams.TrialDays))
 			} else {
-				self.FlapParams.DailyTotal=max(self.FlapParams.DailyTotal,d)
+				self.FlapParams.DailyTotal=max(self.FlapParams.DailyTotal,us.Distance)
 			}
 			totalDayOne = float64(self.FlapParams.DailyTotal)
 
 			// Set MinGrounded, used by flap to ensure initial backfill share
 			// is not too large, to average number of travellers per day over the trial period
-			travellersTotal += float64(t)
+			travellersTotal += float64(us.Travellers)
 			self.FlapParams.MinGrounded = uint64(math.Ceil(travellersTotal/float64(i)))
 		} 
 
@@ -384,13 +385,14 @@ func (self *Engine) promisesAsJSON(t *flap.Traveller) string {
 
 // reportDay reports daily total set for the day as well as total distance
 // travelled and total travellers travelling
-func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, t uint64,d flap.Kilometres,g uint64) {
+func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, us flap.UpdateBackfillStats) {
 	
 	// Update stats
-	self.stats.dailyTotal += float64(dt)/float64(self.ModelParams.ReportDayDelta)
-	self.stats.travellers += float64(t)/float64(self.ModelParams.ReportDayDelta)
-	self.stats.travelled += float64(d)/float64(self.ModelParams.ReportDayDelta)
-	self.stats.grounded += float64(g)/float64(self.ModelParams.ReportDayDelta) 
+	self.stats.dailyTotal  += float64(dt)/float64(self.ModelParams.ReportDayDelta)
+	self.stats.travellers  += float64(us.Travellers)/float64(self.ModelParams.ReportDayDelta)
+	self.stats.travelled   += float64(us.Distance)/float64(self.ModelParams.ReportDayDelta)
+	self.stats.grounded    += float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta) 
+	self.stats.keptBalance += float64(us.KeptBalance)/float64(us.KeptTravellers)/float64(self.ModelParams.ReportDayDelta)
 
 	// Output line if needed
 	if day % self.ModelParams.ReportDayDelta == 0 {
@@ -400,7 +402,7 @@ func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, t uint64,d flap
 			fn := filepath.Join(self.ModelParams.WorkingFolder,"summary.csv")
 			self.fh,_ = os.Create(fn)
 			if self.fh != nil {
-				self.fh.WriteString("Day,DailyTotal,Travelled,Travellers,Grounded\n")
+				self.fh.WriteString("Day,DailyTotal,Travelled,Travellers,Grounded,KeptBalance\n")
 			}
 		}
 
@@ -409,14 +411,14 @@ func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, t uint64,d flap
 			dt =0 
 		}
 		if self.fh != nil {
-			line := fmt.Sprintf("%d,%d,%d,%d,%d\n",day,
+			line := fmt.Sprintf("%d,%d,%d,%d,%d,%d\n",day,
 				flap.Kilometres(self.stats.dailyTotal),flap.Kilometres(self.stats.travelled),
-				uint64(self.stats.travellers),uint64(self.stats.grounded))
+				uint64(self.stats.travellers),uint64(self.stats.grounded),uint64(self.stats.keptBalance))
 			self.fh.WriteString(line)
 		}
 
 		// Wipe stats
-		self.stats = summaryStats{0,0,0,0}
+		self.stats = summaryStats{0,0,0,0,0}
 	}
 }
 

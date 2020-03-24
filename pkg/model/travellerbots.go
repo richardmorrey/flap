@@ -185,7 +185,7 @@ func (self *TravellerBots) Build(modelParams ModelParams,flapParams flap.FlapPar
 		if (bot.numInstances > 0) {
 			bot.countryStep= float64(topWeight)/float64(bot.numInstances)
 		}
-		switch(flapParams.PromisesAlgo) {
+		switch(flapParams.PromisesAlgo &^ 0x15 ) {
 			case 1:
 				bot.planner = new(promisesPlanner)
 			default:
