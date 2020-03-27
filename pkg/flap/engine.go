@@ -7,6 +7,7 @@ import (
 	"math"
 	"errors"
 	"sync"
+	//"fmt"
 )
 
 var EPROMISESNOTENABLED = errors.New("Promises not enabled")
@@ -17,7 +18,7 @@ const (
 	paNone PromisesAlgo = 0x00  
 	paLinearBestFit PromisesAlgo = 0x01
 	pamCorrectBalances PromisesAlgo = 0x10
-	paMask PromisesAlgo = 0x15
+	paMask PromisesAlgo = 0x0f
 )
 
 type FlapParams struct
@@ -249,7 +250,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 	// Calculate backfill share
 	backfillers := 	Kilometres(math.Max(float64(self.Administrator.params.MinGrounded),float64(self.totalGrounded)))
 	if backfillers > 0 {
-		if self.Administrator.params.PromisesAlgo & pamCorrectBalances > 0 {
+		if self.Administrator.params.PromisesAlgo & pamCorrectBalances == pamCorrectBalances {
 			ut.Share = (self.Administrator.params.DailyTotal+self.promisesCorrection) / backfillers
 		} else {
 			ut.Share = self.Administrator.params.DailyTotal / backfillers
@@ -293,6 +294,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 		ut.Travellers += elem.Travellers
 		ut.Distance += elem.Distance
 		ut.KeptBalance += elem.KeptBalance
+		ut.KeptTravellers += elem.KeptTravellers
 		ut.promisesCorrection += elem.promisesCorrection
 		if (elem.Err != nil) {
 			ut.Err = elem.Err
@@ -371,7 +373,7 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 					traveller.balance =0
 				}
 				us.KeptBalance += traveller.balance
-				us.KeptTravellers ++
+				us.KeptTravellers++
 				changed = true
 			}
 
