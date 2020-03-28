@@ -40,7 +40,6 @@ func newYearProbs(bs *BotSpec) (*yearProbs,error) {
 		for yr := time.Date(2020, time.January, 1, 1, 0, 0, 0, time.UTC);yr.Year()==2020; yr=yr.Add(time.Hour*24) {
 			yp.days[yr.YearDay()-1]=(Probability(bs.MonthWeights[yr.Month()-1])/yearWeight)*bs.FlyProbability*366
 		}
-		logInfo("Set daily probabilities:",yp.days)
 		return yp,nil
 	}
 

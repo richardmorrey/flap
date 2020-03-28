@@ -233,7 +233,7 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 
 	// Iterate through each bot in each band
 	for i:=bandIndex(0); i < bandIndex(len(self.bots)); i++ {
-		logInfo("Started planning  band",i,"start",offset,"step",threads)
+		logDebug("Started planning  band ",i," start ",offset," step ",threads)
 		planner := self.bots[i].planner.clone()
 		for j:=botIndex(offset); j < self.bots[i].numInstances; j+=botIndex(threads) {
 
@@ -278,7 +278,7 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 				}
 			}
 		}
-		logInfo("Finished planning  band",i,"start",offset,"step",threads)
+		logDebug("Finished planning  band ",i," start ",offset," step ",threads)
 	}
 	return nil
 } 

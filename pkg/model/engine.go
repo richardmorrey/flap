@@ -18,7 +18,7 @@ import (
 var EFAILEDTOCREATECOUNTRIESAIRPORTSROUTES = errors.New("Failed to create Countries-Airports-Routes")
 var EFAILEDTOCREATETRAVELLERBOTS = errors.New("Failed to create traveller bots")
 var EMODELNOTBUILT = errors.New("Failed to find model to load")
-var ESTARTDAYNOTWHOLEDAYS = errors.New("Start day must be EpochTime representing start of UTC day")
+var EINVALIDSTARTDAY = errors.New("Invalid start day")
 var ENOSUCHTRAVELLER = errors.New("No such traveller")
 
 type Probability float64
@@ -38,7 +38,7 @@ type ModelParams struct {
 	TotalTravellers		uint64
 	BotSpecs		[]BotSpec
 	TripLengths		[]flap.Days
-	StartDay		flap.EpochTime
+	StartDay		time.Time
 	DailyTotalFactor	float64
 	DailyTotalDelta		float64
 	ReportDayDelta		flap.Days
@@ -186,8 +186,9 @@ func (self* Engine) minmaxTripLength() (flap.Days,flap.Days) {
 func (self *Engine) Run() error {
 
 	// Validate model params
-	if self.ModelParams.StartDay % flap.SecondsInDay != 0 {
-		return ESTARTDAYNOTWHOLEDAYS
+	startDay := flap.EpochTime(self.ModelParams.StartDay.Unix())
+	if startDay % flap.SecondsInDay != 0 || startDay == 0 {
+		return EINVALIDSTARTDAY
 	}
 
 	// Load country-airports-routes model
@@ -237,14 +238,14 @@ func (self *Engine) Run() error {
 
 	// Model each day as configured, but run for "planDays" first to make
 	// sure journey planner is pre-loaded with data for each of its days.
-	currentDay := self.ModelParams.StartDay
+	currentDay := startDay
 	flightPaths := newFlightPaths(currentDay)
 	var totalDayOne float64
 	var travellersTotal float64
 	for i:=flap.Days(-planDays); i <= self.ModelParams.DaysToRun; i++ {
 		
 		// Plan flights for all travellers
-		logInfo("DAY", currentDay/flap.SecondsInDay, currentDay.ToTime())
+		logInfo("DAY ", i ," ", currentDay.ToTime())
 		fmt.Printf("\rDay %d: Planning Flights",i)
 		err = travellerBots.planTrips(cars,jp,fe,currentDay,self.ModelParams.Deterministic,self.ModelParams.Threads)
 		if err != nil {

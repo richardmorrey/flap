@@ -141,16 +141,15 @@ func (self *promisesPlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now 
 	}
 
 	// Attempt to choose start day.
-	logInfo("choosing weight",self.chosenWeight)
 	ts,err := self.find(self.chosenWeight)
 	if err != nil {
 		return -1, logError(err)
 	}
 
-	// If the top weight (indicated we are not plannign) has
+	// If the top weight (indicated we are not planning) has
 	// been chosen then return
 	if (ts == NOTPLANNING) {
-		logDebug("not planning after all")
+		logDebug("Not planning after all")
 		return -1,ENOTPLANNINGTODAY
 	} 
 
