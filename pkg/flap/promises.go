@@ -44,6 +44,14 @@ func (self *Promise) To(buff *bytes.Buffer) error {
 func (self *Promise) From(buff *bytes.Buffer) error {
 	return binary.Read(buff,binary.LittleEndian,self)
 }
+
+// Stacked returns true if Promises is stacked i.e.
+// has a clearance date pushed earlier to accomodate 
+// the next Trip
+func (self *Promise) stacked() bool {
+	return self.StackIndex != 0
+}
+
 const MaxPromises=10
 
 type Promises struct {

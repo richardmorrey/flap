@@ -21,8 +21,7 @@ const (
 	paMask PromisesAlgo = 0x0f
 )
 
-type FlapParams struct
-{
+type FlapParams struct {
 	TripLength		Days
 	FlightsInTrip		uint64
 	FlightInterval		Days
@@ -220,10 +219,18 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 	
 	// Add flights to traveller's flight history
 	for _,flight := range flights {
-		err := t.submitFlight(&flight,now,self.Administrator.params.TaxiOverhead,debit)
+
+		// Update traveller with the new flight
+		sb,err := t.submitFlight(&flight,now,self.Administrator.params.TaxiOverhead,debit)
 		if err != nil {
 			return err
+		}
 
+		// Apply any configured balance adjustment
+		if (self.Administrator.params.PromisesAlgo & pamCorrectBalances == pamCorrectBalances) &&
+				   (sb < 0) {
+			self.promisesCorrection += sb 
+			t.balance =0
 		}
 	}
 
@@ -295,7 +302,6 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 		ut.Distance += elem.Distance
 		ut.KeptBalance += elem.KeptBalance
 		ut.KeptTravellers += elem.KeptTravellers
-		ut.promisesCorrection += elem.promisesCorrection
 		if (elem.Err != nil) {
 			ut.Err = elem.Err
 		}
@@ -303,7 +309,6 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 
 	// Update total grounded and return
 	self.totalGrounded=ut.Grounded
-	self.promisesCorrection= ut.promisesCorrection
 	return ut,ut.Err
 }
 
@@ -314,7 +319,6 @@ type UpdateBackfillStats struct {
 	KeptBalance     Kilometres
 	KeptTravellers  uint64
 	Share		Kilometres
-	promisesCorrection Kilometres
 	Err		error
 }
 
@@ -368,10 +372,6 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 			// Check for a promise to keep
 			kept := traveller.keep()
 			if kept {
-				if traveller.balance < 0 && (self.Administrator.params.PromisesAlgo & pamCorrectBalances == pamCorrectBalances) {
-					us.promisesCorrection += traveller.balance
-					traveller.balance =0
-				}
 				us.KeptBalance += traveller.balance
 				us.KeptTravellers++
 				changed = true
