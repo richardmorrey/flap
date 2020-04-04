@@ -395,9 +395,6 @@ func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, us flap.UpdateB
 	self.stats.travelled   += float64(us.Distance)/float64(self.ModelParams.ReportDayDelta)
 	self.stats.grounded    += float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta) 
 	self.stats.share       += float64(us.Share)/float64(self.ModelParams.ReportDayDelta)
-	if (us.KeptTravellers > 0 ) {
-		self.stats.keptBalance += float64(us.KeptBalance)/float64(us.KeptTravellers)/float64(self.ModelParams.ReportDayDelta)
-	}
 
 	// Output line if needed
 	if day % self.ModelParams.ReportDayDelta == 0 {
@@ -413,9 +410,9 @@ func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, us flap.UpdateB
 
 		// Write line
 		if self.fh != nil {
-			line := fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d\n",day,
+			line := fmt.Sprintf("%d,%d,%d,%d,%d,%d\n",day,
 				flap.Kilometres(self.stats.dailyTotal),flap.Kilometres(self.stats.travelled),
-				uint64(self.stats.travellers),uint64(self.stats.grounded),int64(self.stats.keptBalance),int64(self.stats.share))
+				uint64(self.stats.travellers),uint64(self.stats.grounded),int64(self.stats.share))
 			self.fh.WriteString(line)
 		}
 

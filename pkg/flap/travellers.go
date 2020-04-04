@@ -35,8 +35,7 @@ type passportKey [20]byte
 
 type keptPromiseDetails struct {
 	promise		Promise
-	targetBalance	Kilometres
-	clearedError	Days
+	balanceAtTripStart	Kilometres
 }
 
 func (self *keptPromiseDetails) To(buff *bytes.Buffer) error {
@@ -44,11 +43,7 @@ func (self *keptPromiseDetails) To(buff *bytes.Buffer) error {
 	if err != nil {
 		return logError(err)
 	}
-	err = binary.Write(buff,binary.LittleEndian,&(self.targetBalance))
-	if err != nil {
-		return logError(err)
-	}
-	return binary.Write(buff,binary.LittleEndian,&(self.clearedError))
+	return binary.Write(buff,binary.LittleEndian,&(self.balanceAtTripStart))
 }
 
 func (self *keptPromiseDetails) From(buff *bytes.Buffer) error {	
@@ -56,11 +51,7 @@ func (self *keptPromiseDetails) From(buff *bytes.Buffer) error {
 	if err != nil {
 		return logError(err)
 	}
-	err = binary.Read(buff,binary.LittleEndian,&(self.targetBalance))
-	if err != nil {
-		return logError(err)
-	}
-	return binary.Read(buff,binary.LittleEndian,&(self.clearedError))
+	return binary.Read(buff,binary.LittleEndian,&(self.balanceAtTripStart))
 }
 
 type Traveller struct {
@@ -136,29 +127,31 @@ func (self *Traveller) AsKML(a *Airports) string {
 func (self *Traveller) submitFlight(flight *Flight,now EpochTime, taxiOH Kilometres, debit bool) (Kilometres,error) {
 
 	//  Make sure we are cleared to travel
-	var sb Kilometres
 	if !self.Cleared(now) {
 		logDebug("balance:",self.balance,"cleared:",self.kept.promise.Clearance.ToTime())
-		return sb,EGROUNDED
+		return 0,EGROUNDED
+	}
+
+	// Record balance at the start of a new trip if clearance is not as a result
+	// of a stacked promises
+	if (!self.MidTrip() && !self.kept.promise.stacked()) {
+		self.kept.balanceAtTripStart = self.balance
 	}
 
 	// Add flight to history
 	err := self.tripHistory.AddFlight(flight)
 	if err != nil {
-		return sb,err
+		return self.kept.balanceAtTripStart,err
 	}
 
-	// Update balance
-	if  !self.kept.promise.stacked() {
-		sb = self.balance
-	}
+	// Debit flight distance and any taxi overhead from balance
 	if debit {
 		self.balance -= (flight.distance + taxiOH)
 	}
 
 	// Make sure clearance promise only gets applied once
 	self.kept = keptPromiseDetails{}
-	return sb,nil
+	return self.kept.balanceAtTripStart,nil
 }
 
 // generateKey generates a unique key based on the contents of a

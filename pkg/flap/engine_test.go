@@ -450,6 +450,10 @@ func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
 	if traveller.balance != startbalance+20 {
 		t.Error("Failed to backfill cleared traveller with negative balance",startbalance,traveller.balance)
 	}
+	if traveller.kept.promise.Clearance != SecondsInDay*4 {
+		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.kept.promise.Clearance)
+	}
+
 }
 
 func TestUpdateTripsAndBackfillGap(t  *testing.T) {
@@ -459,7 +463,7 @@ func TestUpdateTripsAndBackfillGap(t  *testing.T) {
 	defer engineteardown(db)
 	engine := NewEngine(db,0,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:5,FlightInterval:1,FlightsInTrip:50,TripLength:365,
-			PromisesAlgo:(paLinearBestFit|pamCorrectBalances),PromisesMaxPoints:10,PromisesMaxDays:3}
+		PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:3}
 	engine.Administrator.SetParams(paramsIn)
 
 	// Get and make a promise for flights
@@ -488,11 +492,6 @@ func TestUpdateTripsAndBackfillGap(t  *testing.T) {
 	traveller,err := engine.Travellers.GetTraveller(passport)
 	if traveller.kept.promise.Clearance != SecondsInDay*4 {
 		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.kept.promise.Clearance)
-	}
-
-	// Check traveller has balance of zero
-	if traveller.balance != 0 {
-		t.Error("Failed to force cleared traveller's balance to zero")
 	}
 }
 

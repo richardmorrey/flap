@@ -241,15 +241,15 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 	for _,flight := range flights {
 
 		// Update traveller with the new flight
-		sb,err := t.submitFlight(&flight,now,self.Administrator.params.TaxiOverhead,debit)
+		bac,err := t.submitFlight(&flight,now,self.Administrator.params.TaxiOverhead,debit)
 		if err != nil {
 			return err
 		}
 
 		// Apply any configured balance adjustment
 		if (self.Administrator.params.PromisesAlgo & pamCorrectBalances == pamCorrectBalances) &&
-				   (sb < 0) {
-			self.state.changePromisesCorrection(sb) 
+				   (bac < 0) {
+			self.state.changePromisesCorrection(bac) 
 			t.balance =0
 		}
 	}
@@ -269,7 +269,7 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,error) {
 	
 	// Check we are at start of day
-	var ut UpdateBackfillStats
+	ut := *NewUpdateBackfillStats()
 	if now % SecondsInDay != 0 {
 		return ut,EINVALIDARGUMENT
 	}
@@ -278,6 +278,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 	backfillers := 	Kilometres(math.Max(float64(self.Administrator.params.MinGrounded),float64(self.state.totalGrounded)))
 	if backfillers > 0 {
 		if self.Administrator.params.PromisesAlgo & pamCorrectBalances == pamCorrectBalances {
+			logDebug("DailyTotal=",self.Administrator.params.DailyTotal,"PromisesCorrection=",self.state.getPromisesCorrection())
 			ut.Share = (self.Administrator.params.DailyTotal+self.state.getPromisesCorrection()) / backfillers
 		} else {
 			ut.Share = self.Administrator.params.DailyTotal / backfillers
@@ -321,8 +322,8 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 		ut.Grounded += elem.Grounded
 		ut.Travellers += elem.Travellers
 		ut.Distance += elem.Distance
-		ut.KeptBalance += elem.KeptBalance
-		ut.KeptTravellers += elem.KeptTravellers
+		ut.ClearedDistanceDeltas = append(ut.ClearedDistanceDeltas,elem.ClearedDistanceDeltas...)
+		ut.ClearedDaysDeltas = append(ut.ClearedDaysDeltas,elem.ClearedDaysDeltas...)
 		if (elem.Err != nil) {
 			ut.Err = elem.Err
 		}
@@ -334,18 +335,25 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 }
 
 type UpdateBackfillStats struct {
-	Grounded 	uint64
-	Travellers 	uint64
-	Distance  	Kilometres
-	KeptBalance     Kilometres
-	KeptTravellers  uint64
-	Share		Kilometres
-	Err		error
+	Grounded 		uint64
+	Travellers 		uint64
+	Distance  		Kilometres
+	Share			Kilometres
+	ClearedDistanceDeltas	[]Kilometres
+	ClearedDaysDeltas	[]Days
+	Err			error
+}
+
+func NewUpdateBackfillStats() *UpdateBackfillStats {
+	ubs := new(UpdateBackfillStats)
+	ubs.ClearedDistanceDeltas = make([]Kilometres,0,1000)
+	ubs.ClearedDaysDeltas = make([]Days,0,1000)
+	return ubs
 }
 
 func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share Kilometres,now EpochTime, ss *TravellersSnapshot) UpdateBackfillStats {
 
-	var us UpdateBackfillStats
+	us := *NewUpdateBackfillStats()
 	var prefix [1]byte
 
 	// Iterate through all keys with a first byte in the given
@@ -382,6 +390,18 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 				}
 				changed = true
 			}
+			
+			// Report any clearance deltas if appropriate
+			if (traveller.kept.promise.Clearance > 0 ) {
+				nowDays := Days(now.toEpochDays(false))
+				clearDays := Days(traveller.kept.promise.Clearance.toEpochDays(false))
+				if (nowDays == clearDays) {
+					us.ClearedDistanceDeltas = append(us.ClearedDistanceDeltas,traveller.balance-traveller.kept.balanceAtTripStart)
+				}
+				if (traveller.kept.balanceAtTripStart - traveller.balance <= share) {
+					us.ClearedDaysDeltas = append(us.ClearedDaysDeltas,nowDays-clearDays)
+				}
+			}
 
 			// Backfill if not travelling and balance is negative
 			if !traveller.MidTrip() && traveller.balance < 0 {
@@ -393,8 +413,6 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 			// Check for a promise to keep
 			kept := traveller.keep()
 			if kept {
-				us.KeptBalance += traveller.balance
-				us.KeptTravellers++
 				changed = true
 			}
 
@@ -402,6 +420,7 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 			if changed {
 				bw.Put(traveller)
 			}
+
 		}
 
 		// Release interface
