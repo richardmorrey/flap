@@ -146,13 +146,33 @@ func dropAdministrator(database db.Database) error {
 	return database.DropTable(adminTableName)
 }
 
+type engineState struct {
+	mux sync.Mutex
+	promisesCorrection Kilometres
+	totalGrounded      uint64
+}
+func (self *engineState) getPromisesCorrection() Kilometres {
+	self.mux.Lock()
+	defer self.mux.Unlock()
+	return self.promisesCorrection
+}
+func (self *engineState) setPromisesCorrection(pc Kilometres) {
+	self.mux.Lock()
+	defer self.mux.Unlock()
+	self.promisesCorrection = pc
+}
+func (self *engineState) changePromisesCorrection(delta Kilometres) {
+	self.mux.Lock()
+	defer self.mux.Unlock()
+	self.promisesCorrection += delta
+}
+
 type Engine struct
 {
 	Administrator 		*Administrator
 	Travellers		*Travellers
 	Airports		*Airports
-	totalGrounded		uint64
-	promisesCorrection		Kilometres
+	state			engineState
 }
 
 // NewEngine creates an instance of an Engine object, which can be used
@@ -229,7 +249,7 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 		// Apply any configured balance adjustment
 		if (self.Administrator.params.PromisesAlgo & pamCorrectBalances == pamCorrectBalances) &&
 				   (sb < 0) {
-			self.promisesCorrection += sb 
+			self.state.changePromisesCorrection(sb) 
 			t.balance =0
 		}
 	}
@@ -255,10 +275,10 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 	}
 
 	// Calculate backfill share
-	backfillers := 	Kilometres(math.Max(float64(self.Administrator.params.MinGrounded),float64(self.totalGrounded)))
+	backfillers := 	Kilometres(math.Max(float64(self.Administrator.params.MinGrounded),float64(self.state.totalGrounded)))
 	if backfillers > 0 {
 		if self.Administrator.params.PromisesAlgo & pamCorrectBalances == pamCorrectBalances {
-			ut.Share = (self.Administrator.params.DailyTotal+self.promisesCorrection) / backfillers
+			ut.Share = (self.Administrator.params.DailyTotal+self.state.getPromisesCorrection()) / backfillers
 		} else {
 			ut.Share = self.Administrator.params.DailyTotal / backfillers
 		}
@@ -270,6 +290,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 			logInfo("Added predictior data point:",now.toEpochDays(false),ut.Share)
 		}
 	}
+	self.state.setPromisesCorrection(0)
 
 	// Create snapshot for faster multithreaded reads
 	ss,err := self.Travellers.TakeSnapshot()
@@ -308,7 +329,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 	}
 
 	// Update total grounded and return
-	self.totalGrounded=ut.Grounded
+	self.state.totalGrounded=ut.Grounded
 	return ut,ut.Err
 }
 

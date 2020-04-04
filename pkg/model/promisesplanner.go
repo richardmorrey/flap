@@ -14,8 +14,10 @@ var ENOTPLANNINGTODAY = errors.New("Not planning today")
 type promisesPlanner struct {
 	simplePlanner
 	Weights
-	totalDays  	flap.Days
-	chosenWeight	weight
+	totalDays  	 flap.Days
+	chosenWeight	 weight
+	planProbability  Probability
+	planDay		 flap.EpochTime
 }
 
 // makes a clone of given planner (not a deep copy)
@@ -105,17 +107,20 @@ func (self* promisesPlanner) prepareWeights(fe *flap.Engine,pp flap.Passport,cur
 // to use when actually planning.
 func (self* promisesPlanner) areWePlanning(fe *flap.Engine,pp flap.Passport,now flap.EpochTime,length flap.Days) bool {
 
-	// Calculate probability of planning today
-	var planProb Probability
-	availableDays := self.totalDays-length
-	lastDay := now + (flap.EpochTime(availableDays)*flap.SecondsInDay)
-	for cd := now; cd <  lastDay; cd+=flap.SecondsInDay {
-		planProb += self.probs.getDayProb(cd)/Probability(availableDays)
+	// Calculate probability of planning today if we need to
+	if self.planDay != now {
+		self.planProbability = 0
+		self.planDay = now
+		availableDays := self.totalDays-length
+		lastDay := now + (flap.EpochTime(availableDays)*flap.SecondsInDay)
+		for cd := now; cd <  lastDay; cd+=flap.SecondsInDay {
+			self.planProbability += self.probs.getDayProb(cd)/Probability(availableDays)
+		}
 	}
 
 	// Roll the dice and store it as a weight if we are planning
 	dice:=Probability(rand.Float64())
-	if dice <= planProb {
+	if dice <= self.planProbability {
 		self.chosenWeight= weight(dice*TENPOWERNINE)
 		return true
 	}

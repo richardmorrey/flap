@@ -277,8 +277,8 @@ func TestUpdateTripsAndBackfillOne(t  *testing.T) {
 	if traveller.balance !=  expectedBalance {
 		t.Error("UpdateTripsAndBackfill didnt backfill correctly", traveller.balance)
 	}
-	if engine.totalGrounded != 1 {
-		t.Error("UpdateTripsAndBackfill set wrong value for totalGrounded", engine.totalGrounded)
+	if engine.state.totalGrounded != 1 {
+		t.Error("UpdateTripsAndBackfill set wrong value for totalGrounded", engine.state.totalGrounded)
 	}
 	if us.Travellers != 0 {
 		t.Error("Update returned some travellers when no one travelled yesterday",err)
@@ -286,7 +286,7 @@ func TestUpdateTripsAndBackfillOne(t  *testing.T) {
 	if us.Distance !=0 {
 		t.Error("Update returned some distance when no one travelled yesterday",err)
 	}
-	if us.Grounded != engine.totalGrounded {
+	if us.Grounded != engine.state.totalGrounded {
 		t.Error("Update returned wroung grounded value",us.Grounded)
 	}
 
@@ -344,8 +344,8 @@ func testUpdateTripsThreaded(t *testing.T,threads int) {
 	if traveller.balance !=  expectedBalance {
 		t.Error("UpdateTripsAndBackfill backfilled traveller 2", traveller.balance)
 	}
-	if engine.totalGrounded != 2 {
-		t.Error("UpdateTripsAndBackfill set wrong value for totalGrounded", engine.totalGrounded)
+	if engine.state.totalGrounded != 2 {
+		t.Error("UpdateTripsAndBackfill set wrong value for totalGrounded", engine.state.totalGrounded)
 	}
 	if us.Travellers != 1 {
 		t.Error("Update returned no travellers when someone travelled yesterday",us.Travellers,flights2[1].start)
@@ -504,7 +504,7 @@ func TestPromisesCorrectBalances(t *testing.T) {
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
 	PromisesAlgo:paLinearBestFit,PromisesMaxPoints:100}
 	engine.Administrator.SetParams(paramsIn)
-	engine.promisesCorrection = -25
+	engine.state.promisesCorrection = -25
 	us,err := engine.UpdateTripsAndBackfill(SecondsInDay*4)
 	if err != nil {
 		t.Error("Update failed when testing promises correction",err)
@@ -515,7 +515,7 @@ func TestPromisesCorrectBalances(t *testing.T) {
 
 	paramsIn.PromisesAlgo = paLinearBestFit | pamCorrectBalances
 	engine.Administrator.SetParams(paramsIn)
-	engine.promisesCorrection = -25
+	engine.state.promisesCorrection = -25
 	us,err = engine.UpdateTripsAndBackfill(SecondsInDay*4)
 	if err != nil {
 		t.Error("Update failed when testing promises correction",err)

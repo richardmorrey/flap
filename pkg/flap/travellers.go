@@ -36,7 +36,7 @@ type passportKey [20]byte
 type keptPromiseDetails struct {
 	promise		Promise
 	targetBalance	Kilometres
-	targetCleared	EpochTime
+	clearedError	Days
 }
 
 func (self *keptPromiseDetails) To(buff *bytes.Buffer) error {
@@ -48,7 +48,7 @@ func (self *keptPromiseDetails) To(buff *bytes.Buffer) error {
 	if err != nil {
 		return logError(err)
 	}
-	return binary.Write(buff,binary.LittleEndian,&(self.targetCleared))
+	return binary.Write(buff,binary.LittleEndian,&(self.clearedError))
 }
 
 func (self *keptPromiseDetails) From(buff *bytes.Buffer) error {	
@@ -60,7 +60,7 @@ func (self *keptPromiseDetails) From(buff *bytes.Buffer) error {
 	if err != nil {
 		return logError(err)
 	}
-	return binary.Read(buff,binary.LittleEndian,&(self.targetCleared))
+	return binary.Read(buff,binary.LittleEndian,&(self.clearedError))
 }
 
 type Traveller struct {

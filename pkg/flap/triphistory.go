@@ -15,6 +15,7 @@ import (
 
 type Kilometres int64
 type EpochTime uint64
+type EpochDelta int64
 type flightType int8
 type tripHistoryIndex int8
 type LatLon struct

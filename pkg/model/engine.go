@@ -415,7 +415,7 @@ func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, us flap.UpdateB
 		if self.fh != nil {
 			line := fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d\n",day,
 				flap.Kilometres(self.stats.dailyTotal),flap.Kilometres(self.stats.travelled),
-				uint64(self.stats.travellers),uint64(self.stats.grounded),int64(self.stats.keptBalance),uint64(self.stats.share))
+				uint64(self.stats.travellers),uint64(self.stats.grounded),int64(self.stats.keptBalance),int64(self.stats.share))
 			self.fh.WriteString(line)
 		}
 
