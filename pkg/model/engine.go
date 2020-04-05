@@ -53,12 +53,30 @@ type plannedFlight struct {
 }
 
 type summaryStats struct {
-	dailyTotal	float64	
-	travelled	float64
-	travellers	float64
-	grounded	float64
-	keptBalance	float64
-	share		float64
+	dailyTotal		float64	
+	travelled		float64
+	travellers		float64
+	grounded		float64
+	share			float64
+	clearedDistanceDeltas	[]flap.Kilometres
+	clearedDaysDeltas	[]flap.Days
+}
+
+// reset resets the summary stats structure after a reporting event, avoiding
+// unnecessary new memory allocations
+func (self *summaryStats) reset() {
+	var ssReset summaryStats
+	if self.clearedDistanceDeltas == nil {
+		ssReset.clearedDistanceDeltas = make([]flap.Kilometres,0,10000)
+	} else {
+		ssReset.clearedDistanceDeltas = self.clearedDistanceDeltas[:0]
+	}
+	if self.clearedDaysDeltas == nil {
+		ssReset.clearedDaysDeltas = make([]flap.Days,0,10000)
+	} else {
+		ssReset.clearedDaysDeltas = self.clearedDaysDeltas[:0]
+	}
+	*self=ssReset
 }
 
 type Engine struct {
@@ -236,6 +254,9 @@ func (self *Engine) Run() error {
 		return logError(err)
 	}
 
+	// Reset stats struct
+	self.stats.reset()
+
 	// Model each day as configured, but run for "planDays" first to make
 	// sure journey planner is pre-loaded with data for each of its days.
 	currentDay := startDay
@@ -395,11 +416,13 @@ func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, us flap.UpdateB
 	self.stats.travelled   += float64(us.Distance)/float64(self.ModelParams.ReportDayDelta)
 	self.stats.grounded    += float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta) 
 	self.stats.share       += float64(us.Share)/float64(self.ModelParams.ReportDayDelta)
+	self.stats.clearedDistanceDeltas = append(self.stats.clearedDistanceDeltas, us.ClearedDistanceDeltas...)
+	self.stats.clearedDaysDeltas = append(self.stats.clearedDaysDeltas, us.ClearedDaysDeltas...)
 
-	// Output line if needed
+	// Output stats if needed ...
 	if day % self.ModelParams.ReportDayDelta == 0 {
 
-		// Open file
+		// Summmary stats title
 		if self.fh == nil{
 			fn := filepath.Join(self.ModelParams.WorkingFolder,"summary.csv")
 			self.fh,_ = os.Create(fn)
@@ -408,7 +431,7 @@ func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, us flap.UpdateB
 			}
 		}
 
-		// Write line
+		// Summary stats line
 		if self.fh != nil {
 			line := fmt.Sprintf("%d,%d,%d,%d,%d,%d\n",day,
 				flap.Kilometres(self.stats.dailyTotal),flap.Kilometres(self.stats.travelled),
@@ -416,9 +439,33 @@ func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, us flap.UpdateB
 			self.fh.WriteString(line)
 		}
 
+		// Clearance Days Deltas (to use as a distribution)
+		fn :=  fmt.Sprintf("cleareddaysdeltas_%d.csv",day)
+		fp := filepath.Join(self.ModelParams.WorkingFolder,fn)
+		fhdays,_ := os.Create(fp)
+		if fhdays != nil {
+			for _,val := range self.stats.clearedDaysDeltas  {
+				line := fmt.Sprintf("%d\n",val)
+				fhdays.WriteString(line)
+			}
+			defer fhdays.Close()
+		}
+
+		// Clearance Distance Deltas (to use as a distribution)
+		fn =  fmt.Sprintf("cleareddistancedeltas_%d.csv",day)
+		fp = filepath.Join(self.ModelParams.WorkingFolder,fn)
+		fhdist,_ := os.Create(fp)
+		if fhdist != nil {
+			for _,val := range self.stats.clearedDistanceDeltas  {
+				line := fmt.Sprintf("%d\n",val)
+				fhdist.WriteString(line)
+			}
+			defer fhdist.Close()
+		}
+
+
 		// Wipe stats
-		self.stats = summaryStats{}
+		self.stats.reset()
 	}
 }
-
 
