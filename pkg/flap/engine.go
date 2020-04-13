@@ -21,15 +21,20 @@ const (
 	paMask PromisesAlgo = 0x0f
 )
 
+type PromisesConfig struct{
+	Algo		PromisesAlgo
+	MaxPoints	uint32
+	MaxDays		Days
+	SmoothWindow	Days
+}
+
 type FlapParams struct {
 	TripLength		Days
 	FlightsInTrip		uint64
 	FlightInterval		Days
 	DailyTotal		Kilometres
 	MinGrounded		uint64
-	PromisesAlgo		PromisesAlgo
-	PromisesMaxPoints	uint32
-	PromisesMaxDays		Days
+	Promises		PromisesConfig
 	TaxiOverhead		Kilometres
 	Threads			byte
 }
@@ -99,7 +104,7 @@ func (self *Administrator) SetParams(params FlapParams) error {
 	if (params.FlightInterval*2 >  params.TripLength) {
 		return EINVALIDFLAPPARAMS
 	}
-	if (params.PromisesAlgo != paNone && params.PromisesMaxPoints <=0) {
+	if (params.Promises.Algo != paNone && params.Promises.MaxPoints <=0) {
 		return EINVALIDFLAPPARAMS
 	}
 	var bits int
@@ -115,9 +120,9 @@ func (self *Administrator) SetParams(params FlapParams) error {
 
 	// Check for promises config change and create new predictor
 	if err == nil {
-		algoOld := self.params.PromisesAlgo
+		algoOld := self.params.Promises.Algo
 		self.params=params
-		if params.PromisesAlgo != algoOld {
+		if params.Promises.Algo != algoOld {
 			self.createPredictor(false)
 		}
 	}
@@ -126,9 +131,9 @@ func (self *Administrator) SetParams(params FlapParams) error {
 
 // createPredictor creates predictor of the configured type
 func (self* Administrator) createPredictor(load bool) {
-	switch self.params.PromisesAlgo & paMask { 
+	switch self.params.Promises.Algo & paMask { 
 		case paLinearBestFit:
-			self.predictor,_ = newBestFit(int(self.params.PromisesMaxPoints))
+			self.predictor,_ = newBestFit(self.params.Promises)
 	}
 	if self.validPredictor() && load {
 		self.predictor.get(self.table)
@@ -247,7 +252,7 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 		}
 
 		// Apply any configured balance adjustment
-		if (self.Administrator.params.PromisesAlgo & pamCorrectBalances == pamCorrectBalances) &&
+		if (self.Administrator.params.Promises.Algo & pamCorrectBalances == pamCorrectBalances) &&
 				   (bac < 0) {
 			self.state.changePromisesCorrection(bac) 
 			t.balance =0
@@ -277,7 +282,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 	// Calculate backfill share
 	backfillers := 	Kilometres(math.Max(float64(self.Administrator.params.MinGrounded),float64(self.state.totalGrounded)))
 	if backfillers > 0 {
-		if self.Administrator.params.PromisesAlgo & pamCorrectBalances == pamCorrectBalances {
+		if self.Administrator.params.Promises.Algo & pamCorrectBalances == pamCorrectBalances {
 			logDebug("DailyTotal=",self.Administrator.params.DailyTotal,"PromisesCorrection=",self.state.getPromisesCorrection())
 			ut.Share = (self.Administrator.params.DailyTotal+self.state.getPromisesCorrection()) / backfillers
 		} else {
@@ -468,7 +473,7 @@ func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTi
 	}
 
 	// Check proposed trip is not too far in the future
-	if ts.toEpochDays(true) - now.toEpochDays(false) > epochDays(self.Administrator.params.PromisesMaxDays) {
+	if ts.toEpochDays(true) - now.toEpochDays(false) > epochDays(self.Administrator.params.Promises.MaxDays) {
 		return nil,ETRIPTOOFARAHEAD
 	}
 

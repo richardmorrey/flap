@@ -42,14 +42,14 @@ type bestFit struct {
 // newBestFit constructs a new bestFit struct initialized with
 // the current epoch time so that predictions can be returned
 // in absolute time
-func newBestFit(maxYs int) (*bestFit,error) {
+func newBestFit(cfg PromisesConfig) (*bestFit,error) {
 
 	// Create object
 	bf := new(bestFit)
 	bf.c = -1 // indicates uninitializated state as line cant have -ve values
 
 	// Initialize smoothing window
-	err := bf.setWindows(maxYs,1)
+	err := bf.setWindows(int(cfg.MaxPoints),int(cfg.SmoothWindow))
 	if err != nil {
 		return nil,logError(err)
 	}

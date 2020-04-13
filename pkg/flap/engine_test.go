@@ -363,7 +363,7 @@ func TestUpdateTripsAndBackfillPromises(t  *testing.T) {
 	defer engineteardown(db)
 	engine := NewEngine(db,0,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:5,FlightInterval:1,FlightsInTrip:50,TripLength:365,
-				PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10}
+		Promises: PromisesConfig{Algo:paLinearBestFit,MaxPoints:10}}
 	engine.Administrator.SetParams(paramsIn)
 	var flights []Flight
 	flights = append(flights,*createFlight(1,SecondsInDay,SecondsInDay+1),*createFlight(1,SecondsInDay*3,SecondsInDay*3+1))
@@ -403,7 +403,7 @@ func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
 	defer engineteardown(db)
 	engine := NewEngine(db,0,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:5,FlightInterval:1,FlightsInTrip:50,TripLength:365,
-		PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:3,TaxiOverhead:100}
+		Promises:PromisesConfig{Algo:paLinearBestFit,MaxPoints:10,MaxDays:3},TaxiOverhead:100}
 	engine.Administrator.SetParams(paramsIn)
 
 	// Get and make a promise for flights
@@ -463,7 +463,7 @@ func TestUpdateTripsAndBackfillGap(t  *testing.T) {
 	defer engineteardown(db)
 	engine := NewEngine(db,0,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:5,FlightInterval:1,FlightsInTrip:50,TripLength:365,
-		PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:3}
+		Promises: PromisesConfig{Algo:paLinearBestFit,MaxPoints:10,MaxDays:3}}
 	engine.Administrator.SetParams(paramsIn)
 
 	// Get and make a promise for flights
@@ -501,7 +501,7 @@ func TestPromisesCorrectBalances(t *testing.T) {
 	defer engineteardown(db)
 	engine := NewEngine(db,0,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
-	PromisesAlgo:paLinearBestFit,PromisesMaxPoints:100}
+		Promises:PromisesConfig{Algo:paLinearBestFit,MaxPoints:100}}
 	engine.Administrator.SetParams(paramsIn)
 	engine.state.promisesCorrection = -25
 	us,err := engine.UpdateTripsAndBackfill(SecondsInDay*4)
@@ -512,7 +512,7 @@ func TestPromisesCorrectBalances(t *testing.T) {
 		t.Error("Miscalculated share when not correcting promises",us.Share)
 	}
 
-	paramsIn.PromisesAlgo = paLinearBestFit | pamCorrectBalances
+	paramsIn.Promises.Algo = paLinearBestFit | pamCorrectBalances
 	engine.Administrator.SetParams(paramsIn)
 	engine.state.promisesCorrection = -25
 	us,err = engine.UpdateTripsAndBackfill(SecondsInDay*4)
@@ -531,7 +531,7 @@ func TestProposePromisesActive(t *testing.T) {
 	defer engineteardown(db)
 	engine := NewEngine(db,0,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
-		PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:100}
+		Promises:PromisesConfig{Algo:paLinearBestFit,MaxPoints:10,MaxDays:100}}
 	engine.Administrator.SetParams(paramsIn)
 	passport := NewPassport("987654321","uk")
 
@@ -570,7 +570,7 @@ func TestProposePromisesTooFarAhead(t *testing.T) {
 	defer engineteardown(db)
 	engine := NewEngine(db,0,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
-		PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:1}
+		Promises:PromisesConfig{Algo:paLinearBestFit,MaxPoints:10,MaxDays:1}}
 	engine.Administrator.SetParams(paramsIn)
 	passport := NewPassport("987654321","uk")
 
@@ -589,7 +589,7 @@ func TestProposePromisesActiveiWithTripEnd(t *testing.T) {
 	defer engineteardown(db)
 	engine := NewEngine(db,0,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
-			PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10,PromisesMaxDays:100}
+		Promises:PromisesConfig{Algo:paLinearBestFit,MaxPoints:10,MaxDays:100}}
 	engine.Administrator.SetParams(paramsIn)
 	passport := NewPassport("987654321","uk")
 
@@ -671,7 +671,7 @@ func TestMake(t *testing.T) {
 	defer engineteardown(db)
 	engine := NewEngine(db,0,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
-						PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10}
+		Promises:PromisesConfig{Algo:paLinearBestFit,MaxPoints:10}}
 	engine.Administrator.SetParams(paramsIn)
 	passport := NewPassport("987654321","uk")
 
@@ -698,7 +698,7 @@ func TestMakeOldProposal(t *testing.T) {
 	defer engineteardown(db)
 	engine := NewEngine(db,0,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
-						PromisesAlgo:paLinearBestFit,PromisesMaxPoints:10}
+		Promises:PromisesConfig{Algo:paLinearBestFit,MaxPoints:10}}
 	engine.Administrator.SetParams(paramsIn)
 	passport := NewPassport("987654321","uk")
 

@@ -33,7 +33,7 @@ func (self *promisesPlanner) clone() botPlanner {
 // build stores the maximum number of days ahead for promises to use
 // when choosing whether and when to choose to fly
 func (self *promisesPlanner) build(bs BotSpec, fp flap.FlapParams) error {
-	self.totalDays = fp.PromisesMaxDays
+	self.totalDays = fp.Promises.MaxDays
 	return self.simplePlanner.build(bs,fp)
 } 
 

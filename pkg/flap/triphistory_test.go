@@ -447,7 +447,7 @@ func TestUpdateTrip2Flights(t *testing.T) {
 func TestUpdateTrip2FlightsWithPromises(t *testing.T) {
 	ts := tripState{journeys:2,reopened:false,start:1}
 	f,_ := NewFlight(Airport{},1,Airport{},2)
-	params := FlapParams{TripLength:50,FlightsInTrip:50,FlightInterval:50,PromisesAlgo:paLinearBestFit}
+	params := FlapParams{TripLength:50,FlightsInTrip:50,FlightInterval:50,Promises:PromisesConfig{Algo:paLinearBestFit}}
 	tsAfter := ts
 	ts.updateTrip(f, SecondsInDay, &params)
 	if  f.et != etFlight {

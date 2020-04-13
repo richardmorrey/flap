@@ -362,7 +362,7 @@ func (self *tripState) updateTrip(f* Flight, now EpochTime, params *FlapParams) 
 		self.start = f.start
 	}
 
-	if self.journeys == 2 && params.PromisesAlgo == paNone  {
+	if self.journeys == 2 && params.Promises.Algo == paNone  {
 		self.endTrip(f,true)
 	}
 

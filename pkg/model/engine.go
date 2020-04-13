@@ -246,8 +246,8 @@ func (self *Engine) Run() error {
 
 	// Create journey planner with enough days
 	_,planDays := self.minmaxTripLength()
-	if self.FlapParams.PromisesAlgo != 0 {
-		planDays += self.FlapParams.PromisesMaxDays
+	if self.FlapParams.Promises.Algo != 0 {
+		planDays += self.FlapParams.Promises.MaxDays
 	} 
 	jp,err := NewJourneyPlanner(planDays)
 	if (err != nil) {

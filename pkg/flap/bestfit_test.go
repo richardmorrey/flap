@@ -7,7 +7,7 @@ import (
 )
 
 func TestEmptyLine(t *testing.T) {
-	bf,_ := newBestFit(10)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:10})
 	err := bf.calculateLine(1)
 	if err != ENOTENOUGHDATAPOINTS {
 		t.Error("Calculated a line with no points")
@@ -15,14 +15,14 @@ func TestEmptyLine(t *testing.T) {
 }
 
 func TestZeroMaxpoints(t *testing.T) {
-	_,err := newBestFit(1)
+	_,err := newBestFit(PromisesConfig{MaxPoints:1})
 	if err != EMAXPOINTSBELOWTWO {
 		t.Error("Allowing a maxpoints value of less than 2")
 	}
 }
 
 func TestMaxpoints(t* testing.T) {
-	bf,_ := newBestFit(2)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:2})
 	bf.add(1,1)
 	bf.add(2,2)
 	bf.add(3,3)
@@ -33,7 +33,7 @@ func TestMaxpoints(t* testing.T) {
 }
 
 func TestOnePointLine(t *testing.T) {
-	bf,_ := newBestFit(10)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:10})
 	bf.add(1,0)
 	err := bf.calculateLine(1)
 	if err != ENOTENOUGHDATAPOINTS {
@@ -42,7 +42,7 @@ func TestOnePointLine(t *testing.T) {
 }
 
 func TestHorzontalLine(t *testing.T) {
-	bf,_ := newBestFit(10)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:10})
 	bf.add(1,10)
 	bf.add(2,10)
 	if bf.m !=0 {
@@ -54,7 +54,7 @@ func TestHorzontalLine(t *testing.T) {
 }
 
 func TestLongHorizontal(t *testing.T) {
-	bf,_ := newBestFit(10)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:10})
 	for x:=1; x<1000;x++ {
 		bf.add(epochDays(x),999)
 	}
@@ -67,7 +67,7 @@ func TestLongHorizontal(t *testing.T) {
 }
 
 func TestAscending(t *testing.T) {
-	bf,_ := newBestFit(1000)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:1000})
 	x := epochDays(1)
 	for y:=Kilometres(37); y<1000;y+=5 {
 		bf.add(x,y)
@@ -82,7 +82,7 @@ func TestAscending(t *testing.T) {
 }
 
 func TestDescending(t *testing.T) {
-	bf,_ := newBestFit(1000)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:1000})
 	x := epochDays(1)
 	for y:=Kilometres(567); y>0;y-=5 {
 		bf.add(x,y)
@@ -110,7 +110,7 @@ func TestWobbly(t *testing.T) {
 	// Create line with following x and y
 	//1,2,3,4,5,6,7,8,9,10
 	//510,440,410,340,310,240,210,140,110,40
-	bf,_ := newBestFit(10)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:10})
 	x := epochDays(1)
 	for y:=Kilometres(500); y>0;y-=50 {
 		if y % 100 ==0 {
@@ -131,7 +131,7 @@ func TestWobbly(t *testing.T) {
 }
 
 func TestPredictFlat(t *testing.T) {
-	bf,_ := newBestFit(10)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:10})
 	bf.m=0
 	bf.c=10
 	clear,err := bf.predict(100,1)
@@ -152,7 +152,7 @@ func TestPredictFlat(t *testing.T) {
 }
 
 func TestBackfilledFlat(t *testing.T) {
-	bf,_ := newBestFit(10)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:10})
 	bf.m=0
 	bf.c=10
 	dist,err := bf.backfilled(1,2)
@@ -180,7 +180,7 @@ func TestBackfilledFlat(t *testing.T) {
 }	
 
 func TestPredictSlope(t *testing.T) {
-	bf,_ := newBestFit(10)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:10})
 	bf.m=-1
 	bf.c=4
 	clear,err := bf.predict(4,1)
@@ -197,7 +197,7 @@ func TestPredictSlope(t *testing.T) {
 }
 
 func TestPredictNoAnswer(t *testing.T) {
-	bf,_ := newBestFit(10)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:10})
 	bf.add(1,2)
 	bf.m=-1
 	bf.c=4
@@ -211,7 +211,7 @@ func TestPredictNoAnswer(t *testing.T) {
 }
 
 func TestBackfilledSlope(t *testing.T) {
-	bf,_ := newBestFit(10)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:10})
 	bf.m=-1
 	bf.c=4
 	d,err := bf.backfilled(1,3)
@@ -232,7 +232,7 @@ func TestBackfilledSlope(t *testing.T) {
 }
 
 func TestPredictLongSlope(t *testing.T) {
-	bf,_ := newBestFit(10)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:10})
 	bf.m=-0.01
 	bf.c=100
 	clear,err := bf.predict(1000,1)
@@ -259,7 +259,7 @@ func TestPredictLongSlope(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
-	bf,_ := newBestFit(1000)
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:1000})
 	x := epochDays(1)
 	for y:=Kilometres(100); y>80;y-=5 {
 		bf.add(x,y)
