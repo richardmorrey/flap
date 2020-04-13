@@ -11,7 +11,6 @@ import (
 var ENOVALIDPREDICTION = errors.New("No valid prediction")
 var ENOTENOUGHDATAPOINTS = errors.New("No data points")
 var EXORIGINZERO = errors.New("Xorigin can't be zero")
-var EMAXPOINTSBELOWTWO = errors.New("maxpoints must be two or more")
 
 type epochDays Days
 func (self epochDays) toEpochTime() EpochTime {
@@ -34,27 +33,26 @@ type predictor interface
 // return to credit using a simple linear best fit against a plot
 // of distance share against day.
 type bestFit struct {
-	ys	  	[]Kilometres
+	smoothYs
 	m		float64
 	c		float64
-	maxpoints	uint32
 	pv		predictVersion
 }
 
 // newBestFit constructs a new bestFit struct initialized with
 // the current epoch time so that predictions can be returned
 // in absolute time
-func newBestFit(maxpoints uint32) (*bestFit,error) {
-
-	// Validate maxpoints
-	if maxpoints < 2 {
-		return nil, EMAXPOINTSBELOWTWO
-	}
+func newBestFit(maxYs int) (*bestFit,error) {
 
 	// Create object
 	bf := new(bestFit)
-	bf.maxpoints=maxpoints
 	bf.c = -1 // indicates uninitializated state as line cant have -ve values
+
+	// Initialize smoothing window
+	err := bf.setWindows(maxYs,1)
+	if err != nil {
+		return nil,logError(err)
+	}
 	return bf,nil
 }
 
@@ -90,10 +88,7 @@ func (self *bestFit) version() predictVersion {
 // be called each day with the distance share credit to each
 // account for backfilling that day.
 func (self *bestFit) add(x epochDays, y Kilometres) {
-	if uint32(len(self.ys)) == self.maxpoints {
-		self.ys= self.ys[1:]
-	}
-	self.ys = append(self.ys,y)
+	self.addY(float64(y))
 	self.calculateLine(x)
 }
 
@@ -116,10 +111,10 @@ func (self *bestFit) calculateLine(xmax epochDays) error {
 	xorigin := xmax - epochDays(len(self.ys)-1) 
 	for x,y := range self.ys {
 		realx:= float64(xorigin)+float64(x)
-		ySum += float64(y)
+		ySum += y
 		xSum += realx
 		xxSum += realx*realx
-		xySum += realx*float64(y)
+		xySum += realx*y
 	}
 	n := float64(len(self.ys))
 
@@ -182,7 +177,7 @@ func (self *bestFit) predict(balance Kilometres,start epochDays) (epochDays,erro
 	if choice == math.MaxFloat64 {
 		l := len(self.ys)
 		if  l >  0 {
-			choice = float64(start) + (float64(balance)/float64(self.ys[l-1]))
+			choice = float64(start) + (float64(balance)/self.ys[l-1])
 		}
 	}
 	
@@ -210,7 +205,7 @@ func (self* bestFit) backfilled(start epochDays,end epochDays) (Kilometres,error
 	d2 := float64(end)
 	if self.calcY(d1) < 0  || self.calcY(d2) <0 {
 		logDebug("using horizontal line")
-		return Kilometres(end-start) * self.ys[len(self.ys)-1],nil
+		return Kilometres(end-start) * Kilometres(self.ys[len(self.ys)-1]),nil
 	}
 
 	// ... otherwise return difference between the integrals

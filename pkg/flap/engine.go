@@ -128,7 +128,7 @@ func (self *Administrator) SetParams(params FlapParams) error {
 func (self* Administrator) createPredictor(load bool) {
 	switch self.params.PromisesAlgo & paMask { 
 		case paLinearBestFit:
-			self.predictor,_ = newBestFit(self.params.PromisesMaxPoints)
+			self.predictor,_ = newBestFit(int(self.params.PromisesMaxPoints))
 	}
 	if self.validPredictor() && load {
 		self.predictor.get(self.table)

@@ -27,7 +27,7 @@ func TestMaxpoints(t* testing.T) {
 	bf.add(2,2)
 	bf.add(3,3)
 
-	if !reflect.DeepEqual(bf.ys,[]Kilometres{2,3}) {
+	if !reflect.DeepEqual(bf.ys,[]float64{2,3}) {
 		t.Error("maxpoints not being enforced",bf.ys)
 	}
 }
