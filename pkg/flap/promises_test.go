@@ -3,7 +3,7 @@ package flap
 import (
 	"testing"
 	"reflect"
-	"github.com/richardmorrey/flap/pkg/db"
+	"bytes"
 )
 
 type backfilledArgs struct {
@@ -43,11 +43,11 @@ func (self *testpredictor) backfilled(d1 epochDays,d2 epochDays) (Kilometres,err
 	return self.backfilledDist,nil
 }
 
-func (self *testpredictor) get(t db.Table) error {
+func (self *testpredictor) To(buff *bytes.Buffer) error {
 	return ENOTIMPLEMENTED
 }
 
-func (self *testpredictor) put(t db.Table) error {
+func (self *testpredictor) From(buff *bytes.Buffer) error {
 	return ENOTIMPLEMENTED
 }
 
@@ -252,8 +252,8 @@ func (self *errpredictor) add(x epochDays, y Kilometres) {}
 func (self *errpredictor) predict(dist Kilometres, start epochDays) (epochDays,error) { return 0, self.err }
 func (self *errpredictor) version() predictVersion { return 0 }
 func (self *errpredictor) backfilled(d1 epochDays,d2 epochDays) (Kilometres,error) { return 0, self.err }
-func (self *errpredictor) get(t db.Table) error { return ENOTIMPLEMENTED }
-func (self *errpredictor) put(t db.Table) error { return ENOTIMPLEMENTED }
+func (self *errpredictor) To(buff *bytes.Buffer) error { return ENOTIMPLEMENTED}
+func (self *errpredictor) From(buff *bytes.Buffer) error { return ENOTIMPLEMENTED }
 
 func TestProposePredNotReady(t *testing.T) {
 	var ps Promises

@@ -22,10 +22,11 @@ const (
 )
 
 type PromisesConfig struct{
-	Algo		PromisesAlgo
-	MaxPoints	uint32
-	MaxDays		Days
-	SmoothWindow	Days
+	Algo		  PromisesAlgo
+	MaxPoints 	  uint32
+	MaxDays		  Days
+	SmoothWindow	  Days
+	Degree  	  uint32
 }
 
 type FlapParams struct {
@@ -59,6 +60,7 @@ type Administrator struct {
 // mangement of Flap parameters - Daily Total, Maximum Flight Interval,
 // and Maximum Trip Duration
 const adminTableName="administrator"
+const predictorRecordKey="predictor"
 func newAdministrator(flapdb db.Database) *Administrator {
 	
 	// Create instance and create/open table 
@@ -136,7 +138,7 @@ func (self* Administrator) createPredictor(load bool) {
 			self.predictor,_ = newBestFit(self.params.Promises)
 	}
 	if self.validPredictor() && load {
-		self.predictor.get(self.table)
+		self.table.Get([]byte(predictorRecordKey), self.predictor)
 	}
 }
 
@@ -292,7 +294,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 		// Add calculated share to predictor algorithm
 		if self.Administrator.validPredictor() {
 			self.Administrator.predictor.add(now.toEpochDays(false),ut.Share)
-			self.Administrator.predictor.put(self.Administrator.table)
+			self.Administrator.table.Put([]byte(predictorRecordKey), self.Administrator.predictor)
 			logInfo("Added predictior data point:",now.toEpochDays(false),ut.Share)
 		}
 	}

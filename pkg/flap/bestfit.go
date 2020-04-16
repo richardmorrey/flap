@@ -17,7 +17,6 @@ func (self epochDays) toEpochTime() EpochTime {
 	return EpochTime(self)*SecondsInDay
 }
 
-const predictorRecordKey="predictor"
 type predictVersion uint64
 type predictor interface
 {
@@ -25,8 +24,7 @@ type predictor interface
 	predict(Kilometres,epochDays) (epochDays,error)
 	version() predictVersion
 	backfilled(epochDays,epochDays) (Kilometres,error)
-	get(db.Table) error
-	put(db.Table) error
+	db.Serialize
 }
 
 // bestFit predicts dates when a specified distance balance would
@@ -66,16 +64,6 @@ func (self *bestFit) To(buff *bytes.Buffer) error {
 func (self *bestFit) From(buff *bytes.Buffer) error {
 	enc := gob.NewEncoder(buff) 
 	return enc.Encode(self)
-}
-
-// get reads state from given table
-func (self *bestFit) get(t db.Table) error {
-	return t.Get([]byte(predictorRecordKey),self)
-}
-
-// put saves state to given table
-func (self *bestFit) put(t db.Table) error {
-	return t.Put([]byte(predictorRecordKey), self)
 }
 
 // version returns number indicating current version of the best fit line.
