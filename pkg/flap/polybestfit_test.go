@@ -2,7 +2,6 @@ package flap
 
 import (
 	"testing"
-	//"math"
 	//"reflect"
 )
 
@@ -39,6 +38,27 @@ func TestPolyHorzontalLine(t *testing.T) {
 		t.Error("Failed to calculate c correctly for horizontal line", p.consts[1])
 	}
 }
+
+func TestPolyDegree2(t *testing.T) {
+	ys := []Kilometres{1, 6, 17, 34, 57, 86, 121, 162, 209, 262, 321}
+	p,_ := newPolyBestFit(PromisesConfig{MaxPoints:11,Degree:2})
+	for _,y := range ys {
+		p.add(9,y)
+	}
+	if len(p.consts) != 3 {
+		t.Error("Not enough points for a 3 degree regression",p.consts)
+	}
+	if to3DecimalPlaces(p.consts[0]) !=1 {
+		t.Error("Calculated incorrect first const for polynomial line", p.consts[0])
+	}
+	if to3DecimalPlaces(p.consts[1]) !=2 {
+		t.Error("Calculated incorrect second const for polynomial line", p.consts[1])
+	}
+	if to3DecimalPlaces(p.consts[2]) !=3 {
+		t.Error("Calculated incorrect third const for polynomial line", p.consts[2])
+	}
+}
+
 /*
 func TestLongHorizontal(t *testing.T) {
 	bf,_ := newPolyBestFit(PromisesConfig{MaxPoints:10,Degree:1})

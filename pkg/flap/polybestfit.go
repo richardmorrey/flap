@@ -37,28 +37,32 @@ func (self* polyBestFit) add(today epochDays,y Kilometres) {
     // Add new y value
     self.addY(float64(y))
 
-    // Build X and Y matrices
-    a := self.Vandermonde(float64(today) - float64(epochDays(len(self.ys)-1)))
-    b := mat.NewDense(len(self.ys), 1, self.ys)
+    if len(self.ys) > self.degree {
 
-    // Calculate constants
-    c := mat.NewDense(self.degree+1, 1, nil)
-    qr := new(mat.QR)
-    qr.Factorize(a)
-    err := qr.SolveTo(c, false, b)
+    	// Build X and Y matrices
+    	a := self.Vandermonde(float64(today) - float64(epochDays(len(self.ys)-1)))
+    	b := mat.NewDense(len(self.ys), 1, self.ys)
 
-    // Extract results
-    self.consts = self.consts[:0]
-    if err == nil {
-    	for j:=0; j < self.degree+1; j++ {
-		self.consts = append(self.consts,c.At(0,j))
-	}
+    	// Calculate constants
+    	c := mat.NewDense(self.degree+1, 1, nil)
+    	qr := new(mat.QR)
+    	qr.Factorize(a)
+    	err := qr.SolveTo(c, false, b)
+
+    	// Extract results
+    	self.consts = self.consts[:0]
+    	if err == nil {
+    		for j:=0; j < self.degree+1; j++ {
+			self.consts = append(self.consts,c.At(j,0))
+		}
+    	}
     }
 }
+
 func (self* polyBestFit) Vandermonde(xorigin float64) *mat.Dense {
 	x := mat.NewDense(len(self.ys), self.degree+1, nil)
-	for i := range self.ys {
-		for j, p := 0, 1.; j <= self.degree; j, p = j+1, p*(self.ys[i]+xorigin) {
+	for i,_ := range self.ys {
+		for j, p := 0, 1.; j <= self.degree; j, p = j+1, p*(float64(i)+xorigin) {
 			x.Set(i, j, p)
 		}
 	}
