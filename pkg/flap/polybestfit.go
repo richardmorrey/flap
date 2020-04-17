@@ -33,18 +33,18 @@ func newPolyBestFit(cfg PromisesConfig) (*polyBestFit,error) {
 // adds a point to the graph and recalculates polynomial best fit
 // using configured degree. Based on https://rosettacode.org/wiki/Polynomial_regression#Go
 func (self* polyBestFit) add(today epochDays,y Kilometres) {
-    
+
     // Add new y value
     self.addY(float64(y))
 
     if len(self.ys) > self.degree {
 
-    	// Build X and Y matrices
-    	a := self.Vandermonde(float64(today) - float64(epochDays(len(self.ys)-1)))
-    	b := mat.NewDense(len(self.ys), 1, self.ys)
+	// Build X and Y matrices
+	a := self.Vandermonde(float64(today) - float64(epochDays(len(self.ys)-1)))
+	b := mat.NewDense(len(self.ys), 1, self.ys)
 
-    	// Calculate constants
-    	c := mat.NewDense(self.degree+1, 1, nil)
+	// Calculate constants
+  	c := mat.NewDense(self.degree+1, 1, nil)
     	qr := new(mat.QR)
     	qr.Factorize(a)
     	err := qr.SolveTo(c, false, b)

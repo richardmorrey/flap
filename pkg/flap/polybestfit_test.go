@@ -15,7 +15,6 @@ func TestPolyZeroMaxpoints(t *testing.T) {
 func TestPolyAddOne(t *testing.T) {
 	p,err := newPolyBestFit(PromisesConfig{MaxPoints:10,Degree:1})
 	p.add(1,10)
-	p.add(2,10)
 	if err != nil {
 		t.Error("Faiing to add the first point,err")
 	}
@@ -31,10 +30,10 @@ func TestPolyHorzontalLine(t *testing.T) {
 	if len(p.consts) != 2 {
 		t.Error("Not enough points for a 1 degree regression",p.consts)
 	}
-	if p.consts[0] !=0 {
+	if to3DecimalPlaces(p.consts[1]) !=0 {
 		t.Error("Calculated non-zero gradient for horizontal line", p.consts[0])
 	}
-	if p.consts[1] != 10 {
+	if to3DecimalPlaces(p.consts[0]) != 10 {
 		t.Error("Failed to calculate c correctly for horizontal line", p.consts[1])
 	}
 }
@@ -43,7 +42,7 @@ func TestPolyDegree2(t *testing.T) {
 	ys := []Kilometres{1, 6, 17, 34, 57, 86, 121, 162, 209, 262, 321}
 	p,_ := newPolyBestFit(PromisesConfig{MaxPoints:11,Degree:2})
 	for _,y := range ys {
-		p.add(9,y)
+		p.add(10,y)
 	}
 	if len(p.consts) != 3 {
 		t.Error("Not enough points for a 3 degree regression",p.consts)
