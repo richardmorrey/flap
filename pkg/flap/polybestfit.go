@@ -4,6 +4,9 @@ import (
 	"encoding/gob"
 	"bytes"
 	"gonum.org/v1/gonum/mat"
+	"math"
+	"reflect"
+	"fmt"
 )
 
 // polyBestFit predicts dates when a specified distance balance would
@@ -44,21 +47,25 @@ func (self* polyBestFit) add(today epochDays,y Kilometres) {
 	b := mat.NewDense(len(self.ys), 1, self.ys)
 
 	// Calculate constants
-  	c := mat.NewDense(self.degree+1, 1, nil)
-    	qr := new(mat.QR)
-    	qr.Factorize(a)
-    	err := qr.SolveTo(c, false, b)
+	c := mat.NewDense(self.degree+1, 1, nil)
+	qr := new(mat.QR)
+	qr.Factorize(a)
+	err := qr.SolveTo(c, false, b)
 
-    	// Extract results
-    	self.consts = self.consts[:0]
-    	if err == nil {
-    		for j:=0; j < self.degree+1; j++ {
-			self.consts = append(self.consts,c.At(j,0))
+	// Extract results
+	newConsts := make([]float64,0,self.degree+1)
+	if err == nil {
+		for j:=0; j < self.degree+1; j++ {
+			newConsts = append(newConsts,c.At(j,0))
 		}
-    	}
+		if !reflect.DeepEqual(newConsts,self.consts) {
+			self.pv++
+			fmt.Printf("old=%#v,new=%#v\n",self.consts,newConsts)
+			self.consts = newConsts
+		}
+	}
     }
 }
-
 func (self* polyBestFit) Vandermonde(xorigin float64) *mat.Dense {
 	x := mat.NewDense(len(self.ys), self.degree+1, nil)
 	for i,_ := range self.ys {
@@ -72,24 +79,40 @@ func (self* polyBestFit) Vandermonde(xorigin float64) *mat.Dense {
 // predictY predicts y value for given x, using calculated constants if available
 // and the last given y value otherwise
 func (self* polyBestFit) predictY(x epochDays) float64 {
-	return 0.0
+	var t float64
+	if len(self.consts) ==0 && len(self.ys) > 0 {
+		t = self.ys[len(self.ys)-1]
+	} else {
+		for i,v := range(self.consts) {
+			t += math.Pow(float64(x),float64(i))*v
+		}
+	}
+	return t
 }
 
 // predict performs brute force O(n) predicition of number of days to backfill
-// given disatnce from given day
-func (self* polyBestFit) predict(Kilometres,epochDays) (epochDays,error) {
-	return 0, ENOTIMPLEMENTED
+// given distance from given day
+func (self* polyBestFit) predict(d Kilometres,sd epochDays) (epochDays,error) {
+	cd := sd
+	for r:=d;  r > 0 ; cd ++ {
+		r -= Kilometres(self.predictY(cd))
+	}
+	return cd, nil
 }
 
 // version reports the current version of the polynomial best fit
 func (self* polyBestFit) version() predictVersion {
-	return 0
+	return self.pv
 }
 
 // backfilled performs brute force O(n) prediction of total distance backfilled
 // between two given days
-func (self* polyBestFit) backfilled(epochDays,epochDays) (Kilometres,error) {
-	return 0,ENOTIMPLEMENTED
+func (self* polyBestFit) backfilled(sd epochDays,ed epochDays) (Kilometres,error) {
+	var t Kilometres
+	for d:= sd; d < ed; d++ {
+		t += Kilometres(self.predictY(d))
+	}
+	return t, nil
 }
 
 // To implemented as part of db/Serialize

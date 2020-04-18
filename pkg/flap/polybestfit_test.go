@@ -58,44 +58,78 @@ func TestPolyDegree2(t *testing.T) {
 	}
 }
 
-/*
-func TestLongHorizontal(t *testing.T) {
-	bf,_ := newPolyBestFit(PromisesConfig{MaxPoints:10,Degree:1})
-	for x:=1; x<1000;x++ {
-		bf.add(epochDays(x),999)
+func TestPolyPredictY(t *testing.T) {
+	ys := []Kilometres{1, 6, 17, 34, 57, 86, 121, 162, 209, 262, 321}
+	p,_ := newPolyBestFit(PromisesConfig{MaxPoints:11,Degree:2})
+	for _,y := range ys {
+		p.add(10,y)
 	}
-	if bf.m !=0 {
-		t.Error("Calculated non-zero gradient for horizontal line", bf.m)
-	}
-	if bf.c != 999 {
-		t.Error("Failed to calculate c correctly for horizontla line", bf.c)
+	y := p.predictY(8)
+	if to3DecimalPlaces(y) != 209 {
+		t.Error("predictY failed to return correct prediciotn for day 8", y)
 	}
 }
 
-func TestAscending(t *testing.T) {
-	bf,_ := newBestFit(PromisesConfig{MaxPoints:1000})
+func TestPolyLongHorizontal(t *testing.T) {
+	p,_ := newPolyBestFit(PromisesConfig{MaxPoints:10,Degree:1})
+	for x:=1; x<1000;x++ {
+		p.add(epochDays(x),999)
+	}
+	if to3DecimalPlaces(p.consts[1]) !=0 {
+		t.Error("Calculated non-zero gradient for horizontal line", p.consts[1])
+	}
+	if to3DecimalPlaces(p.consts[0]) != 999 {
+		t.Error("Failed to calculate c correctly for horizontla line", p.consts[0])
+	}
+}
+
+func TestPolyAscending(t *testing.T) {
+	p,_ := newPolyBestFit(PromisesConfig{MaxPoints:1000,Degree:1})
 	x := epochDays(1)
 	for y:=Kilometres(37); y<1000;y+=5 {
-		bf.add(x,y)
+		p.add(x,y)
 		x++
 	}
-	if bf.m !=5 {
-		t.Error("Calculated incorrect gradient for ascending line", bf.m)
+	if to3DecimalPlaces(p.consts[1]) !=5 {
+		t.Error("Calculated incorrect gradient for ascending line", p.consts[1])
 	}
-	if bf.c != 32 {
-		t.Error("Calcualted incorrect constant for ascending line", bf.c)
+	if to3DecimalPlaces(p.consts[0]) != 32 {
+		t.Error("Calcualted incorrect constant for ascending line", p.consts[0])
 	}
 }
 
-func TestDescending(t *testing.T) {
-	bf,_ := newBestFit(PromisesConfig{MaxPoints:1000})
+func TestPolyDescending(t *testing.T) {
+	p,_ := newPolyBestFit(PromisesConfig{MaxPoints:1000,Degree:1})
 	x := epochDays(1)
 	for y:=Kilometres(567); y>0;y-=5 {
-		bf.add(x,y)
+		p.add(x,y)
 		x++
 	}
-	if bf.m !=-5 {
-		t.Error("Calculated incorrect gradient for descending line", bf.m)
+	if to3DecimalPlaces(p.consts[1]) !=-5 {
+		t.Error("Calculated incorrect gradient for descending line", p.consts[1])
 	}
 }
-*/
+
+func TestPolyVersion(t *testing.T) {
+	p,_ := newPolyBestFit(PromisesConfig{MaxPoints:1000,Degree:1})
+	x := epochDays(1)
+	for y:=Kilometres(100); y>80;y-=5 {
+		p.add(x,y)
+		x++
+	}
+	pv := p.version()
+	for y:=Kilometres(80); y>50;y-=5 {
+		p.add(x,y)
+		x++
+	}
+	if pv != p.version() {
+		t.Error("version changed when m and c should have stayed the same")
+	}
+	for y:=Kilometres(50); y>0;y-=10 {
+		p.add(x,y)
+		x++
+	}
+	if p.version() == pv {
+		t.Error("version didnt change when m and c should have changed",p.version())
+	}
+}
