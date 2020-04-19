@@ -17,6 +17,7 @@ type PromisesAlgo		uint8
 const (
 	paNone PromisesAlgo = 0x00  
 	paLinearBestFit PromisesAlgo = 0x01
+	paPolyBestFit PromisesAlgo = 0x02
 	pamCorrectBalances PromisesAlgo = 0x10
 	paMask PromisesAlgo = 0x0f
 )
@@ -77,9 +78,6 @@ func newAdministrator(flapdb db.Database) *Administrator {
 	// Read any parameter settings held in table
 	administrator.table.Get([]byte(adminRecordKey),&administrator.params)
 
-	// Create predictor for promises
-	administrator.createPredictor(true)
-	
 	return administrator
 }
 
@@ -136,15 +134,25 @@ func (self* Administrator) createPredictor(load bool) {
 	switch self.params.Promises.Algo & paMask { 
 		case paLinearBestFit:
 			self.predictor,_ = newBestFit(self.params.Promises)
+		case paPolyBestFit:
+			self.predictor,_ = newPolyBestFit(self.params.Promises)
 	}
-	if self.validPredictor() && load {
-		self.table.Get([]byte(predictorRecordKey), self.predictor)
+	if self.validPredictor() {
+		logInfo("Running with promises config",self.params.Promises)
+		if load {
+			self.table.Get([]byte(predictorRecordKey), self.predictor)
+		}
+	} else {
+		logInfo("Running without promises")
 	}
 }
 
 // validPredictor checks Returns true if promises are enabled  and a predictor exists, and false otherwise.
 func (self *Administrator) validPredictor() bool {
 	_,exists := self.predictor.(*bestFit)
+	if (!exists) {
+		_,exists = self.predictor.(*polyBestFit)
+	}
 	return exists
 }
 

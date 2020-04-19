@@ -4,9 +4,10 @@ import (
 	"encoding/gob"
 	"bytes"
 	"gonum.org/v1/gonum/mat"
+	"gonum.org/v1/gonum/floats"
 	"math"
 	"reflect"
-	"fmt"
+	//"fmt"
 )
 
 // polyBestFit predicts dates when a specified distance balance would
@@ -56,11 +57,10 @@ func (self* polyBestFit) add(today epochDays,y Kilometres) {
 	newConsts := make([]float64,0,self.degree+1)
 	if err == nil {
 		for j:=0; j < self.degree+1; j++ {
-			newConsts = append(newConsts,c.At(j,0))
+			newConsts = append(newConsts,floats.Round(c.At(j,0),10))
 		}
 		if !reflect.DeepEqual(newConsts,self.consts) {
 			self.pv++
-			fmt.Printf("old=%#v,new=%#v\n",self.consts,newConsts)
 			self.consts = newConsts
 		}
 	}
@@ -78,24 +78,46 @@ func (self* polyBestFit) Vandermonde(xorigin float64) *mat.Dense {
 
 // predictY predicts y value for given x, using calculated constants if available
 // and the last given y value otherwise
-func (self* polyBestFit) predictY(x epochDays) float64 {
-	var t float64
-	if len(self.consts) ==0 && len(self.ys) > 0 {
-		t = self.ys[len(self.ys)-1]
-	} else {
-		for i,v := range(self.consts) {
-			t += math.Pow(float64(x),float64(i))*v
-		}
+func (self* polyBestFit) predictY(x epochDays) (float64,error) {
+	if len(self.consts) ==0 {
+		return 0,ENOVALIDPREDICTION
 	}
-	return t
+
+	var t float64
+	for i,v := range(self.consts) {
+		t += math.Pow(float64(x),float64(i))*v
+	}
+
+	if t < 0 {
+		return 0,ENOVALIDPREDICTION
+	} 
+	return t, nil
 }
 
 // predict performs brute force O(n) predicition of number of days to backfill
 // given distance from given day
 func (self* polyBestFit) predict(d Kilometres,sd epochDays) (epochDays,error) {
+
+	// Check for some data to derive prediciton from
+	lys := len(self.ys)
+	if lys == 0 {
+		return 0,ENOTENOUGHDATAPOINTS
+	}
+
+	// Subtract from target prediciton for one day after another
+	// until we get to zero
 	cd := sd
 	for r:=d;  r > 0 ; cd ++ {
-		r -= Kilometres(self.predictY(cd))
+
+		// Get prediction for current day ...
+		dd,err := self.predictY(cd)
+		if err == nil {
+			r -= Kilometres(dd)
+		} else {
+		   // ... switch to just using the last share reported
+		   // on error
+			return (sd + epochDays(d/Kilometres(self.ys[lys-1]))), nil
+		} 
 	}
 	return cd, nil
 }
@@ -106,11 +128,26 @@ func (self* polyBestFit) version() predictVersion {
 }
 
 // backfilled performs brute force O(n) prediction of total distance backfilled
-// between two given days
+// between end of two given days
 func (self* polyBestFit) backfilled(sd epochDays,ed epochDays) (Kilometres,error) {
+
+	// Check for some data to derive prediction from
+	lys := len(self.ys)
+	if lys == 0 {
+		return 0,ENOTENOUGHDATAPOINTS
+	}
+
+	// Add up predicted share for each day in range given
 	var t Kilometres
-	for d:= sd; d < ed; d++ {
-		t += Kilometres(self.predictY(d))
+	for d:= sd+1; d <= ed; d++ {
+		dd, err := self.predictY(d)
+		if (err == nil) {
+			t += Kilometres(dd)
+		} else {
+			// revert to simple calc using last share
+			// on error
+			return  Kilometres(ed-sd)*Kilometres(self.ys[lys-1]),nil
+		}
 	}
 	return t, nil
 }

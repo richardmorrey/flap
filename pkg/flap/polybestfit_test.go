@@ -14,6 +14,9 @@ func TestPolyZeroMaxpoints(t *testing.T) {
 
 func TestPolyAddOne(t *testing.T) {
 	p,err := newPolyBestFit(PromisesConfig{MaxPoints:10,Degree:1})
+	if err != nil {
+		t.Error("newPolyBestFit returned error",err)
+	}
 	p.add(1,10)
 	if err != nil {
 		t.Error("Faiing to add the first point,err")
@@ -64,9 +67,29 @@ func TestPolyPredictY(t *testing.T) {
 	for _,y := range ys {
 		p.add(10,y)
 	}
-	y := p.predictY(8)
+	y,err := p.predictY(8)
+	if err != nil {
+		t.Error("predictY returned unexpected error")
+	}
 	if to3DecimalPlaces(y) != 209 {
-		t.Error("predictY failed to return correct prediciotn for day 8", y)
+		t.Error("predictY failed to return correct prediction for day 8", y)
+	}
+}
+
+func TestPolyPredictYNoPoints(t *testing.T) {
+	p,_ := newPolyBestFit(PromisesConfig{MaxPoints:10,Degree:1})
+	_,err := p.predictY(8)
+	if err != ENOVALIDPREDICTION {
+		t.Error("predictY didnt return error with no data points",err)
+	}
+}
+
+func TestPolyPredictYOnePoint(t *testing.T) {
+	p,_ := newPolyBestFit(PromisesConfig{MaxPoints:10,Degree:1})
+	p.add(1,13)
+	_,err := p.predictY(500)
+	if err != ENOVALIDPREDICTION{
+		t.Error("predictY didnt return error with too few data points",err)
 	}
 }
 
@@ -133,3 +156,71 @@ func TestPolyVersion(t *testing.T) {
 		t.Error("version didnt change when m and c should have changed",p.version())
 	}
 }
+
+func TestPolyPredictNoPoints(t *testing.T) {
+	p,_ := newPolyBestFit(PromisesConfig{MaxPoints:10,Degree:1})
+	_,err := p.predict(1000,10)
+	if err != ENOTENOUGHDATAPOINTS {
+ 		t.Error("predict returned incorrect error  with no data points",err)
+	}
+
+}
+
+func TestPolyPredictHorizontal(t *testing.T) {
+	p,_ := newPolyBestFit(PromisesConfig{MaxPoints:10,Degree:1})
+	p.add(1,10)
+	p.add(2,10)
+	ed,err := p.predict(1000,10)
+	if err != nil {
+ 		t.Error("predict failed for horzontal line with two points")
+	}
+	if ed != 110 {
+		t.Error("predict returned wrong day for horizontal line",ed)
+	}
+}
+
+func TestPolyPredictSlope(t *testing.T) {
+	p,_ := newPolyBestFit(PromisesConfig{MaxPoints:10,Degree:1})
+	p.add(0,4)
+	p.add(1,3)
+	clear,err := p.predict(4,1)
+	if err !=  nil {
+		t.Error("prediced returned error for sloping line",err)
+	}
+	if clear != 3 {
+		t.Error("predict returned wrong prediction for sloping line", clear)
+	}
+	clear,err = p.predict(9,1)
+	if clear !=  4 {
+		t.Error("predict not defaulting to simple algo for line going below zero",clear)
+	}
+}
+
+func TestPolyBackfilledNoPoints(t *testing.T) {
+	p,_ := newPolyBestFit(PromisesConfig{MaxPoints:10,Degree:1})
+	_,err := p.backfilled(1000,10)
+	if err != ENOTENOUGHDATAPOINTS {
+ 		t.Error("backfilled returned incorrect error  with no data points",err)
+	}
+}
+
+func TestPolyBackfilledSlope(t *testing.T) {
+	p,_ := newPolyBestFit(PromisesConfig{MaxPoints:10,Degree:1})
+	p.add(0,4)
+	p.add(1,3)
+	d,err := p.backfilled(1,3)
+	if err !=  nil {
+		t.Error("backfilled returned error for sloping line",err)
+	}
+	if d != 3 {
+		t.Error("backfilled returned wrong prediction for sloping line", d)
+	}
+	d,err = p.backfilled(4,6)
+	if err !=  nil {
+		t.Error("backfilled failed for line sloping below zero",d)
+	}
+	if d != 6 {
+		t.Error("backfilled returned unexpected value for line sloping below zero",d)
+	}
+}
+
