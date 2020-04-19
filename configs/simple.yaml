@@ -2,9 +2,10 @@ flapparams:
   triplength: 365
   flightsintrip: 50
   flightinterval: 1
-  promisesalgo: 1
-  promisesmaxpoints: 100
-  promisesmaxdays: 10
+  promises:
+    algo: 1
+    maxpoints: 100
+    maxdays: 10
   threads: 2
 modelparams:
   loglevel: 3
@@ -19,7 +20,7 @@ modelparams:
     weight: 1
   triplengths:
   - 2
-  startday: 0
+  startday: "2021-01-01T00:00:00Z"
   dailytotalfactor: 0.99
   deterministic: false
   threads: 2

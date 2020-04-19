@@ -6,12 +6,16 @@ flapparams:
   flightsintrip: 50
   # Maximum gap between flights in a single Journey, in days
   flightinterval: 1
-  # Promises algo to use. 0 = promises not enabled, 1 = linear best fit
-  promisesalgo: 1
-  # Number of data points to maintain for promisesalgo
-  promisesmaxpoints: 100
-  # Maximum days ahead to allow a promise trip to end
-  promisesmaxdays: 180
+  # Promises configuration
+  promises:
+    # Promises algo to use. 0 = promises not enabled, 1 = simple linear, 2 = polynomial
+    algo: 2
+    # Number of data points to maintain for promisesalgo
+    maxpoints: 100
+    # Maximum days ahead to allow a promise trip to end
+    maxdays: 90
+    # Degree to use for polynomial predictions
+    degree: 2
   # Number of threads to use for backfilling. Must be power of 2. Defaults to 1.
   threads: 4
 # Parameters controlling flapmodel
@@ -33,7 +37,7 @@ modelparams:
   # Total days for which to run the model, including trial days.
   daystorun: 2000
   # Total number of travellers to simulate
-  totaltravellers: 10000
+  totaltravellers: 1000
   # Definition of one or more "bands" of travellers, with
   # different travel probabilities. Each band has values as follows
   #    flyprobability  - Probability of traveller starting a trip each day
@@ -90,9 +94,8 @@ modelparams:
   - 14
   - 14
   - 28
-  # The date of the first day in the run, in Epoch Time seconds - see
-  # https://en.wikipedia.org/wiki/Unix_time
-  #startday: 1609459200
+  # The date of the first day in the run. Must be start of a day,in  RFC3339 format
+  startday: "2021-01-01T00:00:00Z"
   # Factor to multiply the Daily Total by each day. Does not apply
   # during trial days.
   dailytotalfactor: 0.9995
