@@ -24,6 +24,7 @@ type predictor interface
 	predict(Kilometres,epochDays) (epochDays,error)
 	version() predictVersion
 	backfilled(epochDays,epochDays) (Kilometres,error)
+	state() ([]float64,[]float64,error)
 	db.Serialize
 }
 
@@ -64,6 +65,15 @@ func (self *bestFit) To(buff *bytes.Buffer) error {
 func (self *bestFit) From(buff *bytes.Buffer) error {
 	enc := gob.NewEncoder(buff) 
 	return enc.Encode(self)
+}
+
+// state returns set of points lasted used for regression and the regression results
+// as a list of consts in ascending degree
+func (self* bestFit) state() ([]float64,[]float64,error) {
+	if len(self.ys) < 2 {
+		return nil,nil,ENOTENOUGHDATAPOINTS
+	}
+	return self.ys,[]float64{self.c,self.m},nil
 }
 
 // version returns number indicating current version of the best fit line.

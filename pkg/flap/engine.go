@@ -303,6 +303,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 		if self.Administrator.validPredictor() {
 			self.Administrator.predictor.add(now.toEpochDays(false),ut.Share)
 			self.Administrator.table.Put([]byte(predictorRecordKey), self.Administrator.predictor)
+			ut.BestFitPoints,ut.BestFitConsts,_ = self.Administrator.predictor.state()
 			logInfo("Added predictior data point:",now.toEpochDays(false),ut.Share)
 		}
 	}
@@ -356,6 +357,8 @@ type UpdateBackfillStats struct {
 	Share			Kilometres
 	ClearedDistanceDeltas	[]Kilometres
 	ClearedDaysDeltas	[]Days
+	BestFitPoints		[]float64
+	BestFitConsts		[]float64
 	Err			error
 }
 

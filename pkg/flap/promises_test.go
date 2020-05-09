@@ -24,8 +24,10 @@ type testpredictor struct {
 	pa predictArgs
 }
 
-func (self *testpredictor) add(x epochDays,y Kilometres) {
-}
+func (self *testpredictor) add(x epochDays,y Kilometres) {}
+func (self *testpredictor) state() ([]float64,[]float64,error) {return nil,nil,ENOTIMPLEMENTED}
+func (self *testpredictor) To(buff *bytes.Buffer) error {return ENOTIMPLEMENTED}
+func (self *testpredictor) From(buff *bytes.Buffer) error {return ENOTIMPLEMENTED}
 
 func (self *testpredictor) predict(dist Kilometres, start epochDays) (epochDays,error) {
 	self.pa.dist=dist
@@ -41,14 +43,6 @@ func (self *testpredictor) backfilled(d1 epochDays,d2 epochDays) (Kilometres,err
 	self.ba.d1=d1
 	self.ba.d2=d2
 	return self.backfilledDist,nil
-}
-
-func (self *testpredictor) To(buff *bytes.Buffer) error {
-	return ENOTIMPLEMENTED
-}
-
-func (self *testpredictor) From(buff *bytes.Buffer) error {
-	return ENOTIMPLEMENTED
 }
 
 func TestProposeInvalid(t *testing.T) {
@@ -249,6 +243,7 @@ func TestStackTooLong(t *testing.T) {
 }
 type errpredictor struct { err error }
 func (self *errpredictor) add(x epochDays, y Kilometres) {}
+func (self *errpredictor) state() ([]float64,[]float64,error) {return nil,nil,ENOTIMPLEMENTED}
 func (self *errpredictor) predict(dist Kilometres, start epochDays) (epochDays,error) { return 0, self.err }
 func (self *errpredictor) version() predictVersion { return 0 }
 func (self *errpredictor) backfilled(d1 epochDays,d2 epochDays) (Kilometres,error) { return 0, self.err }

@@ -10,9 +10,18 @@ import (
 	"time"
 	"math"
 	"math/rand"
+	"sort"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"encoding/json"
+	"gonum.org/v1/gonum/stat"
+	"gonum.org/v1/gonum/floats"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/plotutil"
+	"gonum.org/v1/plot/vg"
+	"gonum.org/v1/plot/vg/draw"
+
 )
 
 var EFAILEDTOCREATECOUNTRIESAIRPORTSROUTES = errors.New("Failed to create Countries-Airports-Routes")
@@ -58,8 +67,8 @@ type summaryStats struct {
 	travellers		float64
 	grounded		float64
 	share			float64
-	clearedDistanceDeltas	[]flap.Kilometres
-	clearedDaysDeltas	[]flap.Days
+	clearedDistanceDeltas	[]float64
+	clearedDaysDeltas	[]float64
 }
 
 // reset resets the summary stats structure after a reporting event, avoiding
@@ -67,12 +76,12 @@ type summaryStats struct {
 func (self *summaryStats) reset() {
 	var ssReset summaryStats
 	if self.clearedDistanceDeltas == nil {
-		ssReset.clearedDistanceDeltas = make([]flap.Kilometres,0,10000)
+		ssReset.clearedDistanceDeltas = make([]float64,0,10000)
 	} else {
 		ssReset.clearedDistanceDeltas = self.clearedDistanceDeltas[:0]
 	}
 	if self.clearedDaysDeltas == nil {
-		ssReset.clearedDaysDeltas = make([]flap.Days,0,10000)
+		ssReset.clearedDaysDeltas = make([]float64,0,10000)
 	} else {
 		ssReset.clearedDaysDeltas = self.clearedDaysDeltas[:0]
 	}
@@ -140,7 +149,7 @@ func (self *Engine) Release() {
 
 // Build prepares all persitent data files in order to be able to run the model in the configured data folder. It
 // (a) Builds the countries-airports-routes and the country weights file that drive flight selection.
-// (c) Ensures the Flap library Travellers Table is empty
+// (b) Ensures the Flap library Travellers Table is empty
 func (self *Engine) Build() error {
 	
 	fmt.Printf("Building...\n")
@@ -292,7 +301,7 @@ func (self *Engine) Run() error {
 		
 		// Report daily stats
 		travellerBots.ReportDay(i,self.ModelParams.ReportDayDelta)
-		self.reportDay(i,self.FlapParams.DailyTotal,us)
+		self.reportDay(i,currentDay,self.FlapParams.DailyTotal,us)
 		if i % self.ModelParams.ReportDayDelta == 0 {
 			flightPaths= reportFlightPaths(flightPaths,currentDay,self.ModelParams.WorkingFolder) 
 		}
@@ -408,7 +417,7 @@ func (self *Engine) promisesAsJSON(t *flap.Traveller) string {
 
 // reportDay reports daily total set for the day as well as total distance
 // travelled and total travellers travelling
-func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, us flap.UpdateBackfillStats) {
+func (self *Engine) reportDay(day flap.Days, currentDay flap.EpochTime, dt flap.Kilometres, us flap.UpdateBackfillStats) {
 	
 	// Update stats
 	self.stats.dailyTotal  += float64(dt)/float64(self.ModelParams.ReportDayDelta)
@@ -416,8 +425,12 @@ func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, us flap.UpdateB
 	self.stats.travelled   += float64(us.Distance)/float64(self.ModelParams.ReportDayDelta)
 	self.stats.grounded    += float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta) 
 	self.stats.share       += float64(us.Share)/float64(self.ModelParams.ReportDayDelta)
-	self.stats.clearedDistanceDeltas = append(self.stats.clearedDistanceDeltas, us.ClearedDistanceDeltas...)
-	self.stats.clearedDaysDeltas = append(self.stats.clearedDaysDeltas, us.ClearedDaysDeltas...)
+	for _,v := range us.ClearedDistanceDeltas {
+		self.stats.clearedDistanceDeltas = append(self.stats.clearedDistanceDeltas, float64(v))
+	}
+	for _,u := range us.ClearedDaysDeltas {
+		self.stats.clearedDaysDeltas = append(self.stats.clearedDaysDeltas, float64(u))
+	}
 
 	// Output stats if needed ...
 	if day % self.ModelParams.ReportDayDelta == 0 {
@@ -439,33 +452,147 @@ func (self *Engine) reportDay(day flap.Days, dt flap.Kilometres, us flap.UpdateB
 			self.fh.WriteString(line)
 		}
 
-		// Clearance Days Deltas (to use as a distribution)
-		fn :=  fmt.Sprintf("cleareddaysdeltas_%d.csv",day)
-		fp := filepath.Join(self.ModelParams.WorkingFolder,fn)
-		fhdays,_ := os.Create(fp)
-		if fhdays != nil {
-			for _,val := range self.stats.clearedDaysDeltas  {
-				line := fmt.Sprintf("%d\n",val)
-				fhdays.WriteString(line)
-			}
-			defer fhdays.Close()
-		}
+		// Clearance Days Deltas Distribution
+		self.reportDistribution(self.stats.clearedDaysDeltas,10,fmt.Sprintf("ClearedDaysDistro_%d",day))
 
-		// Clearance Distance Deltas (to use as a distribution)
-		fn =  fmt.Sprintf("cleareddistancedeltas_%d.csv",day)
-		fp = filepath.Join(self.ModelParams.WorkingFolder,fn)
-		fhdist,_ := os.Create(fp)
-		if fhdist != nil {
-			for _,val := range self.stats.clearedDistanceDeltas  {
-				line := fmt.Sprintf("%d\n",val)
-				fhdist.WriteString(line)
-			}
-			defer fhdist.Close()
-		}
+		// Clearance Distance Deltas Distribution
+		self.reportDistribution(self.stats.clearedDistanceDeltas,500,fmt.Sprintf("ClearedDistanceDistro_%d",day))
 
+		// Regression accuracy
+		self.reportRegression(currentDay,us.BestFitPoints,us.BestFitConsts,fmt.Sprintf("Regression_%d",day))
 
 		// Wipe stats
 		self.stats.reset()
 	}
 }
+
+// reportRegression reports the match between given set of points and result
+// of linear regression against those points as a png raster image.
+func (self* Engine) reportRegression(currentDay flap.EpochTime, y []float64, consts []float64, title string) {
+	if len(consts) == 0 {
+		return
+	}
+	p, err := plot.New()
+	if err != nil {
+		return
+	}
+
+	p.Title.Text = title
+	p.X.Label.Text = "Epoch Day"
+	p.Y.Label.Text = "Share(Km)"
+
+	// Define function based on consts
+	f := plotter.NewFunction(
+		func(x float64) float64 {
+			var y float64
+			for i,v := range consts {
+				y += math.Pow(x,float64(i))*v
+			}
+			return y
+		})
+	//f.Color = color.RGBA{B: 255, A: 255}
+	
+	// Add the source points
+	pts := make(plotter.XYs, len(y))
+	firstDay := float64(currentDay/flap.SecondsInDay) - float64(len(y))
+	lastDay := firstDay
+	for i := range pts {
+		pts[i].X = lastDay 
+		pts[i].Y = y[i]
+		lastDay++
+	}
+	plotutil.AddLinePoints(p,"Daily Share", pts)
+
+	// Add the calculated regression line
+	p.Add(f)
+	p.Legend.Add("Regression", f)
+	p.Legend.ThumbnailWidth = 0.5 * vg.Inch
+
+	// Set the axis ranges
+	topY := floats.Max(y)
+	p.X.Max= firstDay
+	p.X.Min = lastDay
+	p.Y.Min = -0.25*topY
+	p.Y.Max = topY + 0.25*topY
+
+	// Build x axis time labels
+	labels := make([]string,0,len(y))
+	for cd := firstDay; cd <= lastDay; cd++  {
+		et := flap.EpochTime(cd*float64(flap.SecondsInDay))
+		t := et.ToTime()
+		labels = append(labels,t.Format("2006-01-02"))
+	}
+	p.NominalX(labels...)
+
+	// Save the plot to a PNG file.
+	fn := title + ".png"
+	fp := filepath.Join(self.ModelParams.WorkingFolder,fn)
+	p.Save(2000, 1000, fp); 
+}
+
+// reportDistribution reports a distribution of the given points with given bin size
+// both as a csv and png raster image.
+func (self* Engine) reportDistribution(x []float64, binSize float64, title string) {
+
+	// Build histogram distribution if we have enough points
+	if len(x) == 0 {
+		return
+	}
+	sort.Float64s(x)	
+	min := floats.Min(x)
+	max := floats.Max(x)
+	max++
+	dividers := make([]float64, int((max-min)/binSize+1))
+	if len(dividers) < 2 {
+		return
+	}
+	floats.Span(dividers, min, max)
+	hist := stat.Histogram(nil, dividers, x, nil)
+
+	// Open csv file
+	fn := title + ".csv"
+	fp := filepath.Join(self.ModelParams.WorkingFolder,fn)
+	fh,_ := os.Create(fp)
+
+	// Write out histogram
+	if fh != nil {
+		for _,val := range hist  {
+			line := fmt.Sprintf("%d\n",int(val))
+			fh.WriteString(line)
+		}
+		defer fh.Close()
+	}
+
+	// Build the bars
+	w := vg.Points(20)
+	bars, err := plotter.NewBarChart(plotter.Values(hist),w)
+	if err == nil {
+		bars.LineStyle.Width = vg.Length(0)
+		bars.Color = plotutil.Color(0)
+
+		// Build labels
+		labels := make([]string,0,len(dividers))
+		for _,d := range dividers {
+			labels = append(labels,fmt.Sprintf("%d",int(d)))
+		}
+
+		// Add to a chart
+		p, err := plot.New()
+		if err == nil {
+			p.Title.Text = title
+			p.Y.Label.Text = "Count"
+			p.Add(bars)
+			p.NominalX(labels...)
+			p.X.Tick.Label.Rotation = math.Pi/2 
+			p.X.Tick.Label.YAlign = draw.YCenter
+			p.X.Tick.Label.XAlign = draw.XRight
+			
+			// Write to a file
+			fn = title + ".png"
+			fp = filepath.Join(self.ModelParams.WorkingFolder,fn)
+			p.Save(2000, 1000, fp)
+		}
+	}
+}
+
 

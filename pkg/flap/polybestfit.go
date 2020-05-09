@@ -34,6 +34,15 @@ func newPolyBestFit(cfg PromisesConfig) (*polyBestFit,error) {
 	return bf,bf.setWindows(int(cfg.MaxPoints),int(cfg.SmoothWindow))
 }
 
+// returns current input of to regression and results of regression as
+// list of consts in ascending degree
+func (self* polyBestFit) state() ([]float64,[]float64,error) {
+	if len(self.consts) == 0 {
+		return nil,nil,ENOTENOUGHDATAPOINTS
+	}
+	return self.ys,self.consts,nil
+}
+
 // adds a point to the graph and recalculates polynomial best fit
 // using configured degree. Based on https://rosettacode.org/wiki/Polynomial_regression#Go
 func (self* polyBestFit) add(today epochDays,y Kilometres) {
