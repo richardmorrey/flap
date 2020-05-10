@@ -438,6 +438,7 @@ func (self *Engine) reportDay(day flap.Days, currentDay flap.EpochTime, dt flap.
 		// Summmary stats title
 		if self.fh == nil{
 			fn := filepath.Join(self.ModelParams.WorkingFolder,"summary.csv")
+			os.MkdirAll(fn, os.ModePerm)
 			self.fh,_ = os.Create(fn)
 			if self.fh != nil {
 				self.fh.WriteString("Day,DailyTotal,Travelled,Travellers,Grounded,KeptBalance,Share\n")
@@ -453,13 +454,13 @@ func (self *Engine) reportDay(day flap.Days, currentDay flap.EpochTime, dt flap.
 		}
 
 		// Clearance Days Deltas Distribution
-		self.reportDistribution(self.stats.clearedDaysDeltas,10,fmt.Sprintf("ClearedDaysDistro_%d",day))
+		self.reportDistribution(self.stats.clearedDaysDeltas,10,"cleareddaysdistro",currentDay)
 
 		// Clearance Distance Deltas Distribution
-		self.reportDistribution(self.stats.clearedDistanceDeltas,500,fmt.Sprintf("ClearedDistanceDistro_%d",day))
+		self.reportDistribution(self.stats.clearedDistanceDeltas,500,"cleareddistancedistro",currentDay)
 
 		// Regression accuracy
-		self.reportRegression(currentDay,us.BestFitPoints,us.BestFitConsts,fmt.Sprintf("Regression_%d",day))
+		self.reportRegression(us.BestFitPoints,us.BestFitConsts,"regression",currentDay)
 
 		// Wipe stats
 		self.stats.reset()
@@ -468,15 +469,18 @@ func (self *Engine) reportDay(day flap.Days, currentDay flap.EpochTime, dt flap.
 
 // reportRegression reports the match between given set of points and result
 // of linear regression against those points as a png raster image.
-func (self* Engine) reportRegression(currentDay flap.EpochTime, y []float64, consts []float64, title string) {
+func (self* Engine) reportRegression(y []float64, consts []float64, title string,currentDay flap.EpochTime) {
+
+	// Check for something to plot
 	if len(consts) == 0 {
 		return
 	}
+
+	// Set labels and titls
 	p, err := plot.New()
 	if err != nil {
 		return
 	}
-
 	p.Title.Text = title
 	p.X.Label.Text = "Epoch Day"
 	p.Y.Label.Text = "Share(Km)"
@@ -515,33 +519,28 @@ func (self* Engine) reportRegression(currentDay flap.EpochTime, y []float64, con
 	p.Y.Min = -0.25*topY
 	p.Y.Max = topY + 0.25*topY
 
-	// Build x axis time labels
-	labels := make([]string,0,len(y))
-	for cd := firstDay; cd <= lastDay; cd++  {
-		et := flap.EpochTime(cd*float64(flap.SecondsInDay))
-		t := et.ToTime()
-		labels = append(labels,t.Format("2006-01-02"))
-	}
-	p.NominalX(labels...)
+	// Make sure the folder exists
+	folder := filepath.Join(self.ModelParams.WorkingFolder,title)
+	os.MkdirAll(folder, os.ModePerm)
 
 	// Save the plot to a PNG file.
-	fn := title + ".png"
-	fp := filepath.Join(self.ModelParams.WorkingFolder,fn)
-	p.Save(2000, 1000, fp); 
+	t := currentDay.ToTime()
+	fn := t.Format("2006-01-02") + ".png"
+	fp := filepath.Join(folder,fn)
+	p.Save(1000, 500, fp); 
 }
 
 // reportDistribution reports a distribution of the given points with given bin size
 // both as a csv and png raster image.
-func (self* Engine) reportDistribution(x []float64, binSize float64, title string) {
+func (self* Engine) reportDistribution(x []float64, binSize float64, title string, currentDay flap.EpochTime) {
 
 	// Build histogram distribution if we have enough points
 	if len(x) == 0 {
 		return
 	}
 	sort.Float64s(x)	
-	min := floats.Min(x)
-	max := floats.Max(x)
-	max++
+	min := float64(int64(floats.Min(x))/int64(binSize))*binSize - binSize 
+	max := float64(int64(floats.Max(x))/int64(binSize))*binSize + binSize*2 
 	dividers := make([]float64, int((max-min)/binSize+1))
 	if len(dividers) < 2 {
 		return
@@ -549,9 +548,14 @@ func (self* Engine) reportDistribution(x []float64, binSize float64, title strin
 	floats.Span(dividers, min, max)
 	hist := stat.Histogram(nil, dividers, x, nil)
 
+	// Make sure there is a folder to write to
+	folder := filepath.Join(self.ModelParams.WorkingFolder,title)
+	os.MkdirAll(folder, os.ModePerm)
+
 	// Open csv file
-	fn := title + ".csv"
-	fp := filepath.Join(self.ModelParams.WorkingFolder,fn)
+	t := currentDay.ToTime()
+	fn := t.Format("2006-01-02") + ".csv"
+	fp := filepath.Join(folder,fn)
 	fh,_ := os.Create(fp)
 
 	// Write out histogram
@@ -581,6 +585,7 @@ func (self* Engine) reportDistribution(x []float64, binSize float64, title strin
 		if err == nil {
 			p.Title.Text = title
 			p.Y.Label.Text = "Count"
+			p.X.Label.Text = "Balance At Clearance (km)"
 			p.Add(bars)
 			p.NominalX(labels...)
 			p.X.Tick.Label.Rotation = math.Pi/2 
@@ -588,9 +593,10 @@ func (self* Engine) reportDistribution(x []float64, binSize float64, title strin
 			p.X.Tick.Label.XAlign = draw.XRight
 			
 			// Write to a file
-			fn = title + ".png"
-			fp = filepath.Join(self.ModelParams.WorkingFolder,fn)
-			p.Save(2000, 1000, fp)
+			t := currentDay.ToTime()
+			fn := t.Format("2006-01-02") + ".png"
+			fp := filepath.Join(folder,fn)
+			p.Save(1000, 500, fp)
 		}
 	}
 }
