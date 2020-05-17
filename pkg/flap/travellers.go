@@ -33,47 +33,43 @@ func (self *Passport) ToString() string {
 
 type passportKey [20]byte
 
-type keptPromiseDetails struct {
-	promise		Promise
-	balanceAtTripStart	Kilometres
-}
-
-func (self *keptPromiseDetails) To(buff *bytes.Buffer) error {
-	err := self.promise.To(buff)
-	if err != nil {
-		return logError(err)
-	}
-	return binary.Write(buff,binary.LittleEndian,&(self.balanceAtTripStart))
-}
-
-func (self *keptPromiseDetails) From(buff *bytes.Buffer) error {	
-	err := self.promise.From(buff)
-	if err != nil {
-		return logError(err)
-	}
-	return binary.Read(buff,binary.LittleEndian,&(self.balanceAtTripStart))
-}
-
 type Traveller struct {
 	passport    Passport
 	tripHistory TripHistory
 	Promises    Promises
-	kept	    keptPromiseDetails
+	kept	    Promise
 	balance	    Kilometres
 }
 
+type clearanceReason		uint8
+const (
+	crGrounded	clearanceReason = 0x00
+	crMidTrip 	clearanceReason = 0x01  
+	crKeptPromise	clearanceReason = 0x02
+	crInCredit	clearanceReason = 0x03
+)
+
 // Cleared returns true if the traveller is cleared
 // to travel at the specified date/time
-func (self *Traveller) Cleared(now EpochTime) bool {	
+// Also indicates reason for clearance
+func (self *Traveller) Cleared(now EpochTime) clearanceReason {
 
-	// If we have a kept promise then update its Clearance date, which might
+	// If we have a.kept then update its Clearance date, which might
 	// have changed due to "stacking"
-	if self.kept.promise.Clearance != 0 {
-		self.kept.promise.Clearance,_ = self.Promises.match(self.kept.promise)
+	if self.kept.Clearance != 0 {
+		self.kept.Clearance,_ = self.Promises.match(self.kept)
 	}
 
 	// Cleared to travel if in a trip, past the clearance date or with a distance account in credit
-	return self.tripHistory.MidTrip() || (self.kept.promise.Clearance > 0 && self.kept.promise.Clearance <= now) || self.balance >=0
+	cr := crGrounded
+	if (self.tripHistory.MidTrip()) {
+		cr = crMidTrip
+	} else if (self.kept.Clearance > 0 && self.kept.Clearance <= now) {
+		cr = crKeptPromise 
+	} else if self.balance >=0 {
+		cr = crInCredit
+	}
+	return cr
 }
 
 // keep checks for a matching promise if we are mid-trip. If one is found
@@ -86,7 +82,7 @@ func (self *Traveller) keep() bool {
 			err = self.EndTrip()
 			if err == nil {
 				logDebug("Kept promise for", self.passport.ToString(), ". Clearance set to",p.Clearance.ToTime())
-				self.kept.promise=p
+				self.kept=p
 				kept = true
 			} else  {
 				logError(err)
@@ -124,24 +120,20 @@ func (self *Traveller) AsKML(a *Airports) string {
 // submitFlight adds given flight to trip history and if traveller is cleared for travel.
 // Also, If "debit" is true, the flight distance  is subtracted from the traveller's distance balance.
 // If traveller is not cleared for travel no action is taken and an error is returned.
+// If a promises is being applied, then current balance is returned.
 func (self *Traveller) submitFlight(flight *Flight,now EpochTime, taxiOH Kilometres, debit bool) (Kilometres,error) {
 
 	//  Make sure we are cleared to travel
-	if !self.Cleared(now) {
-		logDebug("balance:",self.balance,"cleared:",self.kept.promise.Clearance.ToTime())
+	cr := self.Cleared(now) 
+	if cr == crGrounded {
+		logDebug("balance:",self.balance,"cleared:",self.kept.Clearance.ToTime())
 		return 0,EGROUNDED
-	}
-
-	// Record balance at the start of a new trip if clearance is not as a result
-	// of a stacked promises
-	if (!self.MidTrip() && !self.kept.promise.stacked()) {
-		self.kept.balanceAtTripStart = self.balance
 	}
 
 	// Add flight to history
 	err := self.tripHistory.AddFlight(flight)
 	if err != nil {
-		return self.kept.balanceAtTripStart,err
+		return 0,err
 	}
 
 	// Debit flight distance and any taxi overhead from balance
@@ -149,9 +141,12 @@ func (self *Traveller) submitFlight(flight *Flight,now EpochTime, taxiOH Kilomet
 		self.balance -= (flight.distance + taxiOH)
 	}
 
-	// Make sure clearance promise only gets applied once
-	self.kept = keptPromiseDetails{}
-	return self.kept.balanceAtTripStart,nil
+	// Reset any kept promise
+	if cr == crKeptPromise {
+		self.kept = Promise{}
+		return self.balance,nil
+	}
+	return 0,nil
 }
 
 // generateKey generates a unique key based on the contents of a
@@ -217,7 +212,6 @@ func (self* Traveller) get(passport Passport, reader db.Reader) (error) {
 
 // PutTraveller stores a record for the given Traveller in the
 // current table. Any existing record is overwritten.
-//const sizeOfTraveller = unsafe.Sizeof(Traveller{})
 func (self  *Travellers) PutTraveller(traveller Traveller) error {
 	if self.table == nil {
 		return ETABLENOTOPEN
@@ -237,8 +231,6 @@ func (self* Traveller) put(writer db.Writer) error {
 }
 
 func (self *Traveller) To(buff *bytes.Buffer) error {
-	//data := (*(*[1<<31 - 1]byte)(unsafe.Pointer(self)))[:sizeOfTraveller]
-	//_,err := buff.Write(data)
 	err := binary.Write(buff,binary.LittleEndian,&(self.passport))
 	if err != nil {
 		return logError(err)
@@ -259,11 +251,6 @@ func (self *Traveller) To(buff *bytes.Buffer) error {
 }
 
 func (self *Traveller) From(buff *bytes.Buffer) error {	
-	//var blob [sizeOfTraveller]byte
-	//_,err := buff.Read(blob[:])
-	//if err == nil {
-	//	*self = (*(*Traveller)(unsafe.Pointer(&blob[0])))
-	//}
 	err := binary.Read(buff,binary.LittleEndian,&(self.passport))
 	if err != nil {
 		return logError(err)

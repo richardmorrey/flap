@@ -48,23 +48,23 @@ func (self *testpredictor) backfilled(d1 epochDays,d2 epochDays) (Kilometres,err
 func TestProposeInvalid(t *testing.T) {
 	var ps Promises
 	var tp testpredictor
-	_,err:= ps.propose(0,1,1,1,0,nil)
+	_,err:= ps.propose(0,1,1,1,0,nil,3)
 	if err == nil {
 		t.Error("Proposed a clearance with no predictor")
 	}
-	_,err= ps.propose(1,1,1,1,0,&tp)
+	_,err= ps.propose(1,1,1,1,0,&tp,3)
 	if err == nil {
 		t.Error("Proposed a clearance with equal trip start and end")
 	}
-	_,err= ps.propose(0,1,0,1,0,&tp)
+	_,err= ps.propose(0,1,0,1,0,&tp,3)
 	if err == nil {
 		t.Error("Proposed a clearance with no distance")
 	}
-	_,err= ps.propose(0,1,1,1,0,&tp)
+	_,err= ps.propose(0,1,1,1,0,&tp,3)
 	if err == nil {
 		t.Error("Proposed a clearance date with trip start equalling current date")
 	}
-	_,err= ps.propose(1,2,1,1,0,&tp)
+	_,err= ps.propose(1,2,1,1,0,&tp,3)
 	if err == EINVALIDARGUMENT {
 		t.Error("Propose rejected valid arguments")
 	}
@@ -74,7 +74,7 @@ func TestProposeFull(t *testing.T) {
 	var ps Promises
 	var tp testpredictor
 	fillpromises(&ps)
-	_,err := ps.propose(epochDays(8).toEpochTime(),epochDays(9).toEpochTime(),10,10,epochDays(1).toEpochTime(),&tp)
+	_,err := ps.propose(epochDays(8).toEpochTime(),epochDays(9).toEpochTime(),10,10,epochDays(1).toEpochTime(),&tp,3)
 	if err != ENOROOMFORMOREPROMISES {
 		t.Error("Propose not erroring when there are no spare promises")
 	} 
@@ -87,7 +87,7 @@ func TestFirstPromise(t *testing.T) {
 	tp.pv=999
 	psold := ps
 	p := Promise{TripStart:epochDays(2).toEpochTime(),TripEnd:epochDays(3).toEpochTime(),Distance:2,Travelled:2,Clearance:epochDays(5).toEpochTime()}
-	proposal,err := ps.propose(p.TripStart,p.TripEnd,p.Distance,p.Travelled,epochDays(1).toEpochTime(),&tp)
+	proposal,err := ps.propose(p.TripStart,p.TripEnd,p.Distance,p.Travelled,epochDays(1).toEpochTime(),&tp,3)
 	if err != nil {
 		t.Error("Failed to propose a simple promise",err)
 		return
@@ -114,7 +114,7 @@ func TestNonOverlappingPromises(t *testing.T) {
 					      Distance:2,
 					      Travelled:2,
 					      Clearance:epochDays(10*(MaxPromises-i)+8).toEpochTime()}
-		proposal,err = ps.propose(psExpected.entries[i].TripStart,psExpected.entries[i].TripEnd,2,2,epochDays(1).toEpochTime(),&tp)
+		proposal,err = ps.propose(psExpected.entries[i].TripStart,psExpected.entries[i].TripEnd,2,2,epochDays(1).toEpochTime(),&tp,3)
 		if  err != nil {
 			t.Error("Propose failed on non-overlapping promise",err)
 			return
@@ -146,7 +146,7 @@ func TestOverlappingTrip1(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:1}
-	proposal,err := ps.propose(epochDays(47).toEpochTime(),epochDays(50).toEpochTime(),3,3,epochDays(20).toEpochTime(),&tp)
+	proposal,err := ps.propose(epochDays(47).toEpochTime(),epochDays(50).toEpochTime(),3,3,epochDays(20).toEpochTime(),&tp,3)
 	if err != EOVERLAPSWITHNEXTPROMISE{
 		t.Error("Propose accepted overlapping trip time", err, proposal)
 	}
@@ -156,7 +156,7 @@ func TestOverlappingTrip2(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:1}
-	proposal,err := ps.propose(epochDays(46).toEpochTime(),epochDays(49).toEpochTime(),3,3,epochDays(20).toEpochTime(),&tp)
+	proposal,err := ps.propose(epochDays(46).toEpochTime(),epochDays(49).toEpochTime(),3,3,epochDays(20).toEpochTime(),&tp,3)
 	if err != EOVERLAPSWITHPREVPROMISE{
 		t.Error("Propose accepted overlapping trip time", err, proposal)
 	}
@@ -166,7 +166,7 @@ func TestOverlappingTrip3(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:1}
-	proposal,err := ps.propose(epochDays(106).toEpochTime(),epochDays(109).toEpochTime(),3,3,epochDays(20).toEpochTime(),&tp)
+	proposal,err := ps.propose(epochDays(106).toEpochTime(),epochDays(109).toEpochTime(),3,3,epochDays(20).toEpochTime(),&tp,3)
 	if err != EOVERLAPSWITHPREVPROMISE{
 		t.Error("Propose accepted overlapping trip time", err, proposal)
 	}
@@ -176,7 +176,7 @@ func TestOverlappingTrip4(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:1}
-	proposal,err := ps.propose(epochDays(19).toEpochTime(),epochDays(20).toEpochTime(),3,3,epochDays(17).toEpochTime(),&tp)
+	proposal,err := ps.propose(epochDays(19).toEpochTime(),epochDays(20).toEpochTime(),3,3,epochDays(17).toEpochTime(),&tp,3)
 	if err != EOVERLAPSWITHNEXTPROMISE{
 		t.Error("Propose accepted overlapping trip time", err, proposal)
 	}
@@ -186,7 +186,7 @@ func TestFitsNoOverlap1(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:0}
-	proposal,err := ps.propose(epochDays(17).toEpochTime(),epochDays(17).toEpochTime()+1,1,1,epochDays(15).toEpochTime()+10,&tp)
+	proposal,err := ps.propose(epochDays(17).toEpochTime(),epochDays(17).toEpochTime()+1,1,1,epochDays(15).toEpochTime()+10,&tp,3)
 	if err != nil {
 		t.Error("Propose rejected valid proposal", err, proposal)
 	}
@@ -196,7 +196,7 @@ func TestFitsNoOverlap2(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:1}
-	proposal,err := ps.propose(epochDays(107).toEpochTime(),epochDays(107).toEpochTime()+1,1,1,epochDays(16).toEpochTime()+10,&tp)
+	proposal,err := ps.propose(epochDays(107).toEpochTime(),epochDays(107).toEpochTime()+1,1,1,epochDays(16).toEpochTime()+10,&tp,3)
 	if err != nil {
 		t.Error("Propose rejected valid proposal", err, proposal)
 	}
@@ -206,7 +206,7 @@ func TestFitsNoOverlap3(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:0}
-	proposal,err := ps.propose(epochDays(47).toEpochTime(),epochDays(47).toEpochTime()+1,1,1,epochDays(16).toEpochTime()+10,&tp)
+	proposal,err := ps.propose(epochDays(47).toEpochTime(),epochDays(47).toEpochTime()+1,1,1,epochDays(16).toEpochTime()+10,&tp,3)
 	if err != nil {
 		t.Error("Propose rejected valid proposal", err, proposal)
 	}
@@ -216,7 +216,7 @@ func TestDoesntFit(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:2}
-	proposal,err := ps.propose(epochDays(47).toEpochTime(),epochDays(47).toEpochTime()+1,1,1,epochDays(16).toEpochTime()+10,&tp)
+	proposal,err := ps.propose(epochDays(47).toEpochTime(),epochDays(47).toEpochTime()+1,1,1,epochDays(16).toEpochTime()+10,&tp,3)
 	if err != EEXCEEDEDMAXSTACKSIZE  {
 		t.Error("Propose accepts stacked proposal that doesnt fit",proposal)
 	}
@@ -226,7 +226,7 @@ func TestFitsStacked(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:2}
-	proposal,err := ps.propose(epochDays(88).toEpochTime(),epochDays(88).toEpochTime()+1,1,1,epochDays(16).toEpochTime()+10,&tp)
+	proposal,err := ps.propose(epochDays(88).toEpochTime(),epochDays(88).toEpochTime()+1,1,1,epochDays(16).toEpochTime()+10,&tp,3)
 	if err != nil {
 		t.Error("Propose doesnt accept valid stacked proposal",err,proposal)
 	}
@@ -236,7 +236,7 @@ func TestStackTooLong(t *testing.T) {
 	var ps Promises
 	fillpromises(&ps)
 	tp := testpredictor{clearRate:2}
-	proposal,err := ps.propose(epochDays(78).toEpochTime(),epochDays(78).toEpochTime()+1,1,1,epochDays(16).toEpochTime()+10,&tp)
+	proposal,err := ps.propose(epochDays(78).toEpochTime(),epochDays(78).toEpochTime()+1,1,1,epochDays(16).toEpochTime()+10,&tp,3)
 	if err != EEXCEEDEDMAXSTACKSIZE {
 		t.Error("Propose accepts stacked proposal that doesnt fit",err,proposal)
 	}
@@ -255,7 +255,7 @@ func TestProposePredNotReady(t *testing.T) {
 	var ep errpredictor
 	ep.err=ENOTENOUGHDATAPOINTS
 	p := Promise{TripStart:epochDays(2).toEpochTime(),TripEnd:epochDays(3).toEpochTime()+1,Distance:2,Travelled:2,Clearance:epochDays(4).toEpochTime()}
-	proposal,err := ps.propose(p.TripStart,p.TripEnd,p.Distance,p.Travelled,epochDays(1).toEpochTime(),&ep)
+	proposal,err := ps.propose(p.TripStart,p.TripEnd,p.Distance,p.Travelled,epochDays(1).toEpochTime(),&ep,3)
 	if err != nil {
 		t.Error("Failed to propose a promise when predicitor isnt ready",err)
 		return
@@ -269,15 +269,15 @@ func TestUpdateStackEntryInvalid(t *testing.T) {
 	var ps Promises
 	tp := testpredictor{clearRate:1}
 	
-	err := ps.updateStackEntry(0,&tp)
+	err := ps.updateStackEntry(0,&tp,3)
 	if err != EINVALIDARGUMENT {
 		t.Error("updateStackEntry accepted promise with no successors")
 	}
-	err = ps.updateStackEntry(MaxPromises,&tp)
+	err = ps.updateStackEntry(MaxPromises,&tp,3)
 	if err != EINVALIDARGUMENT {
 		t.Error("updateStackEntry accepted out-of-range index")
 	}
- 	err = ps.updateStackEntry(1,nil)
+ 	err = ps.updateStackEntry(1,nil,3)
 	if err != EINVALIDARGUMENT {
 		t.Error("updateStackEntry accepted nil predictor")
 	}
@@ -294,7 +294,7 @@ func TestUpdateStackEntrySimple(t* testing.T) {
 				      TripEnd:epochDays(25).toEpochTime(),
 				      Distance:10,
 				      Clearance:epochDays(35).toEpochTime()}
-	err := ps.updateStackEntry(1,&tp)
+	err := ps.updateStackEntry(1,&tp,3)
 	if err != nil {
 		t.Error("updateStackEntry returned error for simple case",err)
 	}
@@ -341,7 +341,7 @@ func TestUpdateStackEntryContinued(t* testing.T) {
 				      TripEnd:epochDays(25).toEpochTime(),
 				      Distance:10,
 				      Clearance:epochDays(35).toEpochTime()}
-	err := ps.updateStackEntry(1,&tp)
+	err := ps.updateStackEntry(1,&tp,3)
 	if err != nil {
 		t.Error("updateStackEntry returned error for simple case",err)
 	}
@@ -378,9 +378,30 @@ func TestUpdateStackEntryFull(t* testing.T) {
 				      TripEnd:epochDays(25).toEpochTime(),
 				      Distance:10,
 				      Clearance:epochDays(35).toEpochTime()}
-	err := ps.updateStackEntry(1,&tp)
+	err := ps.updateStackEntry(1,&tp,3)
 	if err != EEXCEEDEDMAXSTACKSIZE {
 		t.Error("updateStackEntry made stack too long",err)
+	}
+}
+
+func TestUpdateStackEntryZero(t* testing.T) {
+	var ps Promises
+	tp := testpredictor{clearRate:1,backfilledDist:3}
+	ps.entries[2]=Promise{TripStart:epochDays(10).toEpochTime(),
+				      TripEnd:epochDays(15).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(25).toEpochTime()}
+	ps.entries[1]=Promise{TripStart:epochDays(20).toEpochTime(),
+				      TripEnd:epochDays(25).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(35).toEpochTime()}
+	ps.entries[0]=Promise{TripStart:epochDays(20).toEpochTime(),
+				      TripEnd:epochDays(25).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(35).toEpochTime()}
+	err := ps.updateStackEntry(1,&tp,0)
+	if err != EEXCEEDEDMAXSTACKSIZE {
+		t.Error("updateStackEntry allowed a stack with max stack size set to zero",err)
 	}
 }
 
@@ -403,7 +424,7 @@ func TestRestack(t *testing.T) {
 				      TripEnd:epochDays(36).toEpochTime(),
 				      Distance:10,
 				      Clearance:epochDays(46).toEpochTime()}
-	err := ps.restack(2,&tp)
+	err := ps.restack(2,&tp,3)
 	if (err != nil) {
 		t.Error("failed to restack valid promises",err)
 	}
@@ -446,7 +467,7 @@ func TestRestackFull(t *testing.T) {
 				      TripEnd:epochDays(36).toEpochTime(),
 				      Distance:10,
 				      Clearance:epochDays(56).toEpochTime()}
-	err := ps.restack(3,&tp)
+	err := ps.restack(3,&tp,3)
 	if err != EEXCEEDEDMAXSTACKSIZE {
 		t.Error("restack succeeded where no valid stacking available")
 	}
@@ -471,7 +492,7 @@ func TestRestackOldest(t *testing.T) {
 				      TripEnd:epochDays(36).toEpochTime(),
 				      Distance:10,
 				      Clearance:epochDays(46).toEpochTime()}
-	err := ps.restack(3,&tp)
+	err := ps.restack(3,&tp,3)
 	if (err != nil) {
 		t.Error("failed to restack valid promises",err)
 	}

@@ -26,6 +26,7 @@ type PromisesConfig struct{
 	Algo		  PromisesAlgo
 	MaxPoints 	  uint32
 	MaxDays		  Days
+	MaxStackSize	  StackIndex
 	SmoothWindow	  Days
 	Degree  	  uint32
 }
@@ -410,13 +411,13 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 			}
 			
 			// Report any clearance deltas if appropriate
-			if (traveller.kept.promise.Clearance > 0 ) {
+			if (traveller.kept.Clearance > 0 && traveller.kept.StackIndex==0) {
 				nowDays := Days(now.toEpochDays(false))
-				clearDays := Days(traveller.kept.promise.Clearance.toEpochDays(false))
+				clearDays := Days(traveller.kept.Clearance.toEpochDays(false))
 				if (nowDays == clearDays) {
-					us.ClearedDistanceDeltas = append(us.ClearedDistanceDeltas,traveller.balance-traveller.kept.balanceAtTripStart)
+					us.ClearedDistanceDeltas = append(us.ClearedDistanceDeltas,traveller.balance)
 				}
-				if (traveller.kept.balanceAtTripStart - traveller.balance <= share) {
+				if (traveller.balance + share >= 0) {
 					us.ClearedDaysDeltas = append(us.ClearedDaysDeltas,nowDays-clearDays)
 				}
 			}
@@ -491,7 +492,8 @@ func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTi
 	}
 
 	// Ask for proposal and return the result
-	return self.getCreateTraveller(passport).Promises.propose(ts,te,distance,travelled,now,self.Administrator.predictor)
+	return self.getCreateTraveller(passport).Promises.propose(ts,te,distance,travelled,now,self.Administrator.predictor,
+								  self.Administrator.params.Promises.MaxStackSize)
 }
 
 // Make attempts to apply a proposal for changes to a traveller's set of clearance promises.

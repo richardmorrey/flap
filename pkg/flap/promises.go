@@ -67,7 +67,7 @@ type Proposal struct {
 // start and end dates and schedule. The promise is not made at this point
 // "distance" is the distance to backfill and "travelled" is the distance
 // travelled. This are different if a Taxi Overhead is set.
-func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kilometres,travelled Kilometres, now EpochTime, predictor predictor) (*Proposal,error) {
+func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kilometres,travelled Kilometres, now EpochTime, predictor predictor,maxStackSize StackIndex) (*Proposal,error) {
 
 	// Check args
 	if predictor == nil {
@@ -125,7 +125,7 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	pp.version = predictor.version()
 
 	// Stack promises to ensure no overlap
-	err = pp.restack(i,predictor)
+	err = pp.restack(i,predictor,maxStackSize)
 	if err == nil {
 		return &pp,nil
 	} else {
@@ -174,7 +174,7 @@ func (self* Promises) keep(tripStart EpochTime, tripEnd EpochTime, distance Kilo
 // updateStackEntry updates stack entry i clearance date to allow the trip after to proceed and 
 // updates the clearance date of the trip after to account for the early clearance of stack entry
 // i
-func (self* Promises) updateStackEntry(i int, predictor predictor) error {
+func (self* Promises) updateStackEntry(i int, predictor predictor, maxStackSize StackIndex) error {
 	
 	// Validate args
 	if i==0 || i > MaxPromises-1 {
@@ -192,7 +192,7 @@ func (self* Promises) updateStackEntry(i int, predictor predictor) error {
 	// promise if there is one
 	var lastIndex StackIndex
 	if i < MaxPromises-1 {
-		if self.entries[i+1].StackIndex >= MaxStackSize {
+		if self.entries[i+1].StackIndex >= maxStackSize {
 			logDebug("exceeded max stack size")
 			return EEXCEEDEDMAXSTACKSIZE
 		}
@@ -223,12 +223,11 @@ func (self* Promises) updateStackEntry(i int, predictor predictor) error {
 // - No sequence of more than 3 stacked promises
 // If this is not possible then an error is returned. Note this function does not change the TripStart, TripEnd
 // or Distance fields of any entry.
-const MaxStackSize = 3
-func (self* Promises) restack(i int, predictor predictor) error {
+func (self* Promises) restack(i int, predictor predictor, maxStackSize StackIndex) error {
 	
 	// Check previous promise and extend stack if clearance date overlaps
 	if  i < MaxPromises -1 && self.entries[i+1].Clearance >= self.entries[i].TripStart {
-		err := self.updateStackEntry(i+1,predictor)
+		err := self.updateStackEntry(i+1,predictor,maxStackSize)
 		if err != nil {
 			return err
 		}
@@ -239,7 +238,7 @@ func (self* Promises) restack(i int, predictor predictor) error {
 	for j:=i; j > 0 && self.entries[j].Clearance >= self.entries[j-1].TripStart; j-- {
 		
 		// Update
-		err := self.updateStackEntry(j,predictor)
+		err := self.updateStackEntry(j,predictor,maxStackSize)
 		if err != nil {
 			return err
 		}

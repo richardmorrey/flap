@@ -433,8 +433,8 @@ func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
 	if err != nil {
 		t.Error("Failed to get traveller when testing keep")
 	}
-	if traveller.kept.promise.Clearance != SecondsInDay*4 {
-		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.kept.promise.Clearance)
+	if traveller.kept.Clearance != SecondsInDay*4 {
+		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.kept.Clearance)
 	}
 
 	// Check traveller is backfilled even though they are cleared to fly
@@ -450,8 +450,8 @@ func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
 	if traveller.balance != startbalance+20 {
 		t.Error("Failed to backfill cleared traveller with negative balance",startbalance,traveller.balance)
 	}
-	if traveller.kept.promise.Clearance != SecondsInDay*4 {
-		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.kept.promise.Clearance)
+	if traveller.kept.Clearance != SecondsInDay*4 {
+		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.kept.Clearance)
 	}
 
 }
@@ -490,8 +490,8 @@ func TestUpdateTripsAndBackfillGap(t  *testing.T) {
 
 	// Confirm traveller now has a clearance date
 	traveller,err := engine.Travellers.GetTraveller(passport)
-	if traveller.kept.promise.Clearance != SecondsInDay*4 {
-		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.kept.promise.Clearance)
+	if traveller.kept.Clearance != SecondsInDay*4 {
+		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.kept.Clearance)
 	}
 }
 

@@ -1,4 +1,4 @@
-# Core FLAP Parameters
+# FLAP Parameters
 flapparams:
   # Maximum length of a Trip, in days
   triplength: 90
@@ -14,11 +14,13 @@ flapparams:
     maxpoints: 100
     # Maximum days ahead to allow a promise trip to end
     maxdays: 90
+    # Maximum number of promises that can be stacked
+    maxstacksize: 3
     # Degree to use for polynomial predictions
     degree: 2
   # Number of threads to use for backfilling. Must be power of 2. Defaults to 1.
   threads: 4
-# Parameters controlling flapmodel
+# Model Parameters
 modelparams:
   # Logging level 0 - off, 1 - errors only, 2 - info,
   # 3 - debug. Log output to <workingfolder>/flap.log
@@ -31,7 +33,7 @@ modelparams:
   # travelled on each of the trial days. Can be "average" or "max"
   dtalgo: average
   # The number of trial days to run the model for initially. During
-  # these days flights are logged but no  deductions are made from
+  # these days flights are logged but no deductions are made from
   # distance balances.
   trialdays: 365
   # Total days for which to run the model, including trial days.
@@ -50,50 +52,14 @@ modelparams:
   botspecs:
   - flyprobability: 0.01
     weight: 15
-    monthweights:
-    - 200
-    - 190
-    - 220
-    - 200
-    - 220
-    - 230
-    - 240
-    - 230
-    - 210
-    - 220
-    - 190
-    - 190
+    monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
   - flyprobability: 0.002
+    monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
     weight: 85
-    monthweights:
-    - 200
-    - 190
-    - 220
-    - 200
-    - 220
-    - 230
-    - 240
-    - 230
-    - 210
-    - 220
-    - 190
-    - 190
   # List of possible lengths for trips in days. For each trip an entry
   # is chosen at random from the list. To make a length more frequent
   # add it multiple times.
-  triplengths:
-  - 2
-  - 3
-  - 5
-  - 7
-  - 7
-  - 7
-  - 7
-  - 14
-  - 14
-  - 14
-  - 14
-  - 28
+  triplengths: [2,3,5,7,7,7,7,14,14,14,14,28]
   # The date of the first day in the run. Must be start of a day,in  RFC3339 format
   startday: "2021-01-01T00:00:00Z"
   # Factor to multiply the Daily Total by each day. Does not apply
@@ -101,7 +67,7 @@ modelparams:
   dailytotalfactor: 0.9995
   # Delta to add to the Daily Total each day. Does not apply during trial days
   # Expressed as a percentage of the Daily Total on Day One.
-  #dailytotaldelta: -0.025
+  dailytotaldelta: 0
   # Delta to report for. A row is written to summary.csv and bands.csv
   # every reportdaydelta days. A KML file including all flights taken
   # is written out every reportdaydelta days.

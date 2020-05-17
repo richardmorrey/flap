@@ -106,25 +106,25 @@ func TestPutGetSnapshot(t  *testing.T) {
 
 func TestCleared0(t *testing.T) {
 	var traveller Traveller
-	if (!traveller.Cleared(0)) {
+	if (traveller.Cleared(0) == crGrounded) {
 		t.Error("Traveller not cleared",traveller)
 	}
 }
 
 func TestCleared1(t *testing.T) {
 	var traveller Traveller
-	if (!traveller.Cleared(1)) {
+	if (traveller.Cleared(1) == crGrounded) {
 		t.Error("Traveller not cleared",traveller)
 	}
 }
 
 func TestCleared2Default(t *testing.T) {
 	var traveller Traveller
-	traveller.kept.promise.Clearance=1
+	traveller.kept.Clearance=1
 	traveller.balance=-1
 	populateFlights(&(traveller.tripHistory),1,1)
 	traveller.EndTrip()
-	if (traveller.Cleared(0)) {
+	if (traveller.Cleared(0) != crGrounded) {
 		t.Error("Traveller cleared",traveller)
 	}
 }
@@ -132,26 +132,26 @@ func TestCleared2Default(t *testing.T) {
 func TestClearedByPromise(t *testing.T) {
 	var tr Traveller
 	tr.balance=-1
-	tr.kept.promise=Promise{TripStart:SecondsInDay,TripEnd:SecondsInDay*2,Clearance:SecondsInDay*4,Distance:10}
-	tr.Promises.entries[0]=tr.kept.promise
+	tr.kept = Promise{TripStart:SecondsInDay,TripEnd:SecondsInDay*2,Clearance:SecondsInDay*4,Distance:10}
+	tr.Promises.entries[0]=tr.kept
 	tr.tripHistory.entries[0] = *createFlight(1,SecondsInDay,SecondsInDay*2)
 	tr.tripHistory.entries[0].distance=10
 	tr.tripHistory.entries[0].et = etTravellerTripEnd
-	if (!tr.Cleared(4*SecondsInDay)) {
-		t.Error("Traveller not cleared with valid clearance date",tr.kept.promise)
+	if (tr.Cleared(4*SecondsInDay) != crKeptPromise) {
+		t.Error("Traveller not cleared with valid clearance date",tr.kept)
 	}
-	if (tr.Cleared(3*SecondsInDay)) {
-		t.Error("Traveller cleared with early clearance date",tr.kept.promise)
+	if (tr.Cleared(3*SecondsInDay) != crGrounded)  {
+		t.Error("Traveller cleared with early clearance date",tr.kept)
 	}
 	tr.Promises.entries[0].Clearance = SecondsInDay*3
-	if (!tr.Cleared(3*SecondsInDay)) {
-		t.Error("Traveller not cleared when clearance date changed",tr.kept.promise)
+	if (tr.Cleared(3*SecondsInDay) != crKeptPromise) {
+		t.Error("Traveller not cleared when clearance date changed",tr.kept)
 	}
 }
 
 func TestSubmitFlight(t *testing.T) {
 	var traveller Traveller
-	traveller.kept.promise.Clearance=2
+	traveller.kept.Clearance=2
 	traveller.balance=0
 	oneflight := *createFlight(1,1,2)
 	oneflight.distance=1
@@ -174,7 +174,7 @@ func TestSubmitFlight(t *testing.T) {
 
 func TestSubmitFlightNoDebit(t *testing.T) {
 	var traveller Traveller
-	traveller.kept.promise.Clearance=2
+	traveller.kept.Clearance=2
 	traveller.balance=0
 	oneflight := *createFlight(1,1,2)
 	oneflight.distance=1
@@ -185,7 +185,7 @@ func TestSubmitFlightNoDebit(t *testing.T) {
 	if (traveller.balance !=0) {
 		t.Error("submitFlight updated balance when debit is false",traveller.balance)
 	}
-	if !traveller.Cleared(0) {
+	if traveller.Cleared(0) == crGrounded {
 		t.Error("traveller grounded after no debit submissions",traveller)
 	}
 }
@@ -194,7 +194,7 @@ func TestKeepNoFlights(t *testing.T) {
 	var tr Traveller
 	kept := tr.keep()
 	if kept != false {
-		t.Error("keep kept promise for an empty traveller")
+		t.Error("keepkept.for an empty traveller")
 	}
 	var tEmpty Traveller
 	if !reflect.DeepEqual(tr,tEmpty) {
@@ -210,7 +210,7 @@ func TestKeepMatchingPromise(t *testing.T) {
 	if ! tr.keep()  {
 		t.Error("keep didnt keep matching  promise")
 	}
-	if (tr.kept.promise != tr.Promises.entries[0]) {
+	if (tr.kept != tr.Promises.entries[0]) {
 		t.Error("keep didnt set kept  for matching made promise",tr)
 	}
 	if tr.MidTrip() {
@@ -224,9 +224,9 @@ func TestKeepNonMatchingPromise(t *testing.T) {
 	tr.tripHistory.entries[0].distance=54
 	tr.Promises.entries[0]=Promise{TripStart:1,TripEnd:2,Clearance: epochDays(88).toEpochTime(), Travelled:55}
 	if tr.keep()  {
-		t.Error("keep kept promise that didnt match")
+		t.Error("keepkept.that didnt match")
 	}
-	if (tr.kept.promise.Clearance != 0) {
+	if (tr.kept.Clearance != 0) {
 		t.Error("keep changed cleared for non-matching promise",tr)
 	}
 	if !tr.MidTrip() {

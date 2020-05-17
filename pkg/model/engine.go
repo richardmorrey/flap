@@ -438,18 +438,18 @@ func (self *Engine) reportDay(day flap.Days, currentDay flap.EpochTime, dt flap.
 		// Summmary stats title
 		if self.fh == nil{
 			fn := filepath.Join(self.ModelParams.WorkingFolder,"summary.csv")
-			os.MkdirAll(fn, os.ModePerm)
 			self.fh,_ = os.Create(fn)
 			if self.fh != nil {
-				self.fh.WriteString("Day,DailyTotal,Travelled,Travellers,Grounded,KeptBalance,Share\n")
+				self.fh.WriteString("Day,DailyTotal,Travelled,Travellers,Grounded,Share,RSquared\n")
 			}
 		}
 
 		// Summary stats line
 		if self.fh != nil {
-			line := fmt.Sprintf("%d,%d,%d,%d,%d,%d\n",day,
+			line := fmt.Sprintf("%d,%d,%d,%d,%d,%d,%.2f\n",day,
 				flap.Kilometres(self.stats.dailyTotal),flap.Kilometres(self.stats.travelled),
-				uint64(self.stats.travellers),uint64(self.stats.grounded),int64(self.stats.share))
+				uint64(self.stats.travellers),uint64(self.stats.grounded),int64(self.stats.share),
+			        self.calcRSquared(us.BestFitPoints,us.BestFitConsts,currentDay))
 			self.fh.WriteString(line)
 		}
 
@@ -601,4 +601,28 @@ func (self* Engine) reportDistribution(x []float64, binSize float64, title strin
 	}
 }
 
+// Calculates RSquared - measurment of fit - between given points and consts for results of regression
+// to fit those points
+func (self* Engine) calcRSquared(values []float64, consts []float64,currentDay flap.EpochTime) float64 {
 
+	// Check for something to plot
+	if len(consts) == 0 {
+		return 0
+	}
+
+	// Calculate estimated values for given points
+	estimates := make([]float64,0)
+	xStart := float64(currentDay/flap.SecondsInDay) 
+	xEnd := xStart + float64(len(values))
+	for x := xStart; x < xEnd; x++ {
+		var t float64
+		for i,v := range(consts) {
+			t += math.Pow(float64(x),float64(i))*v
+		}
+		estimates = append(estimates,t)
+	}
+
+	// Calculate RSquared
+	return stat.RSquaredFrom(estimates, values, nil)
+
+}
