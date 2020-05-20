@@ -94,7 +94,7 @@ func (self* promisesPlanner) prepareWeights(fe *flap.Engine,pp flap.Passport,cur
 	// Add a final weight for "not planning" to make the total probability up to 1
 	tw,err := self.topWeight()
 	if err != nil {
-		return logError(err)
+		tw = 0
 	}
 	self.addIndexWeight(NOTPLANNING, weight(TENPOWERNINE)-tw)
 	//logDebug("flyprob=",tw,"notflyprob=",weight(TENPOWERNINE)-tw)
