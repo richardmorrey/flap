@@ -61,17 +61,18 @@ func (self* polyBestFit) add(today epochDays,y Kilometres) {
 	qr := new(mat.QR)
 	qr.Factorize(a)
 	err := qr.SolveTo(c, false, b)
+	if err != nil {
+		logError(err)
+	}
 
 	// Extract results
 	newConsts := make([]float64,0,self.degree+1)
-	if err == nil {
-		for j:=0; j < self.degree+1; j++ {
-			newConsts = append(newConsts,floats.Round(c.At(j,0),10))
-		}
-		if !reflect.DeepEqual(newConsts,self.consts) {
-			self.pv++
-			self.consts = newConsts
-		}
+	for j:=0; j < self.degree+1; j++ {
+		newConsts = append(newConsts,floats.Round(c.At(j,0),10))
+	}
+	if !reflect.DeepEqual(newConsts,self.consts) {
+		self.pv++
+		self.consts = newConsts
 	}
     }
 }
