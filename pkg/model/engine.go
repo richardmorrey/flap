@@ -51,6 +51,7 @@ type ModelParams struct {
 	DailyTotalFactor	float64
 	DailyTotalDelta		float64
 	ReportDayDelta		flap.Days
+	VerboseReportDayDelta	flap.Days
 	LogLevel		logLevel
 	Deterministic		bool
 	Threads			uint
@@ -67,14 +68,17 @@ type summaryStats struct {
 	travellers		float64
 	grounded		float64
 	share			float64
+}
+
+type verboseStats struct {
 	clearedDistanceDeltas	[]float64
 	clearedDaysDeltas	[]float64
 }
 
 // reset resets the summary stats structure after a reporting event, avoiding
 // unnecessary new memory allocations
-func (self *summaryStats) reset() {
-	var ssReset summaryStats
+func (self *verboseStats) reset() {
+	var ssReset verboseStats
 	if self.clearedDistanceDeltas == nil {
 		ssReset.clearedDistanceDeltas = make([]float64,0,10000)
 	} else {
@@ -87,6 +91,9 @@ func (self *summaryStats) reset() {
 	}
 	*self=ssReset
 }
+func (self *summaryStats) reset() {
+	*self = summaryStats{}
+}
 
 type Engine struct {
 	FlapParams 			flap.FlapParams
@@ -95,6 +102,7 @@ type Engine struct {
 	db				*db.LevelDB
 	fh				*os.File
 	stats				summaryStats
+	verbose				verboseStats
 }
 
 // NewEngine is factory function for Engine
@@ -302,7 +310,7 @@ func (self *Engine) Run() error {
 		// Report daily stats
 		travellerBots.ReportDay(i,self.ModelParams.ReportDayDelta)
 		self.reportDay(i,currentDay,self.FlapParams.DailyTotal,us)
-		if i % self.ModelParams.ReportDayDelta == 0 {
+		if i % self.ModelParams.VerboseReportDayDelta == 0 {
 			flightPaths= reportFlightPaths(flightPaths,currentDay,self.ModelParams.WorkingFolder) 
 		}
 
@@ -426,10 +434,10 @@ func (self *Engine) reportDay(day flap.Days, currentDay flap.EpochTime, dt flap.
 	self.stats.grounded    += float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta) 
 	self.stats.share       += float64(us.Share)/float64(self.ModelParams.ReportDayDelta)
 	for _,v := range us.ClearedDistanceDeltas {
-		self.stats.clearedDistanceDeltas = append(self.stats.clearedDistanceDeltas, float64(v))
+		self.verbose.clearedDistanceDeltas = append(self.verbose.clearedDistanceDeltas, float64(v))
 	}
 	for _,u := range us.ClearedDaysDeltas {
-		self.stats.clearedDaysDeltas = append(self.stats.clearedDaysDeltas, float64(u))
+		self.verbose.clearedDaysDeltas = append(self.verbose.clearedDaysDeltas, float64(u))
 	}
 
 	// Output stats if needed ...
@@ -452,24 +460,29 @@ func (self *Engine) reportDay(day flap.Days, currentDay flap.EpochTime, dt flap.
 			        self.calcRSquared(us.BestFitPoints,us.BestFitConsts,currentDay))
 			self.fh.WriteString(line)
 		}
+		self.stats.reset()
+	}
+
+	// Output verbose data if requests
+	if self.ModelParams.VerboseReportDayDelta > 0 && day % self.ModelParams.VerboseReportDayDelta == 0 {
 
 		// Clearance Days Deltas Distribution
-		self.reportDistribution(self.stats.clearedDaysDeltas,10,"cleareddaysdistro",currentDay)
+		self.reportDistribution(self.verbose.clearedDaysDeltas,10,24, "cleareddaysdistro",currentDay)
 
 		// Clearance Distance Deltas Distribution
-		self.reportDistribution(self.stats.clearedDistanceDeltas,500,"cleareddistancedistro",currentDay)
+		self.reportDistribution(self.verbose.clearedDistanceDeltas,500,24,"cleareddistancedistro",currentDay)
 
 		// Regression accuracy
 		self.reportRegression(us.BestFitPoints,us.BestFitConsts,"regression",currentDay)
 
 		// Wipe stats
-		self.stats.reset()
+		self.verbose.reset()
 	}
 }
 
 // reportRegression reports the match between given set of points and result
 // of linear regression against those points as a png raster image.
-func (self* Engine) reportRegression(y []float64, consts []float64, title string,currentDay flap.EpochTime) {
+func (self* Engine) reportRegression(y []float64, consts []float64, foldername string,currentDay flap.EpochTime) {
 
 	// Check for something to plot
 	if len(consts) == 0 {
@@ -481,9 +494,10 @@ func (self* Engine) reportRegression(y []float64, consts []float64, title string
 	if err != nil {
 		return
 	}
-	p.Title.Text = title
-	p.X.Label.Text = "Epoch Day"
-	p.Y.Label.Text = "Share(Km)"
+	p.X.Label.Text = "Days since 1970-01-01"
+	p.Y.Label.Text = "Daily Share (km)"
+	t := currentDay.ToTime()
+	p.Title.Text = t.Format("2006-01-02")
 
 	// Define function based on consts
 	f := plotter.NewFunction(
@@ -505,11 +519,11 @@ func (self* Engine) reportRegression(y []float64, consts []float64, title string
 		pts[i].Y = y[i]
 		lastDay++
 	}
-	plotutil.AddLinePoints(p,"Daily Share", pts)
+	plotutil.AddLinePoints(p,"Actual", pts)
 
 	// Add the calculated regression line
 	p.Add(f)
-	p.Legend.Add("Regression", f)
+	p.Legend.Add("Linear Regression", f)
 	p.Legend.ThumbnailWidth = 0.5 * vg.Inch
 
 	// Set the axis ranges
@@ -520,11 +534,10 @@ func (self* Engine) reportRegression(y []float64, consts []float64, title string
 	p.Y.Max = topY + 0.25*topY
 
 	// Make sure the folder exists
-	folder := filepath.Join(self.ModelParams.WorkingFolder,title)
+	folder := filepath.Join(self.ModelParams.WorkingFolder,foldername)
 	os.MkdirAll(folder, os.ModePerm)
 
 	// Save the plot to a PNG file.
-	t := currentDay.ToTime()
 	fn := t.Format("2006-01-02") + ".png"
 	fp := filepath.Join(folder,fn)
 	p.Save(1000, 500, fp); 
@@ -532,12 +545,14 @@ func (self* Engine) reportRegression(y []float64, consts []float64, title string
 
 // reportDistribution reports a distribution of the given points with given bin size
 // both as a csv and png raster image.
-func (self* Engine) reportDistribution(x []float64, binSize float64, title string, currentDay flap.EpochTime) {
+func (self* Engine) reportDistribution(x []float64, binSize float64, maxBars int, foldername string, currentDay flap.EpochTime) {
 
-	// Build histogram distribution if we have enough points
+	// Check for values to build histogram from
 	if len(x) == 0 {
 		return
 	}
+
+	// Create initial buckets
 	sort.Float64s(x)	
 	min := float64(int64(floats.Min(x))/int64(binSize))*binSize - binSize 
 	max := float64(int64(floats.Max(x))/int64(binSize))*binSize + binSize*2 
@@ -546,10 +561,18 @@ func (self* Engine) reportDistribution(x []float64, binSize float64, title strin
 		return
 	}
 	floats.Span(dividers, min, max)
+
+	// Merge the lowest buckets if we are above max bars
+	for ; len(dividers) > maxBars +1 ;  {
+		dividers = dividers[1:]
+		dividers[0] = -math.MaxFloat64 
+	}
+
+	// Generate distribution
 	hist := stat.Histogram(nil, dividers, x, nil)
 
 	// Make sure there is a folder to write to
-	folder := filepath.Join(self.ModelParams.WorkingFolder,title)
+	folder := filepath.Join(self.ModelParams.WorkingFolder,foldername)
 	os.MkdirAll(folder, os.ModePerm)
 
 	// Open csv file
@@ -571,20 +594,24 @@ func (self* Engine) reportDistribution(x []float64, binSize float64, title strin
 	w := vg.Points(20)
 	bars, err := plotter.NewBarChart(plotter.Values(hist),w)
 	if err == nil {
-		bars.LineStyle.Width = vg.Length(0)
+		bars.LineStyle.Width = vg.Length(1)
 		bars.Color = plotutil.Color(0)
 
 		// Build labels
 		labels := make([]string,0,len(dividers))
 		for _,d := range dividers {
-			labels = append(labels,fmt.Sprintf("%d",int(d)))
+			if d == -math.MaxFloat64 {
+				labels = append(labels,"...")
+			} else {
+				labels = append(labels,fmt.Sprintf("%d",int(d)))
+			}
 		}
 
 		// Add to a chart
 		p, err := plot.New()
 		if err == nil {
-			p.Title.Text = title
-			p.Y.Label.Text = "Count"
+			p.Title.Text = t.Format("2006-01-02")
+			p.Y.Label.Text = "Completed Trips"
 			p.X.Label.Text = "Balance At Clearance (km)"
 			p.Add(bars)
 			p.NominalX(labels...)
