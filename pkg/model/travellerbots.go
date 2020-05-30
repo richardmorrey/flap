@@ -9,6 +9,11 @@ import (
 	"os"
 	"strings"
 	"sync"
+	//"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
+	//"gonum.org/v1/plot/plotutil"
+	//"gonum.org/v1/plot/vg"
+	//"gonum.org/v1/plot/vg/draw"
 )
 
 var ECOULDNTFINDWEIGHT= errors.New("Couldnt find country weight for bot")
@@ -20,6 +25,8 @@ type travellerBot struct {
 	numInstances   botIndex
 	planner	       botPlanner
 	stats	       botStats
+	cancelledPts   plotter.XYs
+	travelledPts   plotter.XYs
 }
 
 type botId struct {
@@ -95,10 +102,21 @@ func (self *travellerBot) ReportDay(rdd flap.Days) string {
 	defer self.stats.mux.Unlock()
 
 	// Format stats
+	cancelled := (float64(self.stats.tripsCancelled)/float64(self.stats.tripsPlanned+self.stats.tripsCancelled))*100
+	distance := float64(self.stats.distance)/float64(flap.Kilometres(self.numInstances))
 	line := fmt.Sprintf("%f,%f,%f,",
 		(float64(self.stats.flightsRefused)/float64(self.stats.flightsTaken+self.stats.flightsRefused))*100,
-		(float64(self.stats.tripsCancelled)/float64(self.stats.tripsPlanned+self.stats.tripsCancelled))*100,
-		 float64(self.stats.distance)/float64(flap.Kilometres(self.numInstances)))
+		cancelled,distance)
+
+	// Add points for summary graphs
+	if self.travelledPts == nil {
+		self.travelledPts = make(plotter.XYs, 0)
+		self.travelledPts = append(self.travelledPts,plotter.XY{X:float64(rdd),Y:distance})
+	}
+	if self.cancelledPts == nil {
+		self.cancelledPts = make(plotter.XYs, 0)
+		self.cancelledPts = append(self.travelledPts,plotter.XY{X:float64(rdd),Y:cancelled})
+	}
 
 	// Reset counters
 	self.stats.flightsTaken = 0

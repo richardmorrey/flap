@@ -21,7 +21,7 @@ import (
 	"gonum.org/v1/plot/plotutil"
 	"gonum.org/v1/plot/vg"
 	"gonum.org/v1/plot/vg/draw"
-
+	"image/color"
 )
 
 var EFAILEDTOCREATECOUNTRIESAIRPORTSROUTES = errors.New("Failed to create Countries-Airports-Routes")
@@ -52,6 +52,7 @@ type ModelParams struct {
 	DailyTotalDelta		float64
 	ReportDayDelta		flap.Days
 	VerboseReportDayDelta	flap.Days
+	ChartWidth		float64
 	LogLevel		logLevel
 	Deterministic		bool
 	Threads			uint
@@ -344,6 +345,9 @@ func (self *Engine) Run() error {
 			logDebug("Updated FLAP Params:",self.FlapParams)
 		}
 	}
+
+	// Output final charts and finish
+	self.reportBandsCancelled(travellerBots)
 	fmt.Printf("\nFinished\n")
 	return nil
 }
@@ -480,6 +484,43 @@ func (self *Engine) reportDay(day flap.Days, currentDay flap.EpochTime, dt flap.
 	}
 }
 
+// reportBandsCancelled generates filled line charts covering the covered bands for distance travelled
+// and % trips cancelled over time.
+func (self* Engine) reportBandsCancelled(bots *TravellerBots) {
+
+	// Set axis labels
+	p, err := plot.New()
+	if err != nil {
+		return
+	}
+	p.X.Label.Text = "Day"
+	p.Y.Label.Text = "Trips Cancelled (%)"
+
+	// Add the source points for each band
+	red:= uint8(255)
+	for _,bot  := range(bots.bots) {
+		line, err := plotter.NewLine(bot.cancelledPts)
+		if err != nil {
+			return
+		}
+		line.LineStyle.Width=3
+		line.LineStyle.Color = color.RGBA{red,0,0,100}
+		p.Add(line)
+		red -=16
+	}
+
+	// Set the axis ranges
+	p.X.Max= float64(self.ModelParams.DaysToRun)
+	p.X.Min = 1
+	p.Y.Min = 0
+	p.Y.Max = 100
+
+	// Save the plot to a PNG file.
+	fp := filepath.Join(self.ModelParams.WorkingFolder,"cancelledbyband.png")
+	w:= vg.Length(self.ModelParams.ChartWidth)*vg.Centimeter
+	p.Save(w, w/2, fp); 
+}
+
 // reportRegression reports the match between given set of points and result
 // of linear regression against those points as a png raster image.
 func (self* Engine) reportRegression(y []float64, consts []float64, foldername string,currentDay flap.EpochTime) {
@@ -489,7 +530,7 @@ func (self* Engine) reportRegression(y []float64, consts []float64, foldername s
 		return
 	}
 
-	// Set labels and titls
+	// Set labels and titles
 	p, err := plot.New()
 	if err != nil {
 		return
@@ -508,7 +549,10 @@ func (self* Engine) reportRegression(y []float64, consts []float64, foldername s
 			}
 			return y
 		})
-	//f.Color = color.RGBA{B: 255, A: 255}
+	f.LineStyle.Width = 3
+ 	f.LineStyle.Dashes = []vg.Length{10}
+     	f.LineStyle.DashOffs =  vg.Length(2)
+	f.LineStyle.Color = color.RGBA{0,0,0,100}
 	
 	// Add the source points
 	pts := make(plotter.XYs, len(y))
@@ -519,12 +563,18 @@ func (self* Engine) reportRegression(y []float64, consts []float64, foldername s
 		pts[i].Y = y[i]
 		lastDay++
 	}
-	plotutil.AddLinePoints(p,"Actual", pts)
+	actual, err := plotter.NewLine(pts)
+	if err == nil {
+		p.Add(actual)
+	}
+	actual.LineStyle.Width=3
+	actual.LineStyle.Color = color.RGBA{100,0,0,100}
+	p.Legend.Add("Actual", actual)
 
 	// Add the calculated regression line
 	p.Add(f)
-	p.Legend.Add("Linear Regression", f)
-	p.Legend.ThumbnailWidth = 0.5 * vg.Inch
+	p.Legend.Add("Regression", f)
+	p.Legend.ThumbnailWidth = 5
 
 	// Set the axis ranges
 	topY := floats.Max(y)
@@ -540,7 +590,8 @@ func (self* Engine) reportRegression(y []float64, consts []float64, foldername s
 	// Save the plot to a PNG file.
 	fn := t.Format("2006-01-02") + ".png"
 	fp := filepath.Join(folder,fn)
-	p.Save(1000, 500, fp); 
+	w:= vg.Length(self.ModelParams.ChartWidth/2)*vg.Centimeter
+	p.Save(w, w/2, fp); 
 }
 
 // reportDistribution reports a distribution of the given points with given bin size
@@ -591,8 +642,8 @@ func (self* Engine) reportDistribution(x []float64, binSize float64, maxBars int
 	}
 
 	// Build the bars
-	w := vg.Points(20)
-	bars, err := plotter.NewBarChart(plotter.Values(hist),w)
+	imagewidth:= vg.Length(self.ModelParams.ChartWidth/2)*vg.Centimeter
+	bars, err := plotter.NewBarChart(plotter.Values(hist),imagewidth/vg.Length(maxBars+2))
 	if err == nil {
 		bars.LineStyle.Width = vg.Length(1)
 		bars.Color = plotutil.Color(0)
@@ -623,7 +674,7 @@ func (self* Engine) reportDistribution(x []float64, binSize float64, maxBars int
 			t := currentDay.ToTime()
 			fn := t.Format("2006-01-02") + ".png"
 			fp := filepath.Join(folder,fn)
-			p.Save(1000, 500, fp)
+			p.Save(imagewidth, imagewidth/2, fp); 
 		}
 	}
 }
