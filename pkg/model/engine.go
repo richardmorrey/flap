@@ -18,9 +18,9 @@ import (
 	"gonum.org/v1/gonum/floats"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
-	"gonum.org/v1/plot/plotutil"
 	"gonum.org/v1/plot/vg"
 	"gonum.org/v1/plot/vg/draw"
+	"gonum.org/v1/plot/palette/brewer"
 	"image/color"
 )
 
@@ -53,6 +53,7 @@ type ModelParams struct {
 	ReportDayDelta		flap.Days
 	VerboseReportDayDelta	flap.Days
 	ChartWidth		float64
+	LargeChartWidth    	float64
 	LogLevel		logLevel
 	Deterministic		bool
 	Threads			uint
@@ -104,6 +105,8 @@ type Engine struct {
 	fh				*os.File
 	stats				summaryStats
 	verbose				verboseStats
+	allowancePts			plotter.XYs
+	travelledPts   			plotter.XYs
 }
 
 // NewEngine is factory function for Engine
@@ -274,6 +277,7 @@ func (self *Engine) Run() error {
 
 	// Reset stats struct
 	self.stats.reset()
+	plot.DefaultFont="Helvetica"
 
 	// Model each day as configured, but run for "planDays" first to make
 	// sure journey planner is pre-loaded with data for each of its days.
@@ -348,6 +352,8 @@ func (self *Engine) Run() error {
 
 	// Output final charts and finish
 	self.reportBandsCancelled(travellerBots)
+	self.reportBandsDistance(travellerBots)
+	self.reportBandsSummary()
 	fmt.Printf("\nFinished\n")
 	return nil
 }
@@ -464,6 +470,16 @@ func (self *Engine) reportDay(day flap.Days, currentDay flap.EpochTime, dt flap.
 			        self.calcRSquared(us.BestFitPoints,us.BestFitConsts,currentDay))
 			self.fh.WriteString(line)
 		}
+	
+		// Update points for summary graph
+		if self.travelledPts == nil {
+			self.travelledPts = make(plotter.XYs, 0)
+		}
+		self.travelledPts = append(self.travelledPts,plotter.XY{X:float64(day),Y:self.stats.travelled})
+		if self.allowancePts == nil {
+			self.allowancePts = make(plotter.XYs, 0)
+		}
+		self.allowancePts = append(self.allowancePts,plotter.XY{X:float64(day),Y:self.stats.dailyTotal})
 		self.stats.reset()
 	}
 
@@ -471,17 +487,108 @@ func (self *Engine) reportDay(day flap.Days, currentDay flap.EpochTime, dt flap.
 	if self.ModelParams.VerboseReportDayDelta > 0 && day % self.ModelParams.VerboseReportDayDelta == 0 {
 
 		// Clearance Days Deltas Distribution
-		self.reportDistribution(self.verbose.clearedDaysDeltas,10,24, "cleareddaysdistro",currentDay)
+		self.reportDistribution(self.verbose.clearedDaysDeltas,10,24, "cleareddaysdistro",currentDay,day)
 
 		// Clearance Distance Deltas Distribution
-		self.reportDistribution(self.verbose.clearedDistanceDeltas,500,24,"cleareddistancedistro",currentDay)
+		self.reportDistribution(self.verbose.clearedDistanceDeltas,500,24,"cleareddistancedistro",currentDay,day)
 
 		// Regression accuracy
-		self.reportRegression(us.BestFitPoints,us.BestFitConsts,"regression",currentDay)
+		self.reportRegression(us.BestFitPoints,us.BestFitConsts,"regression",currentDay,day)
 
 		// Wipe stats
 		self.verbose.reset()
 	}
+}
+
+// reportSummary generates summary line chart comparing daily allowance with distance travelled
+// over time
+func (self* Engine) reportBandsSummary() {
+
+	// Set axis labels
+	p, err := plot.New()
+	if err != nil {
+		return
+	}
+	p.X.Label.Text = "Day"
+	p.Y.Label.Text = "Distance (km)"
+
+	// Add the source points for each band
+	line, err := plotter.NewLine(self.allowancePts)
+	line.LineStyle.Width = 1
+ 	line.LineStyle.Dashes = []vg.Length{10}
+     	line.LineStyle.DashOffs =  vg.Length(2)
+	line.LineStyle.Color = color.Black
+	p.Add(line)
+	_,_,_,ymax := plotter.XYRange(self.allowancePts)
+	if ymax > p.Y.Max {
+		p.Y.Max = ymax
+	}
+	line, err = plotter.NewLine(self.travelledPts)
+	p.Add(line)
+	line.LineStyle.Width = 1
+	palette,err := brewer.GetPalette(brewer.TypeSequential,"Reds",3)
+	if err != nil {
+		return 
+	}
+	line.LineStyle.Color = palette.Colors()[2]
+	p.Add(line)
+	_,_,_,ymax = plotter.XYRange(self.travelledPts)
+	if ymax > p.Y.Max {
+		p.Y.Max = ymax
+	}
+
+	// Set the axis ranges
+	p.X.Max= float64(self.ModelParams.DaysToRun)
+	p.X.Min = 1
+	p.Y.Min = 0
+
+	// Save the plot to a PNG file.
+	fp := filepath.Join(self.ModelParams.WorkingFolder,"summary.png")
+	w:= vg.Length(self.ModelParams.LargeChartWidth)*vg.Centimeter
+	p.Save(w, w/2, fp); 
+}
+
+// reportBandsDistance generates filled line charts covering the covered bands for distance travelled
+// over time.
+func (self* Engine) reportBandsDistance(bots *TravellerBots) {
+
+	// Set axis labels
+	p, err := plot.New()
+	if err != nil {
+		return
+	}
+	p.X.Label.Text = "Day"
+	p.Y.Label.Text = "Distance (km)"
+
+	// Add the source points for each band
+	palette,err := brewer.GetPalette(brewer.TypeSequential,"Reds",len(bots.bots))
+	if err != nil {
+		return 
+	}
+	for i := len(bots.bots)-1; i >= 0; i-- {
+		line, err := plotter.NewLine(bots.bots[i].travelledPts)
+		if err != nil {
+			return
+		}
+		line.FillColor = palette.Colors()[i]
+		p.Add(line)
+
+		// Update y ranges
+		_,_,_,ymax := plotter.XYRange(bots.bots[i].travelledPts)
+		if ymax > p.Y.Max {
+			p.Y.Max = ymax
+		}
+	}
+
+	// Set the axis ranges
+	p.X.Max= float64(self.ModelParams.DaysToRun)
+	p.X.Min = 1
+	p.Y.Min = 0
+
+	// Save the plot to a PNG file.
+	fp := filepath.Join(self.ModelParams.WorkingFolder,"distancebyband.png")
+	w:= vg.Length(self.ModelParams.LargeChartWidth)*vg.Centimeter
+	p.Save(w, w/2, fp); 
 }
 
 // reportBandsCancelled generates filled line charts covering the covered bands for distance travelled
@@ -497,16 +604,17 @@ func (self* Engine) reportBandsCancelled(bots *TravellerBots) {
 	p.Y.Label.Text = "Trips Cancelled (%)"
 
 	// Add the source points for each band
-	red:= uint8(255)
-	for _,bot  := range(bots.bots) {
-		line, err := plotter.NewLine(bot.cancelledPts)
+	palette,err := brewer.GetPalette(brewer.TypeSequential,"Reds",len(bots.bots))
+	if err != nil {
+		return 
+	}
+	for i := len(bots.bots)-1; i >= 0; i-- {
+		line, err := plotter.NewLine(bots.bots[i].cancelledPts)
 		if err != nil {
 			return
 		}
-		line.LineStyle.Width=3
-		line.LineStyle.Color = color.RGBA{red,0,0,100}
+		line.FillColor = palette.Colors()[i]
 		p.Add(line)
-		red -=16
 	}
 
 	// Set the axis ranges
@@ -517,13 +625,13 @@ func (self* Engine) reportBandsCancelled(bots *TravellerBots) {
 
 	// Save the plot to a PNG file.
 	fp := filepath.Join(self.ModelParams.WorkingFolder,"cancelledbyband.png")
-	w:= vg.Length(self.ModelParams.ChartWidth)*vg.Centimeter
+	w:= vg.Length(self.ModelParams.LargeChartWidth)*vg.Centimeter
 	p.Save(w, w/2, fp); 
 }
 
 // reportRegression reports the match between given set of points and result
 // of linear regression against those points as a png raster image.
-func (self* Engine) reportRegression(y []float64, consts []float64, foldername string,currentDay flap.EpochTime) {
+func (self* Engine) reportRegression(y []float64, consts []float64, foldername string,currentDay flap.EpochTime, day flap.Days) {
 
 	// Check for something to plot
 	if len(consts) == 0 {
@@ -538,7 +646,7 @@ func (self* Engine) reportRegression(y []float64, consts []float64, foldername s
 	p.X.Label.Text = "Days since 1970-01-01"
 	p.Y.Label.Text = "Daily Share (km)"
 	t := currentDay.ToTime()
-	p.Title.Text = t.Format("2006-01-02")
+	p.Title.Text = fmt.Sprintf("Day %d",day)
 
 	// Define function based on consts
 	f := plotter.NewFunction(
@@ -549,10 +657,10 @@ func (self* Engine) reportRegression(y []float64, consts []float64, foldername s
 			}
 			return y
 		})
-	f.LineStyle.Width = 3
+	f.LineStyle.Width = 2
  	f.LineStyle.Dashes = []vg.Length{10}
      	f.LineStyle.DashOffs =  vg.Length(2)
-	f.LineStyle.Color = color.RGBA{0,0,0,100}
+	f.LineStyle.Color = color.Black
 	
 	// Add the source points
 	pts := make(plotter.XYs, len(y))
@@ -567,14 +675,15 @@ func (self* Engine) reportRegression(y []float64, consts []float64, foldername s
 	if err == nil {
 		p.Add(actual)
 	}
-	actual.LineStyle.Width=3
-	actual.LineStyle.Color = color.RGBA{100,0,0,100}
-	p.Legend.Add("Actual", actual)
+	palette,err := brewer.GetPalette(brewer.TypeSequential,"Reds",3)
+	if err != nil {
+		return 
+	}
+	actual.LineStyle.Width=2
+	actual.LineStyle.Color = palette.Colors()[2]
 
 	// Add the calculated regression line
 	p.Add(f)
-	p.Legend.Add("Regression", f)
-	p.Legend.ThumbnailWidth = 5
 
 	// Set the axis ranges
 	topY := floats.Max(y)
@@ -590,13 +699,13 @@ func (self* Engine) reportRegression(y []float64, consts []float64, foldername s
 	// Save the plot to a PNG file.
 	fn := t.Format("2006-01-02") + ".png"
 	fp := filepath.Join(folder,fn)
-	w:= vg.Length(self.ModelParams.ChartWidth/2)*vg.Centimeter
+	w:= vg.Length(self.ModelParams.ChartWidth)*vg.Centimeter
 	p.Save(w, w/2, fp); 
 }
 
 // reportDistribution reports a distribution of the given points with given bin size
 // both as a csv and png raster image.
-func (self* Engine) reportDistribution(x []float64, binSize float64, maxBars int, foldername string, currentDay flap.EpochTime) {
+func (self* Engine) reportDistribution(x []float64, binSize float64, maxBars int, foldername string, currentDay flap.EpochTime,day flap.Days) {
 
 	// Check for values to build histogram from
 	if len(x) == 0 {
@@ -642,11 +751,15 @@ func (self* Engine) reportDistribution(x []float64, binSize float64, maxBars int
 	}
 
 	// Build the bars
-	imagewidth:= vg.Length(self.ModelParams.ChartWidth/2)*vg.Centimeter
+	imagewidth:= vg.Length(self.ModelParams.ChartWidth)*vg.Centimeter
 	bars, err := plotter.NewBarChart(plotter.Values(hist),imagewidth/vg.Length(maxBars+2))
 	if err == nil {
+		palette,err := brewer.GetPalette(brewer.TypeSequential,"Reds",3)
+		if err != nil {
+			return 
+		}
 		bars.LineStyle.Width = vg.Length(1)
-		bars.Color = plotutil.Color(0)
+		bars.Color = palette.Colors()[2]
 
 		// Build labels
 		labels := make([]string,0,len(dividers))
@@ -661,7 +774,7 @@ func (self* Engine) reportDistribution(x []float64, binSize float64, maxBars int
 		// Add to a chart
 		p, err := plot.New()
 		if err == nil {
-			p.Title.Text = t.Format("2006-01-02")
+			p.Title.Text = fmt.Sprintf("Day %d - Day %d", day - self.ModelParams.VerboseReportDayDelta,day)
 			p.Y.Label.Text = "Completed Trips"
 			p.X.Label.Text = "Balance At Clearance (km)"
 			p.Add(bars)

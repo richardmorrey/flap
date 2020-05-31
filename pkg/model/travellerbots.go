@@ -95,14 +95,17 @@ func (self  *botStats) Planned() {
 }
 
 // Report writes a single CSV row with stats
-func (self *travellerBot) ReportDay(rdd flap.Days) string {
+func (self *travellerBot) ReportDay(day flap.Days) string {
 	
 	// One thread at a time
 	self.stats.mux.Lock()
 	defer self.stats.mux.Unlock()
 
 	// Format stats
-	cancelled := (float64(self.stats.tripsCancelled)/float64(self.stats.tripsPlanned+self.stats.tripsCancelled))*100
+	var cancelled float64
+	if (self.stats.tripsPlanned+self.stats.tripsCancelled) > 0 {
+		cancelled = (float64(self.stats.tripsCancelled)/float64(self.stats.tripsPlanned+self.stats.tripsCancelled))*100
+	}
 	distance := float64(self.stats.distance)/float64(flap.Kilometres(self.numInstances))
 	line := fmt.Sprintf("%f,%f,%f,",
 		(float64(self.stats.flightsRefused)/float64(self.stats.flightsTaken+self.stats.flightsRefused))*100,
@@ -111,12 +114,12 @@ func (self *travellerBot) ReportDay(rdd flap.Days) string {
 	// Add points for summary graphs
 	if self.travelledPts == nil {
 		self.travelledPts = make(plotter.XYs, 0)
-		self.travelledPts = append(self.travelledPts,plotter.XY{X:float64(rdd),Y:distance})
 	}
+	self.travelledPts = append(self.travelledPts,plotter.XY{X:float64(day),Y:distance})
 	if self.cancelledPts == nil {
 		self.cancelledPts = make(plotter.XYs, 0)
-		self.cancelledPts = append(self.travelledPts,plotter.XY{X:float64(rdd),Y:cancelled})
 	}
+	self.cancelledPts = append(self.cancelledPts,plotter.XY{X:float64(day),Y:cancelled})
 
 	// Reset counters
 	self.stats.flightsTaken = 0
@@ -169,7 +172,7 @@ func (self *TravellerBots) ReportDay(day flap.Days, rdd flap.Days) {
 		// Write line
 		line := fmt.Sprintf("%d,",day)
 		for bb := bandIndex(0); bb < bandIndex(len(self.bots)); bb++ {
-			line += self.bots[bb].ReportDay(rdd)
+			line += self.bots[bb].ReportDay(day)
 		}
 		line=strings.TrimRight(line,",")
 		line+="\n"
