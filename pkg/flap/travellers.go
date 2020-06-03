@@ -137,6 +137,7 @@ func (self *Traveller) submitFlight(flight *Flight,now EpochTime, taxiOH Kilomet
 	}
 
 	// Debit flight distance and any taxi overhead from balance
+	bac := self.balance
 	if debit {
 		self.balance -= (flight.distance + taxiOH)
 	}
@@ -144,7 +145,7 @@ func (self *Traveller) submitFlight(flight *Flight,now EpochTime, taxiOH Kilomet
 	// Reset any kept promise
 	if cr == crKeptPromise {
 		self.kept = Promise{}
-		return self.balance,nil
+		return bac,nil
 	}
 	return 0,nil
 }
