@@ -23,12 +23,13 @@ const (
 )
 
 type PromisesConfig struct{
-	Algo		  PromisesAlgo
-	MaxPoints 	  uint32
-	MaxDays		  Days
-	MaxStackSize	  StackIndex
-	SmoothWindow	  Days
-	Degree  	  uint32
+	Algo		  	PromisesAlgo
+	MaxPoints 	  	uint32
+	MaxDays		  	Days
+	MaxStackSize	  	StackIndex
+	SmoothWindow	  	Days
+	CorrectionSmoothWindow	Days
+	Degree  	  	uint32
 }
 
 type FlapParams struct {
@@ -164,23 +165,24 @@ func dropAdministrator(database db.Database) error {
 
 type engineState struct {
 	mux sync.Mutex
-	promisesCorrection Kilometres
+	pcSmoothed smoothYs
+	pc	Kilometres
 	totalGrounded      uint64
 }
-func (self *engineState) getPromisesCorrection() Kilometres {
+func (self *engineState) cyclePromisesCorrection(smoothWindow Days) Kilometres {
 	self.mux.Lock()
 	defer self.mux.Unlock()
-	return self.promisesCorrection
-}
-func (self *engineState) setPromisesCorrection(pc Kilometres) {
-	self.mux.Lock()
-	defer self.mux.Unlock()
-	self.promisesCorrection = pc
+	if self.pcSmoothed.windowSize == 0 {
+		self.pcSmoothed = smoothYs{windowSize:int(math.Max(1,float64(smoothWindow))),maxYs:1}
+	}
+	self.pcSmoothed.addY(float64(self.pc))
+	self.pc = 0
+	return Kilometres(self.pcSmoothed.ys[0])
 }
 func (self *engineState) changePromisesCorrection(delta Kilometres) {
 	self.mux.Lock()
 	defer self.mux.Unlock()
-	self.promisesCorrection += delta
+	self.pc += delta
 }
 
 type Engine struct
@@ -294,8 +296,9 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 	backfillers := 	Kilometres(math.Max(float64(self.Administrator.params.MinGrounded),float64(self.state.totalGrounded)))
 	if backfillers > 0 {
 		if self.Administrator.params.Promises.Algo & pamCorrectBalances == pamCorrectBalances {
-			logDebug("DailyTotal=",self.Administrator.params.DailyTotal,"PromisesCorrection=",self.state.getPromisesCorrection())
-			ut.Share = (self.Administrator.params.DailyTotal+self.state.getPromisesCorrection()) / backfillers
+			pc := self.state.cyclePromisesCorrection(self.Administrator.params.Promises.CorrectionSmoothWindow)
+			logDebug("DailyTotal=",self.Administrator.params.DailyTotal,"PromisesCorrection=",pc)
+			ut.Share = (self.Administrator.params.DailyTotal+pc) / backfillers
 		} else {
 			ut.Share = self.Administrator.params.DailyTotal / backfillers
 		}
@@ -308,7 +311,6 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 			logInfo("Added predictior data point:",now.toEpochDays(false),ut.Share)
 		}
 	}
-	self.state.setPromisesCorrection(0)
 
 	// Create snapshot for faster multithreaded reads
 	ss,err := self.Travellers.TakeSnapshot()
