@@ -113,7 +113,7 @@ func TestWobbly(t *testing.T) {
 	bf,_ := newBestFit(PromisesConfig{MaxPoints:10})
 	x := epochDays(1)
 	for y:=Kilometres(500); y>0;y-=50 {
-		if y % 100 ==0 {
+		if int64(y) % 100 ==0 {
 			bf.add(x,y+10)
 		} else {
 			bf.add(x,y-10)

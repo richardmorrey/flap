@@ -19,6 +19,7 @@ const (
 	paLinearBestFit PromisesAlgo = 0x01
 	paPolyBestFit PromisesAlgo = 0x02
 	pamCorrectBalances PromisesAlgo = 0x10
+	pamCorrectDailyTotal PromisesAlgo = 0x20
 	paMask PromisesAlgo = 0x0f
 )
 
@@ -295,7 +296,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 	// Calculate backfill share
 	backfillers := 	Kilometres(math.Max(float64(self.Administrator.params.MinGrounded),float64(self.state.totalGrounded)))
 	if backfillers > 0 {
-		if self.Administrator.params.Promises.Algo & pamCorrectBalances == pamCorrectBalances {
+		if self.Administrator.params.Promises.Algo & pamCorrectDailyTotal == pamCorrectDailyTotal {
 			pc := self.state.cyclePromisesCorrection(self.Administrator.params.Promises.CorrectionSmoothWindow)
 			logDebug("DailyTotal=",self.Administrator.params.DailyTotal,"PromisesCorrection=",pc)
 			ut.Share = (self.Administrator.params.DailyTotal+pc) / backfillers

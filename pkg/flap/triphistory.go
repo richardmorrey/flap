@@ -13,7 +13,7 @@ import (
 	"image/color"
 )
 
-type Kilometres int64
+type Kilometres float64
 type EpochTime uint64
 type EpochDelta int64
 type flightType int8

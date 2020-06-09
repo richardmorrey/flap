@@ -90,7 +90,7 @@ func TestCalcDistLHWtoCAI(t* testing.T) {
 		Lon:31.40559959411621,
 	}
 	kms,err := ll1.Distance(ll2)
-	if kms != 3533 {
+	if int64(kms) != 3533 {
 		t.Error("Calculated distance isnt 3533 kms", kms)
 	}
 	if err != nil {
@@ -108,7 +108,7 @@ func TestCalcDistCAItoLWH(t* testing.T) {
 		Lon:31.40559959411621,
 	}
 	kms,err := ll2.Distance(ll1)
-	if kms != 3533 {
+	if int64(kms) != 3533 {
 		t.Error("Calculated distance isnt 3533 kms", kms)
 	}
 	if err != nil {

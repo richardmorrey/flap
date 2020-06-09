@@ -20,6 +20,8 @@ flapparams:
     maxstacksize: 3
     # Degree to use for polynomial predictions
     degree: 1
+    # Moving average window used for smoothing the pormise correction, if set
+    correctionsmoothwindow: 100
   # Number of threads to use for backfilling. Must be power of 2. Defaults to 1.
   threads: 4
 # Model Parameters
@@ -41,7 +43,7 @@ modelparams:
   # Total days for which to run the model, including trial days.
   daystorun: 4000
   # Total number of travellers to simulate
-  totaltravellers: 10000
+  totaltravellers: 1000
   # Definition of one or more "bands" of travellers, with
   # different travel probabilities. Each band has values as follows
   #    flyprobability  - Probability of traveller starting a trip each day
@@ -52,30 +54,24 @@ modelparams:
   #                      each month. Distribution applied such that average probability
   #                      over the course of each calendar year equals planprobability
   botspecs:
-  - flyprobability: 0.0013
-    weight: 4900
+  - flyprobability: 0.0014
+    weight: 50
     monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
   - flyprobability: 0.0041
     monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
-    weight: 2500
+    weight: 25
   - flyprobability: 0.0068
     monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
-    weight: 1200
+    weight: 12
   - flyprobability: 0.0096
     monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
-    weight: 620
-  - flyprobability: 0.012
+    weight: 6
+  - flyprobability: 0.014
     monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
-    weight: 310
-  - flyprobability: 0.015
-    monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
-    weight: 150
+    weight: 5
   - flyprobability: 0.018
     monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
-    weight: 77
-  - flyprobability: 0.02
-    monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
-    weight: 39
+    weight: 2
 
   # List of possible lengths for trips in days. For each trip an entry
   # is chosen at random from the list. To make a length more frequent

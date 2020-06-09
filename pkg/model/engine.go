@@ -464,9 +464,9 @@ func (self *Engine) reportDay(day flap.Days, currentDay flap.EpochTime, dt flap.
 
 		// Summary stats line
 		if self.fh != nil {
-			line := fmt.Sprintf("%d,%d,%d,%d,%d,%d,%.2f\n",day,
+			line := fmt.Sprintf("%d,%.2f,%.2f,%d,%d,%.2f,%.2f\n",day,
 				flap.Kilometres(self.stats.dailyTotal),flap.Kilometres(self.stats.travelled),
-				uint64(self.stats.travellers),uint64(self.stats.grounded),int64(self.stats.share),
+				uint64(self.stats.travellers),uint64(self.stats.grounded),self.stats.share,
 			        self.calcRSquared(us.BestFitPoints,us.BestFitConsts,currentDay))
 			self.fh.WriteString(line)
 		}

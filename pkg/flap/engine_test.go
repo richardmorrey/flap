@@ -512,7 +512,7 @@ func TestPromisesCorrectBalances(t *testing.T) {
 		t.Error("Miscalculated share when not correcting promises",us.Share)
 	}
 
-	paramsIn.Promises.Algo = paLinearBestFit | pamCorrectBalances
+	paramsIn.Promises.Algo = paLinearBestFit | pamCorrectDailyTotal
 	engine.Administrator.SetParams(paramsIn)
 	engine.state.pc = -25
 	us,err = engine.UpdateTripsAndBackfill(SecondsInDay*4)
