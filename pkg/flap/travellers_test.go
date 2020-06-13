@@ -155,7 +155,7 @@ func TestSubmitFlight(t *testing.T) {
 	traveller.balance=0
 	oneflight := *createFlight(1,1,2)
 	oneflight.distance=1
-	_,err:=traveller.submitFlight(&oneflight,2,10,true)
+	_,_,err:=traveller.submitFlight(&oneflight,2,10,true)
 	if err != nil {
 		t.Error("submitFlight failed for cleared traveller",traveller)
 	}
@@ -163,7 +163,7 @@ func TestSubmitFlight(t *testing.T) {
 		t.Error("submitFlight didnt update balance",traveller.balance)
 	}
 	traveller.EndTrip()
-	_,err=traveller.submitFlight(&oneflight,1,10,true)
+	_,_,err=traveller.submitFlight(&oneflight,1,10,true)
 	if err == nil {
 		t.Error("submitFlight accepted flight when grounded",traveller)
 	}
@@ -178,7 +178,7 @@ func TestSubmitFlightNoDebit(t *testing.T) {
 	traveller.balance=0
 	oneflight := *createFlight(1,1,2)
 	oneflight.distance=1
-	_,err:=traveller.submitFlight(&oneflight,2,10,false)
+	_,_,err:=traveller.submitFlight(&oneflight,2,10,false)
 	if err != nil {
 		t.Error("submitFlight failed for cleared traveller",traveller)
 	}

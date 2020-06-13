@@ -121,23 +121,24 @@ func (self *Traveller) AsKML(a *Airports) string {
 // Also, If "debit" is true, the flight distance  is subtracted from the traveller's distance balance.
 // If traveller is not cleared for travel no action is taken and an error is returned.
 // If a promises is being applied, then current balance is returned.
-func (self *Traveller) submitFlight(flight *Flight,now EpochTime, taxiOH Kilometres, debit bool) (Kilometres,error) {
+func (self *Traveller) submitFlight(flight *Flight,now EpochTime, taxiOH Kilometres, debit bool) (Kilometres,Kilometres,error) {
 
 	//  Make sure we are cleared to travel
 	cr := self.Cleared(now) 
 	if cr == crGrounded {
 		logDebug("balance:",self.balance,"cleared:",self.kept.Clearance.ToTime())
-		return 0,EGROUNDED
+		return 0,0,EGROUNDED
 	}
 
 	// Add flight to history
 	err := self.tripHistory.AddFlight(flight)
 	if err != nil {
-		return 0,err
+		return 0,0,err
 	}
 
 	// Debit flight distance and any taxi overhead from balance
 	bac := self.balance
+	pd := self.kept.Distance
 	if debit {
 		self.balance -= (flight.distance + taxiOH)
 	}
@@ -145,9 +146,9 @@ func (self *Traveller) submitFlight(flight *Flight,now EpochTime, taxiOH Kilomet
 	// Reset any kept promise
 	if cr == crKeptPromise {
 		self.kept = Promise{}
-		return bac,nil
+		return bac,pd,nil
 	}
-	return 0,nil
+	return 0,0,nil
 }
 
 // generateKey generates a unique key based on the contents of a

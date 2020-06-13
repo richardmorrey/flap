@@ -20,6 +20,7 @@ const (
 	paPolyBestFit PromisesAlgo = 0x02
 	pamCorrectBalances PromisesAlgo = 0x10
 	pamCorrectDailyTotal PromisesAlgo = 0x20
+	pamCorrectPromiseDistance PromisesAlgo = 0x40
 	paMask PromisesAlgo = 0x0f
 )
 
@@ -166,26 +167,50 @@ func dropAdministrator(database db.Database) error {
 
 type engineState struct {
 	mux sync.Mutex
-	pcSmoothed smoothYs
-	pc	Kilometres
-	totalGrounded      uint64
+	bacSmoothed 		smoothYs
+	balanceAtClearance	Kilometres
+	cdSmoothed		smoothYs
+	clearedDistance		Kilometres
+	bacPerKm		Kilometres
+	totalGrounded      	uint64
 }
 func (self *engineState) cyclePromisesCorrection(smoothWindow Days) Kilometres {
 	self.mux.Lock()
 	defer self.mux.Unlock()
-	if self.pcSmoothed.windowSize == 0 {
-		self.pcSmoothed = smoothYs{windowSize:int(math.Max(1,float64(smoothWindow))),maxYs:1}
+	
+	// Update smoothing window with total balance at clearance since last cycle
+	if self.bacSmoothed.windowSize == 0 {
+		self.bacSmoothed = smoothYs{windowSize:int(math.Max(1,float64(smoothWindow))),maxYs:1}
 	}
-	self.pcSmoothed.addY(float64(self.pc))
-	self.pc = 0
-	return Kilometres(self.pcSmoothed.ys[0])
+	self.bacSmoothed.addY(float64(self.balanceAtClearance))
+
+	// Update smoothing window for total distance in completed trips since last cycle
+	if self.cdSmoothed.windowSize == 0 {
+		self.cdSmoothed = smoothYs{windowSize:int(math.Max(1,float64(smoothWindow))),maxYs:1}
+	}
+	self.cdSmoothed.addY(float64(self.clearedDistance))
+
+	// Recalulate balance at clearance per km travelled
+	if self.cdSmoothed.ys[0] > 0 {
+		self.bacPerKm = self.balanceAtClearance/Kilometres(self.cdSmoothed.ys[0])
+	}
+
+	// Reset cyclic values
+	self.balanceAtClearance = 0
+	self.clearedDistance = 0
+	return Kilometres(self.bacSmoothed.ys[0])
 }
-func (self *engineState) changePromisesCorrection(delta Kilometres) {
+func (self *engineState) changePromisesCorrection(bac Kilometres,pd Kilometres) {
 	self.mux.Lock()
 	defer self.mux.Unlock()
-	self.pc += delta
+	self.balanceAtClearance += bac
+	self.clearedDistance += pd
 }
-
+func (self* engineState) getBACPerKm() Kilometres {
+	self.mux.Lock()
+	defer self.mux.Unlock()
+	return self.bacPerKm
+}
 type Engine struct
 {
 	Administrator 		*Administrator
@@ -260,7 +285,7 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 	for _,flight := range flights {
 
 		// Update traveller with the new flight
-		bac,err := t.submitFlight(&flight,now,self.Administrator.params.TaxiOverhead,debit)
+		bac,pd,err := t.submitFlight(&flight,now,self.Administrator.params.TaxiOverhead,debit)
 		if err != nil {
 			return err
 		}
@@ -268,8 +293,8 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 		// Apply any configured balance adjustment
 		if (self.Administrator.params.Promises.Algo & pamCorrectBalances == pamCorrectBalances) &&
 				   (bac < 0) {
-			self.state.changePromisesCorrection(bac) 
-			t.balance =0
+			self.state.changePromisesCorrection(bac,pd) 
+			t.balance -= bac
 		}
 	}
 
@@ -293,16 +318,17 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 		return ut,EINVALIDARGUMENT
 	}
 
+	// Retrieve and cycle promises correction if enabled
+	var pc Kilometres
+	if self.Administrator.params.Promises.Algo & pamCorrectDailyTotal == pamCorrectDailyTotal {
+		pc = self.state.cyclePromisesCorrection(self.Administrator.params.Promises.CorrectionSmoothWindow)
+		logDebug("DailyTotal=",self.Administrator.params.DailyTotal,"PromisesCorrection=",pc)
+	}
+
 	// Calculate backfill share
 	backfillers := 	Kilometres(math.Max(float64(self.Administrator.params.MinGrounded),float64(self.state.totalGrounded)))
 	if backfillers > 0 {
-		if self.Administrator.params.Promises.Algo & pamCorrectDailyTotal == pamCorrectDailyTotal {
-			pc := self.state.cyclePromisesCorrection(self.Administrator.params.Promises.CorrectionSmoothWindow)
-			logDebug("DailyTotal=",self.Administrator.params.DailyTotal,"PromisesCorrection=",pc)
-			ut.Share = (self.Administrator.params.DailyTotal+pc) / backfillers
-		} else {
-			ut.Share = self.Administrator.params.DailyTotal / backfillers
-		}
+		ut.Share = (self.Administrator.params.DailyTotal+pc) / backfillers
 
 		// Add calculated share to predictor algorithm
 		if self.Administrator.validPredictor() {
@@ -492,6 +518,11 @@ func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTi
 	// Check proposed trip is not too far in the future
 	if ts.toEpochDays(true) - now.toEpochDays(false) > epochDays(self.Administrator.params.Promises.MaxDays) {
 		return nil,ETRIPTOOFARAHEAD
+	}
+
+	// Adjust distance for mean balance at clearance if so configured
+	if self.Administrator.params.Promises.Algo & pamCorrectPromiseDistance == pamCorrectPromiseDistance{
+		distance -= self.state.getBACPerKm()*distance
 	}
 
 	// Ask for proposal and return the result

@@ -503,7 +503,7 @@ func TestPromisesCorrectBalances(t *testing.T) {
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
 				Promises:PromisesConfig{Algo:paLinearBestFit,MaxPoints:100}}
 	engine.Administrator.SetParams(paramsIn)
-	engine.state.pc = -25
+	engine.state.changePromisesCorrection(-25,0)
 	us,err := engine.UpdateTripsAndBackfill(SecondsInDay*4)
 	if err != nil {
 		t.Error("Update failed when testing promises correction",err)
@@ -514,7 +514,6 @@ func TestPromisesCorrectBalances(t *testing.T) {
 
 	paramsIn.Promises.Algo = paLinearBestFit | pamCorrectDailyTotal
 	engine.Administrator.SetParams(paramsIn)
-	engine.state.pc = -25
 	us,err = engine.UpdateTripsAndBackfill(SecondsInDay*4)
 	if err != nil {
 		t.Error("Update failed when testing promises correction",err)
