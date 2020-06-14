@@ -774,7 +774,7 @@ func (self* Engine) reportDistribution(x []float64, binSize float64, maxBars int
 		// Add to a chart
 		p, err := plot.New()
 		if err == nil {
-			p.Title.Text = fmt.Sprintf("Day %d - Day %d", day - self.ModelParams.VerboseReportDayDelta,day)
+			p.Title.Text = fmt.Sprintf("Day %d - Day %d", (day+1) - self.ModelParams.VerboseReportDayDelta,day)
 			p.Y.Label.Text = "Completed Trips"
 			p.X.Label.Text = "Balance At Clearance (km)"
 			p.Add(bars)

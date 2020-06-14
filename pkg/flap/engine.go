@@ -291,9 +291,9 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 		}
 
 		// Apply any configured balance adjustment
+		self.state.changePromisesCorrection(bac,pd) 
 		if (self.Administrator.params.Promises.Algo & pamCorrectBalances == pamCorrectBalances) &&
 				   (bac < 0) {
-			self.state.changePromisesCorrection(bac,pd) 
 			t.balance -= bac
 		}
 	}
