@@ -36,25 +36,25 @@
 		<div class="content">
 			<h3>Trips and Clearance Promises</h3>
 			<p>
-			A Trip is simply a sequence of consecutive flights by a single Traveller with a maximum length
+			A trip is simply a sequence of consecutive flights by a single traveller with a maximum length
 			of 90 days from the start of the first flight to the end of the last. The start of a Trip is enforced by FLAP but
-			the Traveller controls when a Trip ends - FLAP only forces a Trip to end if the 90 day limit is reached.
+			the traveller controls when a trip ends - FLAP only forces a trip to end if the 90 day limit is reached.
 			</p>
 			<p>
-			Travellers (or the airlines they fly with) are able to submit Trip plans to FLAP in advance and obtain a "Clearance Promise":
-		       	a committed date after the completion of the Trip when the Traveller will be allowed to fly again. This
-			promise holds regardless of the Traveller's Distance Balance at the time, and allows subsequent Trips to be planned in
+			Travellers (or the airlines they fly with) are able to submit trip plans to FLAP in advance and obtain a "clearance promise":
+		       	a committed date after the completion of the Trip when the traveller will be allowed to fly again. This
+			promise holds regardless of the traveller's distance balance at the time, and allows subsequent trips to be planned in
 			advance with certainty.
 			</p>
 			<p>
-			Up to three consecutive Clearance Promises can be "stacked". A stacked promise has a date that is brought forward
-		       	to be the start date of the next planned Trip. This allows Travellers to bunch up to four Trips close together, but
+			Up to three consecutive clearance promises can be "chained". A chained promise has a date that is brought forward
+		       	to be the start date of the next planned trip. This allows travellers to bunch up to four trips close together, but
 			at a cost. The date of the promise immediately following the end of the stack is pushed further into the future to
 			allow for the backfilling of the distance defict accrued over the period of the stack.	
 			</p>
 
 			<h3>In Practice</h3>
-			<p>The experience of most Travellers is simply of a calendar, very similar to a calendar presented on-line for the booking
+			<p>The experience of most travellers is simply of a calendar, very similar to a calendar presented on-line for the booking
 			of holiday accomodation, with each day colour coded according to its currrent FLAP state. Below is a mock-up from of how
 			this might look using Google Calendar.
 			</p>
@@ -62,9 +62,9 @@
 				<iframe src="https://calendar.google.com/calendar/embed?height=600&amp;wkst=1&amp;bgcolor=%23ffffff&amp;ctz=Europe%2FLondon&amp;src=Nm11ajdhOWdzaXFkbzBlZmZjMzNybG1ma2tAZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ&amp;src=NW1sYzZzdWxuMXB0aG9sdjRmZGcxNDJvczRAZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ&amp;color=%235A6986&amp;color=%23711616&amp;showTitle=0&amp;showNav=0&amp;showPrint=0&amp;showTabs=0&amp;showCalendars=0&amp;showTz=0&amp;dates=20210101/20210131" style="border-width:0" frameborder="0" scrolling="no"></iframe>
 			</div>
 			<p>The blue days show a return trip from London to Rome for a long weekend over the New Year. Immediately after the red
-			days show when the Traveller is grounded and unable to travel. As soon as the clearence date (4th February) is reached
+			days show when the traveller is grounded and unable to travel. As soon as the clearence date (4th February) is reached
 			the days turn clear again.</p>
-		        <p>The Traveller is free to book more trips at any time but only for dates where days from the start of the trip to its
+		        <p>The traveller is free to book more trips at any time but only for dates where days from the start of the trip to its
 			associated clearance date are all clear.</p>
 			<p>An interactive Web UI can automatically use stacks to make best efforts to accomodate a planned trip, and to make proposals
 			about which planned trips could be delayed or cancelled to accommodate the new trip.

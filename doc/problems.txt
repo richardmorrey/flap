@@ -1,6 +1,0 @@
-- Avoiding massive shares to a low number of grounded travellers at the start of the programme.
-- Algorithm for setting clearing dates that self-manages to avoid high aggregate deficit building up.
-- Traveller flight submissions in order to get clearing dates and plan a multi-trip schedule - how to securely correlate these with actual flight submissions for carriers, especially in event of travel disruption - submission of planned flights result in a single TripEnd entry with distance and start/end date. If more distance travlled then a second backfill after the "cleared" date for the remaining distance happens. If trip starts after tripend tripend is discarded. If trip ends after tripend ..?.
-- switch to Vincenty formula for more accurate flight distance calculation?
-- Add "version" byte to the persisted structures?
-- Put of one carrier being overwrittn by put of another

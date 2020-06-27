@@ -37,49 +37,44 @@
 		<div class="content">
 			<h3>Simulating One Million People</h3>
 			<p>Following is a summary of the findings of a modelling exercise simulating air travel by one million people
-			over a period of two thousand days with FLAP in place. Travellers were split into two bands to repesent the real-world
+			over a period of two thousand days with FLAP in place. Travellers were split into six bands to repesent the real-world
 			balance between frequent and infrequent flyers discussed
 			<a href="http://afreeride.org/">here</a> and
-			<a href="https://www.inequalityintransport.org.uk/exploring-transport-inequality/who-travels-air">here</a> as follows:
-			<ul>
-				<li>150,000 frequent flyers, making on average one trip every 100 days</li>
-				<li>850,000 infrequent flyers, making on average one trip every 500 days</li> 	
-			</ul>
-			</p>
-			<p>
-			The initial "Daily Allowance" was calculated as the average total daily distance travelled during the first 100 days.
-			This was then enforced, and reduced by 0.05% each day, from Day 101 onwards.
-			</p>
+			<a href="https://www.inequalityintransport.org.uk/exploring-transport-inequality/who-travels-air">here</a>. In the top band travellers
+			fly six to twelve times a year. In the bottom band flyers fly zero to one time a year.</p>
+			<p>The initial daily allowance was calculated as the average total daily distance travelled during the first 100 days.
+			This was then enforced, and reduced by 0.05% each day, from Day 101 onwards.</p>
 			<p>The source code for the FLAP implementation and modelling tool used is available
 				<a href="https://github.com/richardmorrey/flap">here</a> to download and use.</p>
 			<h3>Global Air Travel is Reduced</h3>
 			<div id=chart-holder><canvas id="goal1chart"></canvas></div>
-			<p>This chart shows how the Daily Allowance and the total daily distance travelled varies over time. Air travel is
-			reduced by 40% over the course of 5 years. You can see a visualization of flights contribution to each data point on this
+			<p>This chart shows how the daily allowance and the total daily distance travelled varies over time. Air travel is
+			reduced by 40% over the course of five years. The yearly cycle of variation in distance travelled is due to the modelling
+		        of seasonal traffic flows. You can see a visualization of flights contribution to each data point on this
 			graph <a href="./explore.html">here.</a>
 
 			<h3>Frequent Flyers Can Still Fly More</h3>
 			<div id=chart-holder><canvas id="goal2chart"></canvas></div>
-			<p>This chart shows how the average distance travelled every 100 days by frequent and infrequent travellers compares over
+			<p>This chart shows how the average distance travelled every 100 days by the most and least frequent flyers compares over
 			time. Frequent traveller flying is reduced whilst infrequent traveller flying remains steady, but
 			despite this frequent flyers fly more throughout the 2000 day period.
 			<h3>Infrequent Flyers are Impacted Less</h3>
 			<div id=chart-holder><canvas id="goal3chart"></canvas></div>
-			<p>This chart shows the percentage of trips that frequent and infrequent flyers are forced to cancel at the planning
+			<p>This chart shows the percentage of trips that the most frequent and infrequent flyers are forced to cancel at the planning
 			stage (see <a href="./experience.html">Experience</a> for an explanation of how this works in practice). Infrequent flyers
 			suffer far less disruption to their travel plans than frequent flyers.
 			<h3>Opportunities for Improvement</h3>
-			The model used to generate these results is basic. Whilst it does simulate global air traffic on geniune routes between
+			<p>The model used to generate these results is basic. Whilst it does simulate global air traffic on geniune routes between
 			genuine airports it diverges from real-world flying patterns in many ways, including:
 			<ul>
 				<li>All trips simulated are simple return flights.</li>
-				<li>No attempt is made to simulate seasonal variations in flying patterns.</li>
 				<li>Each simulated traveller has a home country but no home location within that country to influence choice of departure location.</li>
 				<li>No attempt is made to simulate variation in passport details due to lost or stolen passports and dual passport holders.</li>
 				<li>No attempt to simulate changes in traveller behaviour over time</li>
 			</ul>
-			We don't believe any of these negate the findings on this page but nevertheless we plan to address some in future iterations of
-		       the modelling tool. We are also planning s second white paper focussed on the details of the modelling process and its results.
+			We don't believe any of these omssions negate the validity of the results but nevertheless plan to address some in future iterations of
+			the modelling tool.</p>
+			<p> For more details on this and the modelling exercise as a whole please refer to this <a href="../doc/flapmodelling.pdf">white paper</a>.</p>
 		</div>
 
 		<br><br>
