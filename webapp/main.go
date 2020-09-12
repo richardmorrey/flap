@@ -1,23 +1,22 @@
 package main
 
 import (
-	"io"
 	"log"
-	"os"
 	"net/http"
 )
 
-// handleStatic services requests to retrieve static content from the "app" folder
-func handleStatic(w http.ResponseWriter, r *http.Request) {
-	page, err := os.Open(r.URL.Path[1:])
-	if (err != nil) {
-		return
-	}
-	io.Copy(w,page)
-}
-
 // main is main
 func main() {
-	http.HandleFunc("/app/", handleStatic)
+	
+	// Handler for app static content requests
+	appfs := http.FileServer(http.Dir("."))
+	http.Handle("/app/", appfs)
+
+	// Handler for website requests
+	websitefs := http.FileServer(http.Dir("../website"))
+	http.Handle("/", websitefs)
+
+	// Start serving up content
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
+
