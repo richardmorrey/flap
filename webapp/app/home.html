@@ -48,6 +48,9 @@
       $('#revoke-access-button').click(function() {
         revokeAccess();
       });
+      $('#flight-history-button').click(function() {
+        showFlightHistory();
+      });
     });
   }
 
@@ -71,12 +74,14 @@
     if (isAuthorized) {
       $('#sign-in-or-out-button').html('Sign out');
       $('#revoke-access-button').css('display', 'inline-block');
+      $('#flight-history-button').css('display', 'inline-block');
       $('#auth-status').html('You are currently signed in and have granted ' +
           'access to this app.');
     } else {
       $('#sign-in-or-out-button').html('Sign In/Authorize');
       $('#revoke-access-button').css('display', 'none');
-      $('#auth-status').html('You have not authorized this app or you are ' +
+      $('#flight-history-button').css('display', 'none');
+     $('#auth-status').html('You have not authorized this app or you are ' +
           'signed out.');
     }
   }
@@ -84,12 +89,27 @@
   function updateSigninStatus(isSignedIn) {
     setSigninStatus();
   }
+
+  function showFlightHistory() {
+	  var user = GoogleAuth.currentUser.get();
+	  var id_token = user.getAuthResponse().id_token;
+	  var xhr = new XMLHttpRequest();
+	  xhr.open('GET', '/api/v1/flighthistory/id/'+id_token);
+	  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+	  xhr.onload = function() {
+				   alert(xhr.responseText);
+			 };
+	  xhr.send();
+  }
+
 </script>
 
 <button id="sign-in-or-out-button"
         style="margin-left: 25px">Sign In/Authorize</button>
 <button id="revoke-access-button"
         style="display: none; margin-left: 25px">Revoke access</button>
+<button id="flight-history-button"
+        style="display: none; margin-left: 25px">Show flight history</button>
 
 <div id="auth-status" style="display: inline; padding-left: 25px"></div><hr>
 
