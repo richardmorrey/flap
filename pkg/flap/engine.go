@@ -55,168 +55,25 @@ func (self *FlapParams) From(buff *bytes.Buffer) error {
 	return binary.Read(buff,binary.LittleEndian,self)
 }
 
-type Administrator struct {
-	table db.Table
-	params FlapParams
-	predictor predictor
+type backfillState struct {
+	totalGrounded uint64
 }
 
-// newAdministrators creates an instance of Administrator, for
-// mangement of Flap parameters - Daily Total, Maximum Flight Interval,
-// and Maximum Trip Duration
-const adminTableName="administrator"
-const predictorRecordKey="predictor"
-func newAdministrator(flapdb db.Database) *Administrator {
-	
-	// Create instance and create/open table 
-	administrator := new(Administrator)
-	table,err := flapdb.OpenTable(adminTableName)
-	if  err == db.ETABLENOTFOUND { 
-		table,err = flapdb.CreateTable(adminTableName)
-	}
-	if err != nil {
-		return nil
-	}
-	administrator.table  = table
-
-	// Read any parameter settings held in table
-	administrator.table.Get([]byte(adminRecordKey),&administrator.params)
-
-	return administrator
+// To implements db/Serialize
+func (self *backfillState) To(buff *bytes.Buffer) error {
+	return binary.Write(buff, binary.LittleEndian,self)
 }
 
-// GetParams returns the currently active set of Flap parameters
-const adminRecordKey="flapparams" 
-func (self *Administrator) GetParams() FlapParams {
-	return self.params
+// From implemments db/Serialize
+func (self *backfillState) From(buff *bytes.Buffer) error {
+	return binary.Read(buff,binary.LittleEndian,self)
 }
 
-// SetParams makes a new complete set of Flap parameters active. 
-// The values are also written to the db table, replacing
-// what was there previously.
-func (self *Administrator) SetParams(params FlapParams) error {
-	
-	// Check for valid table
-	if  self.table == nil {
-		return ETABLENOTOPEN
-	}
-
-	// Check for invalid values
-	if (params.FlightsInTrip*2  >  MaxFlights) {
-		return EINVALIDFLAPPARAMS
-	}
-	if (params.FlightInterval*2 >  params.TripLength) {
-		return EINVALIDFLAPPARAMS
-	}
-	if (params.Promises.Algo != paNone && params.Promises.MaxPoints <=0) {
-		return EINVALIDFLAPPARAMS
-	}
-	var bits int
-	for n:=params.Threads; n != 0 ; n=n & (n-1) {
-		bits++;
-	}
-	if bits >  1 {
-		return EINVALIDFLAPPARAMS
-	}
-
-	// Write record as binary
-	err := self.table.Put([]byte(adminRecordKey),&(self.params))
-
-	// Check for promises config change and create new predictor
-	if err == nil {
-		algoOld := self.params.Promises.Algo
-		self.params=params
-		if params.Promises.Algo != algoOld {
-			self.createPredictor(false)
-		}
-	}
-	return err
-}
-
-// createPredictor creates predictor of the configured type
-func (self* Administrator) createPredictor(load bool) {
-	switch self.params.Promises.Algo & paMask { 
-		case paLinearBestFit:
-			self.predictor,_ = newBestFit(self.params.Promises)
-		case paPolyBestFit:
-			self.predictor,_ = newPolyBestFit(self.params.Promises)
-	}
-	if self.validPredictor() {
-		logInfo("Running with promises config",self.params.Promises)
-		if load {
-			self.table.Get([]byte(predictorRecordKey), self.predictor)
-		}
-	} else {
-		logInfo("Running without promises")
-	}
-}
-
-// validPredictor checks Returns true if promises are enabled  and a predictor exists, and false otherwise.
-func (self *Administrator) validPredictor() bool {
-	_,exists := self.predictor.(*bestFit)
-	if (!exists) {
-		_,exists = self.predictor.(*polyBestFit)
-	}
-	return exists
-}
-
-// dropAdministrator Adminitrator table from given database
-func dropAdministrator(database db.Database) error {
-	return database.DropTable(adminTableName)
-}
-
-type engineState struct {
-	mux sync.Mutex
-	bacSmoothed 		smoothYs
-	balanceAtClearance	Kilometres
-	cdSmoothed		smoothYs
-	clearedDistance		Kilometres
-	bacPerKm		Kilometres
-	totalGrounded      	uint64
-}
-func (self *engineState) cyclePromisesCorrection(smoothWindow Days) Kilometres {
-	self.mux.Lock()
-	defer self.mux.Unlock()
-	
-	// Update smoothing window with total balance at clearance since last cycle
-	if self.bacSmoothed.windowSize == 0 {
-		self.bacSmoothed = smoothYs{windowSize:int(math.Max(1,float64(smoothWindow))),maxYs:1}
-	}
-	self.bacSmoothed.addY(float64(self.balanceAtClearance))
-
-	// Update smoothing window for total distance in completed trips since last cycle
-	if self.cdSmoothed.windowSize == 0 {
-		self.cdSmoothed = smoothYs{windowSize:int(math.Max(1,float64(smoothWindow))),maxYs:1}
-	}
-	self.cdSmoothed.addY(float64(self.clearedDistance))
-
-	// Recalulate balance at clearance per km travelled
-	if self.cdSmoothed.ys[0] > 0 {
-		self.bacPerKm = self.balanceAtClearance/Kilometres(self.cdSmoothed.ys[0])
-	}
-
-	// Reset cyclic values
-	self.balanceAtClearance = 0
-	self.clearedDistance = 0
-	return Kilometres(self.bacSmoothed.ys[0])
-}
-func (self *engineState) changePromisesCorrection(bac Kilometres,pd Kilometres) {
-	self.mux.Lock()
-	defer self.mux.Unlock()
-	self.balanceAtClearance += bac
-	self.clearedDistance += pd
-}
-func (self* engineState) getBACPerKm() Kilometres {
-	self.mux.Lock()
-	defer self.mux.Unlock()
-	return self.bacPerKm
-}
 type Engine struct
 {
 	Administrator 		*Administrator
 	Travellers		*Travellers
 	Airports		*Airports
-	state			engineState
 }
 
 // NewEngine creates an instance of an Engine object, which can be used
@@ -291,7 +148,7 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 		}
 
 		// Apply any configured balance adjustment
-		self.state.changePromisesCorrection(bac,pd) 
+		self.Administrator.pc.change(bac,pd) 
 		if (self.Administrator.params.Promises.Algo & pamCorrectBalances == pamCorrectBalances) &&
 				   (bac < 0) {
 			t.balance -= bac
@@ -321,19 +178,18 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 	// Retrieve and cycle promises correction if enabled
 	var pc Kilometres
 	if self.Administrator.params.Promises.Algo & pamCorrectDailyTotal == pamCorrectDailyTotal {
-		pc = self.state.cyclePromisesCorrection(self.Administrator.params.Promises.CorrectionSmoothWindow)
+		pc = self.Administrator.pc.cycle(self.Administrator.params.Promises.CorrectionSmoothWindow)
 		logDebug("DailyTotal=",self.Administrator.params.DailyTotal,"PromisesCorrection=",pc)
 	}
 
 	// Calculate backfill share
-	backfillers := 	Kilometres(math.Max(float64(self.Administrator.params.MinGrounded),float64(self.state.totalGrounded)))
+	backfillers := 	Kilometres(math.Max(float64(self.Administrator.params.MinGrounded),float64(self.Administrator.bs.totalGrounded)))
 	if backfillers > 0 {
 		ut.Share = (self.Administrator.params.DailyTotal+pc) / backfillers
 
 		// Add calculated share to predictor algorithm
 		if self.Administrator.validPredictor() {
 			self.Administrator.predictor.add(now.toEpochDays(false),ut.Share)
-			self.Administrator.table.Put([]byte(predictorRecordKey), self.Administrator.predictor)
 			ut.BestFitPoints,ut.BestFitConsts,_ = self.Administrator.predictor.state()
 			logInfo("Added predictior data point:",now.toEpochDays(false),ut.Share)
 		}
@@ -376,7 +232,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 	}
 
 	// Update total grounded and return
-	self.state.totalGrounded=ut.Grounded
+	self.Administrator.bs.totalGrounded=ut.Grounded
 	return ut,ut.Err
 }
 
@@ -522,7 +378,7 @@ func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTi
 
 	// Adjust distance for mean balance at clearance if so configured
 	if self.Administrator.params.Promises.Algo & pamCorrectPromiseDistance == pamCorrectPromiseDistance{
-		distance -= self.state.getBACPerKm()*distance
+		distance -= self.Administrator.pc.getBACPerKm()*distance
 	}
 
 	// Ask for proposal and return the result
