@@ -3,7 +3,7 @@ package flap
 import (
 	"sync"
 	"math"
-	"encoding/binary"
+	"encoding/gob"
 	"bytes"
 )
 
@@ -22,13 +22,16 @@ type promisesCorrection struct {
 }
 
 // To implements db/Serialize
+// To implemented as part of db/Serialize
 func (self *promisesCorrection) To(buff *bytes.Buffer) error {
-	return binary.Write(buff, binary.LittleEndian,self.state)
+	dec := gob.NewDecoder(buff)
+	return dec.Decode(&self.state)
 }
 
-// From implemments db/Serialize
+// From implemented as part of db/Serialize
 func (self *promisesCorrection) From(buff *bytes.Buffer) error {
-	return binary.Read(buff,binary.LittleEndian,self.state)
+	enc := gob.NewEncoder(buff) 
+	return enc.Encode(&self.state)
 }
 
 // cycle updates all data needed to apply corrections to promise dates and

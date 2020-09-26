@@ -47,8 +47,10 @@ func (self *Administrator)  Load() {
 	logError(self.table.Get([]byte(paramsRecordKey),&self.params))
 	
 	// Promises predictor
-	logError(self.table.Get([]byte(predictorRecordKey), self.predictor))
-	
+	if self.validPredictor() {
+		logError(self.table.Get([]byte(predictorRecordKey), self.predictor))
+	}
+
 	// Promises correction
 	logError(self.table.Get([]byte(correctionRecordKey), &self.pc))
 
@@ -67,9 +69,11 @@ func (self* Administrator) Save() error {
 	}
 
 	// Promises predictor
-	err = self.table.Put([]byte(predictorRecordKey), self.predictor)
-	if err != nil {
-		return logError(err)
+	if self.validPredictor() {
+		err = self.table.Put([]byte(predictorRecordKey), self.predictor)
+		if err != nil {
+			return logError(err)
+		}
 	}
 
 	// Promises correction
