@@ -3,6 +3,7 @@ package flap
 import (
 	"github.com/richardmorrey/flap/pkg/db"
 	"encoding/binary"
+	"encoding/gob"
 	"bytes"
 	"math"
 	"errors"
@@ -45,6 +46,17 @@ type FlapParams struct {
 	Threads			byte
 }
 
+func (self* FlapParams) To(b *bytes.Buffer) error {
+	enc := gob.NewEncoder(b) 
+	return enc.Encode(self)
+}
+
+func (self* FlapParams) From(b *bytes.Buffer) error {
+	dec := gob.NewDecoder(b)
+	return dec.Decode(self)
+}
+
+/*
 // To implements db/Serialize
 func (self *FlapParams) To(buff *bytes.Buffer) error {
 	return binary.Write(buff, binary.LittleEndian,self)
@@ -54,6 +66,7 @@ func (self *FlapParams) To(buff *bytes.Buffer) error {
 func (self *FlapParams) From(buff *bytes.Buffer) error {
 	return binary.Read(buff,binary.LittleEndian,self)
 }
+*/
 
 type backfillState struct {
 	totalGrounded uint64
@@ -61,12 +74,12 @@ type backfillState struct {
 
 // To implements db/Serialize
 func (self *backfillState) To(buff *bytes.Buffer) error {
-	return binary.Write(buff, binary.LittleEndian,self)
+	return binary.Write(buff, binary.LittleEndian,&self.totalGrounded)
 }
 
 // From implemments db/Serialize
 func (self *backfillState) From(buff *bytes.Buffer) error {
-	return binary.Read(buff,binary.LittleEndian,self)
+	return binary.Read(buff,binary.LittleEndian,&self.totalGrounded)
 }
 
 type Engine struct

@@ -3,7 +3,7 @@ package flap
 import (
 	"sync"
 	"math"
-	"encoding/gob"
+	"encoding/binary"
 	"bytes"
 )
 
@@ -23,16 +23,63 @@ type promisesCorrection struct {
 
 // To implements db/Serialize
 // To implemented as part of db/Serialize
-func (self *promisesCorrection) To(buff *bytes.Buffer) error {
-	dec := gob.NewDecoder(buff)
-	return dec.Decode(&self.state)
+func (self *promisesCorrection) From(buff *bytes.Buffer) error {
+
+	err := self.state.bacSmoothed.From(buff)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Read(buff,binary.LittleEndian,&self.state.balanceAtClearance)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = self.state.cdSmoothed.From(buff)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Read(buff,binary.LittleEndian,&self.state.clearedDistance)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Read(buff,binary.LittleEndian,&self.state.bacPerKm)
+	
+	return err
+
 }
 
 // From implemented as part of db/Serialize
-func (self *promisesCorrection) From(buff *bytes.Buffer) error {
-	enc := gob.NewEncoder(buff) 
-	return enc.Encode(&self.state)
+func (self *promisesCorrection) To(buff *bytes.Buffer) error {
+
+	err := self.state.bacSmoothed.To(buff)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Write(buff,binary.LittleEndian,&self.state.balanceAtClearance)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = self.state.cdSmoothed.To(buff)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Write(buff,binary.LittleEndian,&self.state.clearedDistance)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Write(buff,binary.LittleEndian,&self.state.bacPerKm)
+	
+	return err
+
 }
+
 
 // cycle updates all data needed to apply corrections to promise dates and
 // resets interim values used to calculate them. To be called daily.

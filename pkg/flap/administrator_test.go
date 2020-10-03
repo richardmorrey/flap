@@ -42,7 +42,7 @@ func TestSaveLoadBackfill(t *testing.T) {
 		t.Error("Failed to create administrator")
 	}
 
-        if admin2.bs.totalGrounded != 1000 {
+        if admin2.bs.totalGrounded != 10 {
 		t.Error("Failed to load saved backfill state", admin2.bs)
 	}
 
@@ -116,7 +116,7 @@ func TestSaveLoadPredictor(t *testing.T) {
 
 	admin.SetParams(FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
 		Promises:PromisesConfig{Algo:paLinearBestFit,MaxPoints:10,MaxDays:100}})
-	if admin.predictor != nil {
+	if admin.predictor == nil {
 		t.Error("Administrator didn't create predictor")
 	}
 	admin.predictor.add(SecondsInDay,1000)
@@ -153,7 +153,7 @@ func TestPolyBestFitPredictor(t *testing.T) {
 	}
 
 	admin.SetParams(FlapParams{Promises:PromisesConfig{Algo:paPolyBestFit,MaxPoints:10,MaxDays:100}})
-	if admin.predictor != nil {
+	if admin.predictor == nil {
 		t.Error("Administrator didn't create predictor")
 	}
 
@@ -179,12 +179,12 @@ func TestLinearBestFitPredictor(t *testing.T) {
 	}
 
 	admin.SetParams(FlapParams{Promises:PromisesConfig{Algo:paLinearBestFit,MaxPoints:10,MaxDays:100}})
-	if admin.predictor != nil {
+	if admin.predictor == nil {
 		t.Error("Administrator didn't create predictor")
 	}
 
 	switch v := admin.predictor.(type) {
-		case *polyBestFit:
+		case *bestFit:
 		break
 		default:
 			t.Error("Failed to create Linear Best Fit predictor",v)

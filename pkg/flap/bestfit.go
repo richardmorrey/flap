@@ -4,7 +4,7 @@ import (
 	"errors"
 	"math"
 	"github.com/richardmorrey/flap/pkg/db"
-	"encoding/gob"
+	"encoding/binary"
 	"bytes"
 )
 
@@ -57,14 +57,45 @@ func newBestFit(cfg PromisesConfig) (*bestFit,error) {
 
 // To implemented as part of db/Serialize
 func (self *bestFit) To(buff *bytes.Buffer) error {
-	dec := gob.NewDecoder(buff)
-	return dec.Decode(self)
+
+	err := self.smoothYs.To(buff)
+	if (err != nil) {
+		return err
+	}
+
+	err = binary.Write(buff,binary.LittleEndian,&self.m)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Write(buff,binary.LittleEndian,&self.c)
+	if err != nil {
+		return logError(err)
+	}
+
+	return binary.Write(buff,binary.LittleEndian,&self.pv)
 }
 
 // From implemented as part of db/Serialize
 func (self *bestFit) From(buff *bytes.Buffer) error {
-	enc := gob.NewEncoder(buff) 
-	return enc.Encode(self)
+
+	err := self.smoothYs.From(buff)
+	if (err != nil) {
+		return err
+	}
+
+	err = binary.Read(buff,binary.LittleEndian,&self.m)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Read(buff,binary.LittleEndian,&self.c)
+	if err != nil {
+		return logError(err)
+	}
+
+	return binary.Read(buff,binary.LittleEndian,&self.pv)
+
 }
 
 // state returns set of points lasted used for regression and the regression results

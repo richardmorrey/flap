@@ -45,8 +45,9 @@ func (self *Administrator)  Load() {
 
 	// FLAP Parameters
 	logError(self.table.Get([]byte(paramsRecordKey),&self.params))
-	
+
 	// Promises predictor
+	self.createPredictor()
 	if self.validPredictor() {
 		logError(self.table.Get([]byte(predictorRecordKey), self.predictor))
 	}
@@ -63,7 +64,7 @@ func (self *Administrator)  Load() {
 func (self* Administrator) Save() error {
 
 	// FLAP parameters
-	err := self.table.Put([]byte(paramsRecordKey),&self.params)
+	err := self.table.Put([]byte(paramsRecordKey),&(self.params))
 	if err != nil {
 		return logError(err)
 	}
@@ -87,7 +88,8 @@ func (self* Administrator) Save() error {
 	if err != nil {
 		return logError(err)
 	}
-	return err
+
+	return nil
 }
 
 // GetParams returns the currently active set of Flap parameters
@@ -127,13 +129,13 @@ func (self *Administrator) SetParams(params FlapParams) error {
 	algoOld := self.params.Promises.Algo
 	self.params=params
 	if params.Promises.Algo != algoOld {
-		self.createPredictor(false)
+		self.createPredictor()
 	}
 	return nil
 }
 
 // createPredictor creates predictor of the configured type
-func (self* Administrator) createPredictor(load bool) {
+func (self* Administrator) createPredictor() {
 	switch self.params.Promises.Algo & paMask { 
 		case paLinearBestFit:
 			self.predictor,_ = newBestFit(self.params.Promises)
@@ -142,9 +144,6 @@ func (self* Administrator) createPredictor(load bool) {
 	}
 	if self.validPredictor() {
 		logInfo("Running with promises config",self.params.Promises)
-		if load {
-			self.table.Get([]byte(predictorRecordKey), self.predictor)
-		}
 	} else {
 		logInfo("Running without promises")
 	}
