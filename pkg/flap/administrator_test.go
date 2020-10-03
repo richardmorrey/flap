@@ -142,32 +142,6 @@ func TestSaveLoadPredictor(t *testing.T) {
 	}
 }
 
-func TestPolyBestFitPredictor(t *testing.T) {
-
-	db:=setupAdmin(t)
-	defer teardownAdmin(db)
-	
-	admin := newAdministrator(db)
-	if admin == nil {
-		t.Error("Failed to create administrator")
-	}
-
-	admin.SetParams(FlapParams{Promises:PromisesConfig{Algo:paPolyBestFit,MaxPoints:10,MaxDays:100}})
-	if admin.predictor == nil {
-		t.Error("Administrator didn't create predictor")
-	}
-
-	_,exists := admin.predictor.(*bestFit)
-	if exists  {
-		t.Error("Created incorrect predictor")
-	}
-
-	_,exists = admin.predictor.(*polyBestFit)
-	if !exists {
-		t.Error("Failed to create Linear Best Fit predictor")
-	}
-}
-
 func TestLinearBestFitPredictor(t *testing.T) {
 
 	db:=setupAdmin(t)
@@ -192,4 +166,27 @@ func TestLinearBestFitPredictor(t *testing.T) {
 	}
 }
 
+func TestPolyBestFitPredictor(t *testing.T) {
+
+	db:=setupAdmin(t)
+	defer teardownAdmin(db)
+	
+	admin := newAdministrator(db)
+	if admin == nil {
+		t.Error("Failed to create administrator")
+	}
+
+	admin.SetParams(FlapParams{Promises:PromisesConfig{Algo:paPolyBestFit,MaxPoints:10,MaxDays:100}})
+	if admin.predictor == nil {
+		t.Error("Administrator didn't create predictor")
+	}
+
+	switch v := admin.predictor.(type) {
+		case *polyBestFit:
+		break
+		default:
+			t.Error("Failed to create Poly Best Fit predictor",v)
+		break
+	}
+}
 

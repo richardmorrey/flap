@@ -32,7 +32,7 @@ func (self *smoothYs) From(buff *bytes.Buffer) error {
 	}
 	self.maxYs=int(fixedSize)
 
-	n := int32(len(self.ys))
+	var n  int32
 	err = binary.Read(buff, binary.LittleEndian,&n)
 	if err != nil {
 		return err

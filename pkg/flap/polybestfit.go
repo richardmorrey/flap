@@ -1,7 +1,7 @@
 package flap 
 
 import (
-	"encoding/gob"
+	"encoding/binary"
 	"bytes"
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/floats"
@@ -18,6 +18,65 @@ type polyBestFit struct {
 	pv		predictVersion
 	consts		[]float64
 	degree		int
+}
+
+// To implemented as part of db/Serialize
+func (self *polyBestFit) To(buff *bytes.Buffer) error {
+
+	err := self.smoothYs.To(buff)
+	if (err != nil) {
+		return err
+	}
+
+	err = binary.Write(buff,binary.LittleEndian,&self.pv)
+	if err != nil {
+		return logError(err)
+	}
+
+	n := int32(len(self.consts))
+	err = binary.Write(buff, binary.LittleEndian,&n)
+	if err != nil {
+		return err
+	}
+	for i:=int32(0); i < n; i++ {
+		err = binary.Write(buff, binary.LittleEndian,&self.consts[i])
+		if err != nil {
+			return err
+		}
+	}
+
+	return binary.Write(buff,binary.LittleEndian,&self.degree)
+}
+
+// From implemented as part of db/Serialize
+func (self *polyBestFit) From(buff *bytes.Buffer) error {
+
+	err := self.smoothYs.From(buff)
+	if (err != nil) {
+		return err
+	}
+
+	err = binary.Read(buff,binary.LittleEndian,&self.pv)
+	if err != nil {
+		return logError(err)
+	}
+
+	var n int32
+	err = binary.Read(buff, binary.LittleEndian,&n)
+	if err != nil {
+		return err
+	}
+	for i:=int32(0); i < n; i++ {
+		var v float64
+		err = binary.Read(buff, binary.LittleEndian,&v)
+		if err != nil {
+			return err
+		}
+		self.consts= append(self.consts,v)
+	}
+
+	return binary.Read(buff,binary.LittleEndian,&self.degree)
+
 }
 
 // newBestFit constructs a new bestFit struct initialized with
@@ -160,17 +219,5 @@ func (self* polyBestFit) backfilled(sd epochDays,ed epochDays) (Kilometres,error
 		}
 	}
 	return t, nil
-}
-
-// To implemented as part of db/Serialize
-func (self *polyBestFit) To(buff *bytes.Buffer) error {
-	dec := gob.NewDecoder(buff)
-	return dec.Decode(self)
-}
-
-// From implemented as part of db/Serialize
-func (self *polyBestFit) From(buff *bytes.Buffer) error {
-	enc := gob.NewEncoder(buff) 
-	return enc.Encode(self)
 }
 

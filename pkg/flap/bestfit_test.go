@@ -4,6 +4,7 @@ import (
 	"testing"
 	"math"
 	"reflect"
+	"bytes"
 )
 
 func TestEmptyLine(t *testing.T) {
@@ -281,3 +282,31 @@ func TestVersion(t *testing.T) {
 		t.Error("version didnt change when m and c should have changed",bf.version())
 	}
 }
+
+func TestFromTo(t *testing.T) {
+
+	var buff bytes.Buffer
+	bf,_ := newBestFit(PromisesConfig{MaxPoints:1000})
+	x := epochDays(1)
+	for y:=Kilometres(100); y>80;y-=5 {
+		bf.add(x,y)
+		x++
+	}
+
+	err := bf.To(&buff)
+	if err != nil {
+		t.Error("To failed",bf.version())
+	}
+
+	bf2,_ := newBestFit(PromisesConfig{MaxPoints:10}) 
+	err = bf2.From(&buff)
+	if err != nil {
+		t.Error("From failed",bf.version())
+	}
+
+	if !reflect.DeepEqual(bf,bf2) {
+		t.Error("Deserialised doesnt equal serialized", bf ,bf2)
+	}
+
+}
+
