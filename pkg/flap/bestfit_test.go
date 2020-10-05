@@ -283,7 +283,7 @@ func TestVersion(t *testing.T) {
 	}
 }
 
-func TestFromTo(t *testing.T) {
+func TestBestFitFromTo(t *testing.T) {
 
 	var buff bytes.Buffer
 	bf,_ := newBestFit(PromisesConfig{MaxPoints:1000})

@@ -3,6 +3,7 @@ package flap
 import (
 	"testing"
 	"reflect"
+	"bytes"
 )
 
 func TestSmoothSmallWindow(t *testing.T) {
@@ -50,5 +51,30 @@ func TestSmoothFillingWindow(t *testing.T) {
 	if !reflect.DeepEqual(s.ys,[]float64{10,15,20}) {
 		t.Error("Ys not correct for filling window",s.ys)
 	}
+}
+
+func TestSmoothedBestFitFromTo(t *testing.T) {
+
+	var buff bytes.Buffer
+	var s = smoothYs{windowSize:3,maxYs:4}
+	for i:=10.0; i <=30; i+=10 {
+		s.addY(i)
+	}
+
+	err := s.To(&buff)
+	if err != nil {
+		t.Error("To failed",err)
+	}
+
+	s2 := smoothYs{windowSize:1,maxYs:2}
+	err = s2.From(&buff)
+	if err != nil {
+		t.Error("From failed",err)
+	}
+
+	if !reflect.DeepEqual(s,s2) {
+		t.Error("Deserialised doesnt equal serialized",s ,s2)
+	}
+
 }
 

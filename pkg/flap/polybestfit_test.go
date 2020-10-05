@@ -2,7 +2,8 @@ package flap
 
 import (
 	"testing"
-	//"reflect"
+	"reflect"
+	"bytes"
 )
 
 func TestPolyZeroMaxpoints(t *testing.T) {
@@ -222,5 +223,32 @@ func TestPolyBackfilledSlope(t *testing.T) {
 	if d != 6 {
 		t.Error("backfilled returned unexpected value for line sloping below zero",d)
 	}
+}
+
+func TestPolyBestFitFromTo(t *testing.T) {
+
+	var buff bytes.Buffer
+	bf,_ := newPolyBestFit(PromisesConfig{MaxPoints:1000,Degree:2})
+	x := epochDays(1)
+	for y:=Kilometres(100); y>80;y-=5 {
+		bf.add(x,y)
+		x++
+	}
+
+	err := bf.To(&buff)
+	if err != nil {
+		t.Error("To failed",err)
+	}
+
+	bf2,_ := newPolyBestFit(PromisesConfig{MaxPoints:10,Degree:1}) 
+	err = bf2.From(&buff)
+	if err != nil {
+		t.Error("From failed",err)
+	}
+
+	if !reflect.DeepEqual(bf,bf2) {
+		t.Error("Deserialised doesnt equal serialized", bf ,bf2)
+	}
+
 }
 

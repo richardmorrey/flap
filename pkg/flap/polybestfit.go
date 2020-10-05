@@ -45,7 +45,8 @@ func (self *polyBestFit) To(buff *bytes.Buffer) error {
 		}
 	}
 
-	return binary.Write(buff,binary.LittleEndian,&self.degree)
+	fixedLength := uint32(self.degree)
+	return binary.Write(buff,binary.LittleEndian,&fixedLength)
 }
 
 // From implemented as part of db/Serialize
@@ -75,8 +76,12 @@ func (self *polyBestFit) From(buff *bytes.Buffer) error {
 		self.consts= append(self.consts,v)
 	}
 
-	return binary.Read(buff,binary.LittleEndian,&self.degree)
-
+	var fixedLength uint32
+	err = binary.Read(buff,binary.LittleEndian,&fixedLength)
+	if (err == nil) {
+		self.degree = int(fixedLength)
+	}
+	return err
 }
 
 // newBestFit constructs a new bestFit struct initialized with
@@ -88,7 +93,7 @@ func newPolyBestFit(cfg PromisesConfig) (*polyBestFit,error) {
 	bf := new(polyBestFit)
 	bf.degree = int(cfg.Degree)
 	bf.consts = make([]float64,0,bf.degree+1)
-
+	
 	// Initialize smoothing window
 	return bf,bf.setWindows(int(cfg.MaxPoints),int(cfg.SmoothWindow))
 }
