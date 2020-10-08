@@ -132,13 +132,13 @@ func (self *travellerBot) ReportDay(day flap.Days) string {
 
 type TravellerBots struct {
 	bots	[]travellerBot
-	countryWeights *CountryWeights
+	countryWeights *countryWeights
 	fh		*os.File
 	statsFolder    string
 	tripLengths	[]flap.Days
 }
 
-func NewTravellerBots(cw *CountryWeights) *TravellerBots {
+func NewTravellerBots(cw *countryWeights) *TravellerBots {
 	tbs := new(TravellerBots)
 	tbs.bots = make([]travellerBot,0,10)
 	tbs.countryWeights=cw

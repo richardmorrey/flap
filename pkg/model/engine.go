@@ -29,6 +29,7 @@ var EFAILEDTOCREATETRAVELLERBOTS = errors.New("Failed to create traveller bots")
 var EMODELNOTBUILT = errors.New("Failed to find model to load")
 var EINVALIDSTARTDAY = errors.New("Invalid start day")
 var ENOSUCHTRAVELLER = errors.New("No such traveller")
+var EFAILEDTOCREATECOUNTRYWEIGHTS = errors.New("Failed to create country weights")
 
 type Probability float64
 
@@ -102,6 +103,7 @@ type Engine struct {
 	ModelParams			ModelParams
 	plannedFlights			[]plannedFlight
 	db				*db.LevelDB
+	table				db.Table
 	fh				*os.File
 	stats				summaryStats
 	verbose				verboseStats
@@ -145,6 +147,16 @@ func NewEngine(configFilePath string) (*Engine,error) {
 	// Create db
 	e.db = db.NewLevelDB(e.ModelParams.WorkingFolder)
 
+	// Create model table
+	table,err := e.db.OpenTable(modelTableName)
+	if  err == db.ETABLENOTFOUND { 
+		table,err = e.db.CreateTable(modelTableName)
+	}
+	if err != nil {
+		return e,err
+	}
+	e.table  = table
+
 	// Seed Random Number Generator
 	if e.ModelParams.Deterministic {
 		rand.Seed(0) 
@@ -159,6 +171,7 @@ func (self *Engine) Release() {
 	self.db.Release()
 }
 
+const modelTableName="model"
 // Build prepares all persitent data files in order to be able to run the model in the configured data folder. It
 // (a) Builds the countries-airports-routes and the country weights file that drive flight selection.
 // (b) Ensures the Flap library Travellers Table is empty
@@ -179,12 +192,20 @@ func (self *Engine) Build() error {
 	}
 
 	// Build countries-airports-flights table from real-world data
+	cw := newCountryWeights()
+	if  cw == nil {
+		return EFAILEDTOCREATECOUNTRYWEIGHTS
+	}
 	cars := NewCountriesAirportsRoutes(self.db)
 	if cars  == nil {
 		return EFAILEDTOCREATECOUNTRIESAIRPORTSROUTES
 	}
-	err = cars.Build(self.ModelParams.DataFolder,self.ModelParams.WorkingFolder)
+	err = cars.Build(self.ModelParams.DataFolder,cw)
 	if (err != nil) {
+		return logError(err)
+	}
+	err = cw.save(self.table)
+	if err != nil {
 		return logError(err)
 	}
 	fmt.Printf("...Finished\n")
@@ -237,14 +258,17 @@ func (self *Engine) Run() error {
 	}
 
 	// Load country weights
-	var countryWeights CountryWeights
-	err := countryWeights.load(self.ModelParams.WorkingFolder)
+	cw := newCountryWeights()
+	if  cw == nil {
+		return EFAILEDTOCREATECOUNTRYWEIGHTS
+	}
+	err := cw.load(self.table)
 	if err != nil {
 		return logError(err)
 	}
 	
 	// Build flight plans for traveller bots
-	travellerBots := NewTravellerBots(&countryWeights)
+	travellerBots := NewTravellerBots(cw)
 	if travellerBots == nil {
 		return EFAILEDTOCREATETRAVELLERBOTS
 	}
@@ -363,14 +387,14 @@ func (self *Engine) ShowTraveller(band uint64,bot uint64) (flap.Passport,string,
 
 	// Load country weights (need to establish issuing country of passport)
 	var p flap.Passport
-	var countryWeights CountryWeights
-	err := countryWeights.load(self.ModelParams.WorkingFolder)
+	cw := newCountryWeights()
+	err := cw.load(self.table)
 	if err != nil {
 		return p,"","","",logError(err)
 	}
 
 	// Create travellerbots struct
-	travellerBots := NewTravellerBots(&countryWeights)
+	travellerBots := NewTravellerBots(cw)
 	if travellerBots == nil {
 		return p,"","","",logError(EFAILEDTOCREATETRAVELLERBOTS)
 	}

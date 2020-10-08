@@ -6,8 +6,8 @@ import (
 	"github.com/richardmorrey/flap/pkg/flap"
 )
 
-func buildCountryWeights(nEntries int) *CountryWeights{
-	countryWeights := NewCountryWeights()
+func buildCountryWeights(nEntries int) *countryWeights{
+	countryWeights := newCountryWeights()
 	for j:=1; j <= nEntries; j++  {
 		countryWeights.Countries= append(countryWeights.Countries,string(j+64))
 		countryWeights.add(weight(j*10))

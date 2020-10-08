@@ -5,12 +5,10 @@ import (
 	"github.com/richardmorrey/flap/pkg/db"
 	"path/filepath"
 	"encoding/csv"
-	"encoding/json"
 	"encoding/gob"
 	"bytes"
 	"bufio"
 	"io"
-	"io/ioutil"
 	"strconv"
 	"os"
 	"fmt"
@@ -70,50 +68,6 @@ type CountriesAirportsRoutes struct {
 	res		[]RouteWithWeight
 } 
 
-type CountryWeights struct {
-	Countries []string
-	Weights
-}
-
-func NewCountryWeights() *CountryWeights {
-	countryWeights := new(CountryWeights)
-	countryWeights.Countries = make([]string,0,100)
-	return countryWeights
-}
-
-// save saves the country weights to file "countryweights.json" 
-// in the given folder. Any existing file is overwriten
-func (self *CountryWeights) save(folder string) error  {
-	jsonData, err  := json.MarshalIndent(self, "", "    ")
-	if err != nil {
-		return logError(err)
-	}
-	filePath := filepath.Join(folder,"countryweights.json")
-	return ioutil.WriteFile(filePath, jsonData, 0644)
-}
-
-// load attempts to load the country weights from file
-// "countryweights.json". Current state of struct is completely
-// overwritten
-func (self *CountryWeights) load(folder string) error {
-	filePath := filepath.Join(folder,"countryweights.json")
-	file, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return logError(err)
-	}
-	return json.Unmarshal([]byte(file), self)
-}
-
-// update  adds country held in countryState to the list of country weights
-func (self *CountryWeights) update(cs *countryState) error {
-	self.Countries= append(self.Countries,string(cs.countryCode[:2]))
-	w,err := cs.country.topWeight()
-	if err != nil {
-		return logError(err)
-	}
-	self.add(w)
-	return nil
-}
 
 // NewCountriesAirportsRoutes creates a new instance of CountryAirportsRoutes
 // ensuring a table is created for its contents in the provided database
@@ -149,7 +103,7 @@ func (self* countryState) report() {
 // size of the destination airport. Airpots are assigned ascending weights based on their size. Countries
 // are assigned ascending weights based on the total weight of all airports it contains.
 // Driven by real world data from openflights.org
-func (self *CountriesAirportsRoutes) Build(dataFolder string, workingFolder string) (error) {
+func (self *CountriesAirportsRoutes) Build(dataFolder string, cw *countryWeights) (error) {
 	
 	// Load openflightsid-to-airport ICAOCode map
 	err := self.loadIDs(dataFolder)
@@ -178,7 +132,6 @@ func (self *CountriesAirportsRoutes) Build(dataFolder string, workingFolder stri
 	cs.airport = cs.country.getAirport(self.res[0].From)
 	
 	// Build table entries
-	countryWeights := NewCountryWeights()
 	for _, route := range self.res {
 
 		// Create next country if country code has changed
@@ -191,7 +144,7 @@ func (self *CountriesAirportsRoutes) Build(dataFolder string, workingFolder stri
 			}
 
 			// Update country weights
-			err = countryWeights.update(&cs)
+			err = cw.update(&cs)
 			if err != nil {
 				return logError(err)
 			}
@@ -230,17 +183,12 @@ func (self *CountriesAirportsRoutes) Build(dataFolder string, workingFolder stri
 	}
 	
 	// Update country weights with last country
-	err = countryWeights.update(&cs)
+	err = cw.update(&cs)
 	if (err != nil) {
 		return logError(err)
 	}
 
-	// Save country weights
-	err = countryWeights.save(workingFolder)
-	if (err != nil) {
-		return logError(err)
-	}
-	fmt.Printf("\r...built weighted model for %d countries...                           \n",len(countryWeights.Countries))
+	fmt.Printf("\r...built weighted model for %d countries...                           \n",len(cw.Countries))
 	return nil
 }
 
