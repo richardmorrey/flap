@@ -14,6 +14,8 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"encoding/json"
+	"encoding/binary"
+	"bytes"
 	"gonum.org/v1/gonum/stat"
 	"gonum.org/v1/gonum/floats"
 	"gonum.org/v1/plot"
@@ -105,15 +107,44 @@ type Engine struct {
 	db				*db.LevelDB
 	table				db.Table
 	fh				*os.File
+	state				engineState
 	stats				summaryStats
 	verbose				verboseStats
 	allowancePts			plotter.XYs
 	travelledPts   			plotter.XYs
 }
 
+type engineState struct {
+	totalDayOne float64
+	travellersTotal float64
+}
+
+// From implements db/Serialize
+func (self *engineState) From(buff *bytes.Buffer) error {
+	err := binary.Read(buff,binary.LittleEndian,&self.totalDayOne)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Read(buff,binary.LittleEndian,&self.travellersTotal)
+	return err
+}
+
+// To implemented as part of db/Serialize
+func (self *engineState) To(buff *bytes.Buffer) error {
+
+	err := binary.Write(buff,binary.LittleEndian,&self.totalDayOne)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Write(buff,binary.LittleEndian,&self.travellersTotal)
+	return err
+}
+
 // NewEngine is factory function for Engine
 func NewEngine(configFilePath string) (*Engine,error) {
-	
+
 	e:= new(Engine)
 
 	// Load config file
@@ -163,6 +194,9 @@ func NewEngine(configFilePath string) (*Engine,error) {
 	} else {
 		rand.Seed(time.Now().UTC().UnixNano())
 	}
+	
+	// Default config for plotter
+	plot.DefaultFont="Helvetica"
 	return e,nil
 }
 
@@ -241,52 +275,51 @@ func (self* Engine) minmaxTripLength() (flap.Days,flap.Days) {
 	return minLength, maxLength
 }
 
-// Runs the model with configuration as specified in ModelParams, writing results out
-// to multiple CSV files in the specified working folder.
-func (self *Engine) Run() error {
-
+// prepare sets up all data structures needed for a post-build modelling operation
+func (self* Engine) prepare() (*CountriesAirportsRoutes, *TravellerBots, *flap.Engine,*journeyPlanner,error) {
+	
 	// Validate model params
 	startDay := flap.EpochTime(self.ModelParams.StartDay.Unix())
 	if startDay % flap.SecondsInDay != 0 || startDay == 0 {
-		return EINVALIDSTARTDAY
+		return nil,nil,nil,nil,EINVALIDSTARTDAY
 	}
 
 	// Load country-airports-routes model
 	cars := NewCountriesAirportsRoutes(self.db)
 	if cars == nil {
-		return EMODELNOTBUILT
+		return nil,nil,nil,nil,EMODELNOTBUILT
 	}
 
 	// Load country weights
 	cw := newCountryWeights()
 	if  cw == nil {
-		return EFAILEDTOCREATECOUNTRYWEIGHTS
+		return nil,nil,nil,nil,EFAILEDTOCREATECOUNTRYWEIGHTS
 	}
 	err := cw.load(self.table)
 	if err != nil {
-		return logError(err)
+		return nil,nil,nil,nil,logError(err)
 	}
 	
 	// Build flight plans for traveller bots
 	travellerBots := NewTravellerBots(cw)
 	if travellerBots == nil {
-		return EFAILEDTOCREATETRAVELLERBOTS
+		return nil,nil,nil,nil,EFAILEDTOCREATETRAVELLERBOTS
 	}
 	err = travellerBots.Build(self.ModelParams,self.FlapParams)
 	if (err != nil) {
-		return logError(err)
+		return nil,nil,nil,nil,logError(err)
 	}
 	
-	// Reset flap and load airports
+	// Create engine and load airports
 	err = flap.Reset(self.db)
 	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
 	err = fe.Administrator.SetParams(self.FlapParams)
 	if (err != nil) {
-		return logError(err)
+		return nil,nil,nil,nil,logError(err)
 	}
 	err =fe.Airports.LoadAirports(filepath.Join(self.ModelParams.DataFolder,"airports.dat"))
 	if (err != nil) {
-		return logError(err)
+		return nil,nil,nil,nil,logError(err)
 	}
 
 	// Create journey planner with enough days
@@ -296,87 +329,130 @@ func (self *Engine) Run() error {
 	} 
 	jp,err := NewJourneyPlanner(planDays)
 	if (err != nil) {
-		return logError(err)
+		return nil,nil,nil,nil,logError(err)
 	}
 
 	// Reset stats struct
 	self.stats.reset()
-	plot.DefaultFont="Helvetica"
+	return cars,travellerBots,fe,jp,nil
+}
 
-	// Model each day as configured, but run for "planDays" first to make
-	// sure journey planner is pre-loaded with data for each of its days.
-	currentDay := startDay
+/// modelDay models a single day - planning flights, submitting flights and performing update and backfill
+func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRoutes, tb *TravellerBots, fe *flap.Engine, jp *journeyPlanner, fp *flightPaths) (flap.UpdateBackfillStats,error) {
+
+
+	// Calculate day of model
+	i := flap.Days(currentDay/flap.SecondsInDay) - flap.Days(flap.EpochTime(self.ModelParams.StartDay.Unix())/flap.SecondsInDay)
+
+	// For each travller: Update triphistory and backfill those with distance accounts in
+	// deficit.
+	fmt.Printf("\rDay %d: Backfilling       ",i)
+	us,err :=  fe.UpdateTripsAndBackfill(currentDay)
+	if err != nil {
+		return flap.UpdateBackfillStats{},logError(err)
+	}
+
+	// Plan flights for all travellers
+	logInfo("DAY ", i ," ", currentDay.ToTime())
+	fmt.Printf("\rDay %d: Planning Flights",i)
+	err = tb.planTrips(cars,jp,fe,currentDay,self.ModelParams.Deterministic,self.ModelParams.Threads)
+	if err != nil {
+		return flap.UpdateBackfillStats{},logError(err)
+	}
+
+	// Submit all flights for this day, logging only - i.e. not debiting distance accounts - if
+	// we are still pre-loading the journey planner.
+	fmt.Printf("\rDay %d: Submitting Flights",i)
+	err = jp.submitFlights(tb,fe,currentDay,fp,i>self.ModelParams.TrialDays)
+	if err != nil && err != ENOJOURNEYSPLANNED {
+		return flap.UpdateBackfillStats{},logError(err)
+	}
+
+	// If in trial period calculate starting daily total and minimum grounded travellers
+	if (i > 0 && i <= self.ModelParams.TrialDays) {
+			
+		// Calculate DT as average across trial days if specified, defaulting to minimum
+		if self.ModelParams.DTAlgo=="average" {
+			self.FlapParams.DailyTotal += flap.Kilometres(float64(us.Distance)/float64(self.ModelParams.TrialDays))
+		} else {
+			self.FlapParams.DailyTotal=max(self.FlapParams.DailyTotal,us.Distance)
+		}
+		self.state.totalDayOne = float64(self.FlapParams.DailyTotal)
+
+		// Set MinGrounded, used by flap to ensure initial backfill share
+		// is not too large, to average number of travellers per day over the trial period
+		self.state.travellersTotal += float64(us.Travellers)
+		self.FlapParams.MinGrounded = uint64(math.Ceil(self.state.travellersTotal/float64(i)))
+	} 
+
+	// If next day is beyond trial period then set daily total and min grounded
+	if i >= self.ModelParams.TrialDays {
+
+		// Adjust Daily Total for the next day
+		self.FlapParams.DailyTotal = flap.Kilometres(float64(self.FlapParams.DailyTotal)*self.ModelParams.DailyTotalFactor)
+		self.FlapParams.DailyTotal += flap.Kilometres(self.ModelParams.DailyTotalDelta*self.state.totalDayOne/100.0)
+		err = fe.Administrator.SetParams(self.FlapParams)
+		if err != nil {
+			return flap.UpdateBackfillStats{},logError(err)
+		}
+		logDebug("Updated FLAP Params:",self.FlapParams)
+	}
+	return us,nil
+}
+
+// Runs the model with configuration as specified in ModelParams, writing results out
+// to multiple CSV files in the specified working folder.
+func (self *Engine) Run() error {
+
+	// Set up data structures
+	err := flap.Reset(self.db)
+	if err != nil {
+		return logError(err)
+	}
+	cars,tb,fe,jp,err := self.prepare()
+	if err != nil {
+		return logError(err)
+	}
+	err = fe.Administrator.SetParams(self.FlapParams)
+	if err != nil {
+		return logError(err)
+	}
+
+	// Calculate number of days needed to "prewarm" the model
+	_,planDays := self.minmaxTripLength()
+	if self.FlapParams.Promises.Algo != 0 {
+		planDays += self.FlapParams.Promises.MaxDays
+	} 
+
+	// Model for each of the plan days and the days for the model
+	// proper
+	currentDay := flap.EpochTime(self.ModelParams.StartDay.Unix()) - flap.EpochTime(uint64(planDays*flap.SecondsInDay))
 	flightPaths := newFlightPaths(currentDay)
-	var totalDayOne float64
-	var travellersTotal float64
+	self.state.totalDayOne =0
+	self.state.travellersTotal =0
+	logInfo("Running ", planDays, " day prewarm and ",self.ModelParams.DaysToRun," day model")
 	for i:=flap.Days(-planDays); i <= self.ModelParams.DaysToRun; i++ {
 		
-		// Plan flights for all travellers
-		logInfo("DAY ", i ," ", currentDay.ToTime())
-		fmt.Printf("\rDay %d: Planning Flights",i)
-		err = travellerBots.planTrips(cars,jp,fe,currentDay,self.ModelParams.Deterministic,self.ModelParams.Threads)
+		// Run model for one day
+		us,err := self.modelDay(currentDay,cars,tb,fe,jp,flightPaths)
 		if err != nil {
 			return logError(err)
 		}
 
-		// Submit all flights for this day, logging only - i.e. not debiting distance accounts - if
-		// we are still pre-loading the journey planner.
-		fmt.Printf("\rDay %d: Submitting Flights",i)
-		err = jp.submitFlights(travellerBots,fe,currentDay,flightPaths,i>self.ModelParams.TrialDays)
-		if err != nil && err != ENOJOURNEYSPLANNED {
-			return logError(err)
-		}
-
-		// For each travller: Update triphistory and backfill those with distance accounts in
-		// deficit.
-		fmt.Printf("\rDay %d: Backfilling       ",i)
-		currentDay += flap.SecondsInDay
-		us,err :=  fe.UpdateTripsAndBackfill(currentDay)
-		if err != nil {
-			return logError(err)
-		}
-		
 		// Report daily stats
-		travellerBots.ReportDay(i,self.ModelParams.ReportDayDelta)
+		tb.ReportDay(i,self.ModelParams.ReportDayDelta)
 		self.reportDay(i,currentDay,self.FlapParams.DailyTotal,us)
 		if i % self.ModelParams.VerboseReportDayDelta == 0 {
 			flightPaths= reportFlightPaths(flightPaths,currentDay,self.ModelParams.WorkingFolder) 
 		}
-
-		// If in trial period calculate starting daily total and minimum grounded travellers
-		if (i > 0 && i <= self.ModelParams.TrialDays) {
-			
-			// Calculate DT as average across trial days if specified, defaulting to minimum
-			if self.ModelParams.DTAlgo=="average" {
-				self.FlapParams.DailyTotal += flap.Kilometres(float64(us.Distance)/float64(self.ModelParams.TrialDays))
-			} else {
-				self.FlapParams.DailyTotal=max(self.FlapParams.DailyTotal,us.Distance)
-			}
-			totalDayOne = float64(self.FlapParams.DailyTotal)
-
-			// Set MinGrounded, used by flap to ensure initial backfill share
-			// is not too large, to average number of travellers per day over the trial period
-			travellersTotal += float64(us.Travellers)
-			self.FlapParams.MinGrounded = uint64(math.Ceil(travellersTotal/float64(i)))
-		} 
-
-		// If next day is beyond trial period then set daily total and min grounded
-		if i >= self.ModelParams.TrialDays {
-
-			// Adjust Daily Total for the next day
-			self.FlapParams.DailyTotal = flap.Kilometres(float64(self.FlapParams.DailyTotal)*self.ModelParams.DailyTotalFactor)
-			self.FlapParams.DailyTotal += flap.Kilometres(self.ModelParams.DailyTotalDelta*totalDayOne/100.0)
-			err = fe.Administrator.SetParams(self.FlapParams)
-			if err != nil {
-				return logError(err)
-			}
-			logDebug("Updated FLAP Params:",self.FlapParams)
-		}
+		
+		// Next day
+		currentDay += flap.SecondsInDay
 	}
 
 	// Output final charts and finish
-	self.reportBandsCancelled(travellerBots)
-	self.reportBandsDistance(travellerBots)
+	self.reportBandsCancelled(tb)
+	self.reportBandsDistance(tb)
 	self.reportBandsSummary()
 	fmt.Printf("\nFinished\n")
 	return nil
