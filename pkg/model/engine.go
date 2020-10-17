@@ -107,20 +107,19 @@ type Engine struct {
 	db				*db.LevelDB
 	table				db.Table
 	fh				*os.File
-	state				engineState
 	stats				summaryStats
 	verbose				verboseStats
 	allowancePts			plotter.XYs
 	travelledPts   			plotter.XYs
 }
 
-type engineState struct {
+type modelState struct {
 	totalDayOne float64
 	travellersTotal float64
 }
 
 // From implements db/Serialize
-func (self *engineState) From(buff *bytes.Buffer) error {
+func (self *modelState) From(buff *bytes.Buffer) error {
 	err := binary.Read(buff,binary.LittleEndian,&self.totalDayOne)
 	if err != nil {
 		return logError(err)
@@ -131,7 +130,7 @@ func (self *engineState) From(buff *bytes.Buffer) error {
 }
 
 // To implemented as part of db/Serialize
-func (self *engineState) To(buff *bytes.Buffer) error {
+func (self *modelState) To(buff *bytes.Buffer) error {
 
 	err := binary.Write(buff,binary.LittleEndian,&self.totalDayOne)
 	if err != nil {
@@ -140,6 +139,18 @@ func (self *engineState) To(buff *bytes.Buffer) error {
 
 	err = binary.Write(buff,binary.LittleEndian,&self.travellersTotal)
 	return err
+}
+
+const modelstateRecordKey="modelstate"
+
+// load loads engine state from given table
+func (self *modelState) load(t db.Table) error {
+	return t.Get([]byte(modelstateRecordKey),self)
+}
+
+// save saves engine state to given table
+func (self *modelState)  save(t db.Table) error {
+	return t.Put([]byte(modelstateRecordKey),self)
 }
 
 // NewEngine is factory function for Engine
@@ -338,8 +349,17 @@ func (self* Engine) prepare() (*CountriesAirportsRoutes, *TravellerBots, *flap.E
 }
 
 /// modelDay models a single day - planning flights, submitting flights and performing update and backfill
-func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRoutes, tb *TravellerBots, fe *flap.Engine, jp *journeyPlanner, fp *flightPaths) (flap.UpdateBackfillStats,error) {
+func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRoutes, tb *TravellerBots, fe *flap.Engine, jp *journeyPlanner, fp *flightPaths) (flap.UpdateBackfillStats, flap.Kilometres,error) {
 
+	// load flap params
+	flapParams := fe.Administrator.GetParams()
+
+	// load engine state
+	var ms modelState
+	err := ms.load(self.table)
+	if err != nil {
+		return flap.UpdateBackfillStats{},0,logError(err)
+	}
 
 	// Calculate day of model
 	i := flap.Days(currentDay/flap.SecondsInDay) - flap.Days(flap.EpochTime(self.ModelParams.StartDay.Unix())/flap.SecondsInDay)
@@ -349,7 +369,7 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 	fmt.Printf("\rDay %d: Backfilling       ",i)
 	us,err :=  fe.UpdateTripsAndBackfill(currentDay)
 	if err != nil {
-		return flap.UpdateBackfillStats{},logError(err)
+		return flap.UpdateBackfillStats{},0,logError(err)
 	}
 
 	// Plan flights for all travellers
@@ -357,7 +377,7 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 	fmt.Printf("\rDay %d: Planning Flights",i)
 	err = tb.planTrips(cars,jp,fe,currentDay,self.ModelParams.Deterministic,self.ModelParams.Threads)
 	if err != nil {
-		return flap.UpdateBackfillStats{},logError(err)
+		return flap.UpdateBackfillStats{},0,logError(err)
 	}
 
 	// Submit all flights for this day, logging only - i.e. not debiting distance accounts - if
@@ -365,7 +385,7 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 	fmt.Printf("\rDay %d: Submitting Flights",i)
 	err = jp.submitFlights(tb,fe,currentDay,fp,i>self.ModelParams.TrialDays)
 	if err != nil && err != ENOJOURNEYSPLANNED {
-		return flap.UpdateBackfillStats{},logError(err)
+		return flap.UpdateBackfillStats{},0,logError(err)
 	}
 
 	// If in trial period calculate starting daily total and minimum grounded travellers
@@ -373,31 +393,39 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 			
 		// Calculate DT as average across trial days if specified, defaulting to minimum
 		if self.ModelParams.DTAlgo=="average" {
-			self.FlapParams.DailyTotal += flap.Kilometres(float64(us.Distance)/float64(self.ModelParams.TrialDays))
+			flapParams.DailyTotal += flap.Kilometres(float64(us.Distance)/float64(self.ModelParams.TrialDays))
 		} else {
-			self.FlapParams.DailyTotal=max(self.FlapParams.DailyTotal,us.Distance)
+			flapParams.DailyTotal=max(flapParams.DailyTotal,us.Distance)
 		}
-		self.state.totalDayOne = float64(self.FlapParams.DailyTotal)
+		ms.totalDayOne = float64(flapParams.DailyTotal)
 
 		// Set MinGrounded, used by flap to ensure initial backfill share
 		// is not too large, to average number of travellers per day over the trial period
-		self.state.travellersTotal += float64(us.Travellers)
-		self.FlapParams.MinGrounded = uint64(math.Ceil(self.state.travellersTotal/float64(i)))
+		ms.travellersTotal += float64(us.Travellers)
+		flapParams.MinGrounded = uint64(math.Ceil(ms.travellersTotal/float64(i)))
 	} 
 
 	// If next day is beyond trial period then set daily total and min grounded
 	if i >= self.ModelParams.TrialDays {
 
 		// Adjust Daily Total for the next day
-		self.FlapParams.DailyTotal = flap.Kilometres(float64(self.FlapParams.DailyTotal)*self.ModelParams.DailyTotalFactor)
-		self.FlapParams.DailyTotal += flap.Kilometres(self.ModelParams.DailyTotalDelta*self.state.totalDayOne/100.0)
-		err = fe.Administrator.SetParams(self.FlapParams)
-		if err != nil {
-			return flap.UpdateBackfillStats{},logError(err)
-		}
-		logDebug("Updated FLAP Params:",self.FlapParams)
+		flapParams.DailyTotal = flap.Kilometres(float64(flapParams.DailyTotal)*self.ModelParams.DailyTotalFactor)
+		flapParams.DailyTotal += flap.Kilometres(self.ModelParams.DailyTotalDelta*ms.totalDayOne/100.0)
 	}
-	return us,nil
+
+	// Save any changes to flap params
+	err = fe.Administrator.SetParams(flapParams)
+	if err != nil {
+		return flap.UpdateBackfillStats{},0,logError(err)
+	}
+
+	// save engine state
+	err = ms.save(self.table)
+	if err != nil {
+		return flap.UpdateBackfillStats{},0,logError(err)
+	}
+
+	return us,flapParams.DailyTotal,nil
 }
 
 // Runs the model with configuration as specified in ModelParams, writing results out
@@ -424,24 +452,29 @@ func (self *Engine) Run() error {
 		planDays += self.FlapParams.Promises.MaxDays
 	} 
 
+	// Reset model state
+	var ms modelState
+	err = ms.save(self.table)
+	if err != nil {
+		return logError(err)
+	}
+
 	// Model for each of the plan days and the days for the model
 	// proper
 	currentDay := flap.EpochTime(self.ModelParams.StartDay.Unix()) - flap.EpochTime(uint64(planDays*flap.SecondsInDay))
 	flightPaths := newFlightPaths(currentDay)
-	self.state.totalDayOne =0
-	self.state.travellersTotal =0
 	logInfo("Running ", planDays, " day prewarm and ",self.ModelParams.DaysToRun," day model")
 	for i:=flap.Days(-planDays); i <= self.ModelParams.DaysToRun; i++ {
 		
 		// Run model for one day
-		us,err := self.modelDay(currentDay,cars,tb,fe,jp,flightPaths)
+		us,dt,err := self.modelDay(currentDay,cars,tb,fe,jp,flightPaths)
 		if err != nil {
 			return logError(err)
 		}
 
 		// Report daily stats
 		tb.ReportDay(i,self.ModelParams.ReportDayDelta)
-		self.reportDay(i,currentDay,self.FlapParams.DailyTotal,us)
+		self.reportDay(i,currentDay,dt,us)
 		if i % self.ModelParams.VerboseReportDayDelta == 0 {
 			flightPaths= reportFlightPaths(flightPaths,currentDay,self.ModelParams.WorkingFolder) 
 		}
