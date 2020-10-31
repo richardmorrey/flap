@@ -135,7 +135,7 @@ func TestClearedByPromise(t *testing.T) {
 	tr.kept = Promise{TripStart:SecondsInDay,TripEnd:SecondsInDay*2,Clearance:SecondsInDay*4,Distance:10}
 	tr.Promises.entries[0]=tr.kept
 	tr.tripHistory.entries[0] = *createFlight(1,SecondsInDay,SecondsInDay*2)
-	tr.tripHistory.entries[0].distance=10
+	tr.tripHistory.entries[0].Distance=10
 	tr.tripHistory.entries[0].et = etTravellerTripEnd
 	if (tr.Cleared(4*SecondsInDay) != crKeptPromise) {
 		t.Error("Traveller not cleared with valid clearance date",tr.kept)
@@ -154,7 +154,7 @@ func TestSubmitFlight(t *testing.T) {
 	traveller.kept.Clearance=2
 	traveller.balance=0
 	oneflight := *createFlight(1,1,2)
-	oneflight.distance=1
+	oneflight.Distance=1
 	_,_,err:=traveller.submitFlight(&oneflight,2,10,true)
 	if err != nil {
 		t.Error("submitFlight failed for cleared traveller",traveller)
@@ -177,7 +177,7 @@ func TestSubmitFlightNoDebit(t *testing.T) {
 	traveller.kept.Clearance=2
 	traveller.balance=0
 	oneflight := *createFlight(1,1,2)
-	oneflight.distance=1
+	oneflight.Distance=1
 	_,_,err:=traveller.submitFlight(&oneflight,2,10,false)
 	if err != nil {
 		t.Error("submitFlight failed for cleared traveller",traveller)
@@ -205,7 +205,7 @@ func TestKeepNoFlights(t *testing.T) {
 func TestKeepMatchingPromise(t *testing.T) {
 	var tr Traveller
 	tr.tripHistory.entries[0] = *createFlight(1,1,2)
-	tr.tripHistory.entries[0].distance=55
+	tr.tripHistory.entries[0].Distance=55
 	tr.Promises.entries[0]=Promise{TripStart:1,TripEnd:2,Clearance: epochDays(88).toEpochTime(), Travelled:55}
 	if ! tr.keep()  {
 		t.Error("keep didnt keep matching  promise")
@@ -221,7 +221,7 @@ func TestKeepMatchingPromise(t *testing.T) {
 func TestKeepNonMatchingPromise(t *testing.T) {
 	var tr Traveller
 	tr.tripHistory.entries[0] = *createFlight(1,1,2)
-	tr.tripHistory.entries[0].distance=54
+	tr.tripHistory.entries[0].Distance=54
 	tr.Promises.entries[0]=Promise{TripStart:1,TripEnd:2,Clearance: epochDays(88).toEpochTime(), Travelled:55}
 	if tr.keep()  {
 		t.Error("keepkept.that didnt match")
@@ -235,3 +235,24 @@ func TestKeepNonMatchingPromise(t *testing.T) {
 
 }
 
+func TestPassportFromString(t *testing.T) {
+	p1 := NewPassport("012345678","uk")
+	s := p1.ToString()
+	var p2 Passport
+	err := p2.FromString(s)
+	if err != nil {
+		t.Error("failed to parse passport from string",s)
+	}
+	if !reflect.DeepEqual(p1,p2) {
+		t.Error("passport from string doesnt match original",p1,p2)
+	}
+}
+
+func TestPassportFromStringFail(t *testing.T) {
+	s := "nonsense"
+	var p2 Passport
+	err := p2.FromString(s)
+	if err != EPASSPORTSTRINGWRONGLENGTH {
+		t.Error("FromString accepted string of incorrect length",err)
+	}
+}

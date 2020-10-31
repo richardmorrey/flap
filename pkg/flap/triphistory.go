@@ -76,15 +76,15 @@ const MaxEpochTime=EpochTime(math.MaxUint64)
 
 type Flight struct {
 	et flightType
-	start EpochTime
-	end  EpochTime
-	from  ICAOCode
-	to ICAOCode
-	distance  Kilometres
+	Start EpochTime
+	End  EpochTime
+	FromAirport  ICAOCode
+	ToAirport ICAOCode
+	Distance  Kilometres
 }
 
 func (self *Flight) Older(the *Flight) bool {
-	return bool(the.start >= self.start)
+	return bool(the.Start >= self.Start)
 }
 
 func (self *Flight) setType(ft flightType, respectful bool) {
@@ -102,23 +102,23 @@ func (self *Flight) To(buff *bytes.Buffer) error {
 	if err != nil {
 		return logError(err)
 	}
-	err = binary.Write(buff,binary.LittleEndian,&self.start)
+	err = binary.Write(buff,binary.LittleEndian,&self.Start)
 	if err != nil {
 		return logError(err)
 	}
-	err = binary.Write(buff,binary.LittleEndian,&self.end)
+	err = binary.Write(buff,binary.LittleEndian,&self.End)
 	if err != nil {
 		return logError(err)
 	}
-	err = binary.Write(buff,binary.LittleEndian,&self.from)
+	err = binary.Write(buff,binary.LittleEndian,&self.FromAirport)
 	if err != nil {
 		return logError(err)
 	}
-	err = binary.Write(buff,binary.LittleEndian,&self.to)
+	err = binary.Write(buff,binary.LittleEndian,&self.ToAirport)
 	if err != nil {
 		return logError(err)
 	}
-	return binary.Write(buff,binary.LittleEndian,&self.distance)
+	return binary.Write(buff,binary.LittleEndian,&self.Distance)
 }
 
 // From implemments db/Serialize
@@ -127,23 +127,23 @@ func (self *Flight) From(buff *bytes.Buffer) error {
 	if err != nil {
 		return logError(err)
 	}
-	err = binary.Read(buff,binary.LittleEndian,&self.start)
+	err = binary.Read(buff,binary.LittleEndian,&self.Start)
 	if err != nil {
 		return logError(err)
 	}
-	err = binary.Read(buff,binary.LittleEndian,&self.end)
+	err = binary.Read(buff,binary.LittleEndian,&self.End)
 	if err != nil {
 		return logError(err)
 	}
-	err = binary.Read(buff,binary.LittleEndian,&self.from)
+	err = binary.Read(buff,binary.LittleEndian,&self.FromAirport)
 	if err != nil {
 		return logError(err)
 	}
-	err = binary.Read(buff,binary.LittleEndian,&self.to)
+	err = binary.Read(buff,binary.LittleEndian,&self.ToAirport)
 	if err != nil {
 		return logError(err)
 	}
-	return binary.Read(buff,binary.LittleEndian,&self.distance)
+	return binary.Read(buff,binary.LittleEndian,&self.Distance)
 }
 
 // NewFlight constructs a new flight from one airpot to another and
@@ -159,13 +159,13 @@ func NewFlight(from Airport,start EpochTime,to Airport,end EpochTime) (*Flight,e
 		return nil,EINVALIDARGUMENT
 	}
 	flight := new(Flight)
-	flight.start=start
-	flight.end=end
-	flight.from=from.Code
-	flight.to=to.Code
+	flight.Start=start
+	flight.End=end
+	flight.FromAirport=from.Code
+	flight.ToAirport=to.Code
 
 	var err error
-	flight.distance,err = from.Loc.Distance(to.Loc)
+	flight.Distance,err = from.Loc.Distance(to.Loc)
 	return flight,err
 }
 
@@ -249,7 +249,7 @@ func (self *TripHistory) RemoveFlight(f *Flight) error {
 	}
 	
 	// Move forward flight by flight until we find a match
-	for ; self.entries[i] != *f && self.entries[i].start==f.start; i++ {}
+	for ; self.entries[i] != *f && self.entries[i].Start==f.Start; i++ {}
 	if self.entries[i] != *f {
 		return EFLIGHTNOTFOUND
 	}
@@ -283,7 +283,7 @@ func (self *TripHistory) startOfTrip(j tripHistoryIndex) (tripHistoryIndex,error
 	// Find the previous trip end flight and return the index of flight
 	// immediately after
 	var i tripHistoryIndex
-	for i=j; i < MaxFlights && self.entries[i].start !=0; i++ {
+	for i=j; i < MaxFlights && self.entries[i].Start !=0; i++ {
 		f := &(self.entries[i])
 		if f.et == etTripEnd || f.et == etTravellerTripEnd {
 			return i-1,nil
@@ -300,12 +300,12 @@ func (self *TripHistory) startOfTrip(j tripHistoryIndex) (tripHistoryIndex,error
 func (self *TripHistory) tripStartEndLength() (EpochTime,EpochTime,Kilometres) {
 	var d Kilometres
 	var st EpochTime
-	for i:=0; i < MaxFlights && self.entries[i].start !=0 && self.entries[i].et != etTripEnd && self.entries[i].et != etTravellerTripEnd; i++ {
-		d += self.entries[i].distance
-		st = self.entries[i].start
+	for i:=0; i < MaxFlights && self.entries[i].Start !=0 && self.entries[i].et != etTripEnd && self.entries[i].et != etTravellerTripEnd; i++ {
+		d += self.entries[i].Distance
+		st = self.entries[i].Start
 	}
 	if d > 0 {
-		return st,self.entries[0].end,d
+		return st,self.entries[0].End,d
 	} else {
 		return 0,0,0
 	}
@@ -313,7 +313,7 @@ func (self *TripHistory) tripStartEndLength() (EpochTime,EpochTime,Kilometres) {
 
 // empty returns true if their are no flights in the trip history
 func (self *TripHistory) empty() bool {
-	return self.entries[0].start == 0
+	return self.entries[0].Start == 0
 }
 
 // daysBetween returns whole days from time1 to time2
@@ -359,7 +359,7 @@ func (self *tripState) endJourney(f *Flight) {
 func (self *tripState) updateTrip(f* Flight, now EpochTime, params *FlapParams) {
 
 	if self.start == 0 {
-		self.start = f.start
+		self.start = f.Start
 	}
 
 	if self.journeys == 2 && params.Promises.Algo == paNone  {
@@ -382,15 +382,15 @@ func (self *tripState) updateJourney(f* Flight, now EpochTime, params *FlapParam
 	}
 
 	if (self.visited != nil) {
-		if self.visited[f.to] {
+		if self.visited[f.ToAirport] {
 			self.endJourney(f)
 		} else {
-			self.visited[f.from] = true
-			self.visited[f.to]=true
+			self.visited[f.FromAirport] = true
+			self.visited[f.ToAirport]=true
 		}
 	}
 
-	if (daysBetween(f.end,now) >= params.FlightInterval) {
+	if (daysBetween(f.End,now) >= params.FlightInterval) {
 		self.endJourney(f)
 	}
 }
@@ -405,8 +405,8 @@ func (self* tripState) nextEntry(th *TripHistory,i tripHistoryIndex) *Flight {
 }
 
 func (self *Flight) yesterday(now EpochTime) Kilometres {
-	if (self.start < now) && (now-self.start <= SecondsInDay) {
-		return self.distance
+	if (self.Start < now) && (now-self.Start <= SecondsInDay) {
+		return self.Distance
 	}
 	return 0
 }
@@ -446,7 +446,7 @@ func (self *TripHistory) Update(params *FlapParams,now EpochTime) (Kilometres,er
 	}
 	// ... but if we have to do older flights go back to start of trip before.
 	if self.oldestChange>0 {
-		if j != MaxFlights-1 && self.entries[j+1].start != 0 {
+		if j != MaxFlights-1 && self.entries[j+1].Start != 0 {
 	      		j,_ = self.startOfTrip(tripHistoryIndex(j+1))
 		}
 	}
@@ -457,7 +457,7 @@ func (self *TripHistory) Update(params *FlapParams,now EpochTime) (Kilometres,er
 
 		// Update boilerplate stuff
 		entry:= state.nextEntry(self,i)
-		nowthen := self.entries[i-1].start
+		nowthen := self.entries[i-1].Start
 
 		// If the traveller has called the trip closed at this
 		// flight, enforce it
@@ -536,7 +536,7 @@ func (self *TripHistory) AsJSON() string {
 	var currentTrip *jsonTrip
 	var currentJourney *jsonJourney
 	tripStatus := "Open"
-	for i:=0; self.entries[i].start !=0 && i < MaxFlights; i++ {
+	for i:=0; self.entries[i].Start !=0 && i < MaxFlights; i++ {
 		if (self.entries[i].et == etTripEnd) {
 			tripStatus="Closed by FLAP"
 		}
@@ -559,7 +559,7 @@ func (self *TripHistory) AsJSON() string {
 		f := &(self.entries[i])
 		currentJourney.Flights = 
 			append(currentJourney.Flights,
-			jsonFlight{f.start.ToTime(),f.end.ToTime(),f.from.ToString(),f.to.ToString(),f.distance})
+			jsonFlight{f.Start.ToTime(),f.End.ToTime(),f.FromAirport.ToString(),f.ToAirport.ToString(),f.Distance})
 	}
 
 	jsonData, _ := json.MarshalIndent(trips, "", "    ")
@@ -577,16 +577,16 @@ func (self* TripHistory) AsKML(airports *Airports) string {
 					),
 				))
 
-	for i:=0; self.entries[i].start !=0 && i < MaxFlights; i++ {
+	for i:=0; self.entries[i].Start !=0 && i < MaxFlights; i++ {
 		
 		// Get airport locations
-		from,_ := airports.GetAirport(self.entries[i].from)
-		to,_ := airports.GetAirport(self.entries[i].to)
+		from,_ := airports.GetAirport(self.entries[i].FromAirport)
+		to,_ := airports.GetAirport(self.entries[i].ToAirport)
 
 		// Build tracker:
 		gt := kml.GxTrack()
-		gt.Add(kml.When(self.entries[i].start.ToTime()))
-		gt.Add(kml.When(self.entries[i].end.ToTime()))
+		gt.Add(kml.When(self.entries[i].Start.ToTime()))
+		gt.Add(kml.When(self.entries[i].End.ToTime()))
 		gt.Add(kml.GxCoord(kml.Coordinate{Lon: from.Loc.Lon, Lat: from.Loc.Lat, Alt: 30000}))
 		gt.Add(kml.GxCoord(kml.Coordinate{Lon: to.Loc.Lon, Lat: to.Loc.Lat, Alt: 30000}))
 		
@@ -605,7 +605,7 @@ func (self* TripHistory) AsKML(airports *Airports) string {
 // MidTrip returns true if the trip history indicates the Traveller is in a middle of a trip - i.e.
 //the latest flight is not a trip end event - or the traveller has never travelled.
 func (self *TripHistory) MidTrip() bool {
-	if self.entries[0].start == 0 {
+	if self.entries[0].Start == 0 {
 		return true
 	}
 	if self.entries[0].et != etTripEnd && self.entries[0].et != etTravellerTripEnd {
@@ -616,7 +616,7 @@ func (self *TripHistory) MidTrip() bool {
 
 // To implements db/Serialize
 func (self *TripHistory) To(buff *bytes.Buffer) error {
-	n := int32(sort.Search(MaxFlights,  func(i int) bool {return self.entries[i].start==0}))
+	n := int32(sort.Search(MaxFlights,  func(i int) bool {return self.entries[i].Start==0}))
 	err := binary.Write(buff, binary.LittleEndian,&n)
 	if err != nil {
 		return logError(err)

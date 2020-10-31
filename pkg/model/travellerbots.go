@@ -9,11 +9,8 @@ import (
 	"os"
 	"strings"
 	"sync"
-	//"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
-	//"gonum.org/v1/plot/plotutil"
-	//"gonum.org/v1/plot/vg"
-	//"gonum.org/v1/plot/vg/draw"
+	"strconv"
 )
 
 var ECOULDNTFINDWEIGHT= errors.New("Couldnt find country weight for bot")
@@ -32,6 +29,21 @@ type travellerBot struct {
 type botId struct {
 	band  bandIndex
 	index botIndex
+}
+
+// fromPassport derives botid from passport
+func (self *botId) fromPassport(p flap.Passport) error {
+	n, err := strconv.ParseUint(string(p.Number[:2]), 10, 8)
+	if err != nil {
+		return err
+	}
+	self.band = bandIndex(n)
+	n, err = strconv.ParseUint(string(p.Number[3:]), 10, 32)
+	if err != nil {
+		return err
+	}
+	self.index = botIndex(n)
+	return nil
 }
 
 // getPassport calculates passport, including 
@@ -282,11 +294,10 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 				ts,err := planner.whenWillWeFly(fe,p,currentDay,from,to,tripLength)
 				switch (err) {
 					case nil: 
-						err = jp.planTrip(from,to,tripLength, botId{i,j},flap.Days(ts))
+						err = jp.planTrip(from,to,tripLength,p,ts,fe)
 						if err != nil {
 							return logError(err)
 						} else {
-							logDebug("planned trip in ",ts," days")
 							self.bots[i].stats.Planned()
 						}
 					case ENOSPACEFORTRIP:

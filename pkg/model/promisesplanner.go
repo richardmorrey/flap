@@ -129,43 +129,43 @@ func (self* promisesPlanner) areWePlanning(fe *flap.Engine,pp flap.Passport,now 
 }
 
 // whenWillWeFly tries to obtain a promise
-// for the new trip and if successful returns start day of  the trip for planning
+// for the new trip and if successful returns start of the day of the trip for planning
 // and otherwise an error
-func (self *promisesPlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now flap.EpochTime,from flap.ICAOCode,to flap.ICAOCode,length flap.Days) (int,error) {
+func (self *promisesPlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now flap.EpochTime,from flap.ICAOCode,to flap.ICAOCode,length flap.Days) (flap.EpochTime,error) {
 
 	// Make sure we have chosen to plan
 	if self.chosenWeight==0 {
-		return -1, logError(ENOTPLANNINGTODAY)
+		return 0, logError(ENOTPLANNINGTODAY)
 	}
 
 	// Build weights to use to choose trip start day
 	nowInDays := flap.Days(now/flap.SecondsInDay)
 	err := self.prepareWeights(fe,pp,nowInDays,length)
 	if err != nil {
-		return -1,logError(err)
+		return 0,logError(err)
 	}
 
 	// Attempt to choose start day.
 	ts,err := self.find(self.chosenWeight)
 	if err != nil {
-		return -1, logError(err)
+		return 0, logError(err)
 	}
 
 	// If the top weight (indicated we are not planning) has
 	// been chosen then return
 	if (ts == NOTPLANNING) {
 		logDebug("Not planning after all")
-		return -1,ENOTPLANNINGTODAY
+		return 0,ENOTPLANNINGTODAY
 	} 
 
 	// Create airports
 	fromAirport,err := fe.Airports.GetAirport(from)
 	if (err != nil) {
-		return -1,logError(err)
+		return 0,logError(err)
 	}
 	toAirport,err := fe.Airports.GetAirport(to)
 	if (err != nil) {
-		return -1,logError(err)
+		return 0,logError(err)
 	}
 
 	// Build trip flights. Note flight times do not need to be accurate for promises as long as the
@@ -177,12 +177,12 @@ func (self *promisesPlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now 
 	ede:=sds + flap.EpochTime(length*flap.SecondsInDay)
 	f,err := flap.NewFlight(fromAirport,sds,toAirport,sds+1)
 	if (err != nil) {
-		return -1,logError(err)
+		return 0,logError(err)
 	}
 	plannedflights[0]=*f
 	f,err = flap.NewFlight(toAirport,ede-2,fromAirport,ede-1)
 	if (err != nil) {
-		return -1,logError(err)
+		return 0,logError(err)
 	}
 	plannedflights[1]=*f
 	logDebug("plannedflights:",plannedflights)
@@ -191,7 +191,7 @@ func (self *promisesPlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now 
 	proposal,err := fe.Propose(pp,plannedflights[:],0,now)
 	if (err != nil) {
 		logError(err)
-		return -1,ENOSPACEFORTRIP
+		return 0,ENOSPACEFORTRIP
 	}
 
 	// Make promise
@@ -199,8 +199,8 @@ func (self *promisesPlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now 
 	if err == nil {
 		logDebug("Made promise for trip on Day ",epochStartDay)
 	} else {
-		return -1, logError(err)
+		return 0, logError(err)
 	}
-	return ts-int(nowInDays),err
+	return flap.EpochTime(ts*flap.SecondsInDay),err
 }
 

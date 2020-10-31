@@ -10,7 +10,7 @@ type botPlanner interface
 	clone() botPlanner
 	build(BotSpec,flap.FlapParams) error
 	areWePlanning(*flap.Engine,flap.Passport,flap.EpochTime,flap.Days) bool
-	whenWillWeFly(*flap.Engine,flap.Passport,flap.EpochTime,flap.ICAOCode,flap.ICAOCode,flap.Days) (int,error)
+	whenWillWeFly(*flap.Engine,flap.Passport,flap.EpochTime,flap.ICAOCode,flap.ICAOCode,flap.Days) (flap.EpochTime,error)
 }
 
 type simplePlanner struct {
@@ -54,6 +54,6 @@ func (self *simplePlanner) areWePlanning(fe *flap.Engine,pp flap.Passport, curre
 }
 
 // canWePlan confirms whether traveller can plan the proposed trip on the given day
-func (self *simplePlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now flap.EpochTime,from flap.ICAOCode,to flap.ICAOCode,tripLength flap.Days) (int,error) {
-	return 0,nil
+func (self *simplePlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now flap.EpochTime,from flap.ICAOCode,to flap.ICAOCode,tripLength flap.Days) (flap.EpochTime,error) {
+	return now,nil
 }

@@ -338,7 +338,7 @@ func (self* Engine) prepare() (*CountriesAirportsRoutes, *TravellerBots, *flap.E
 	if self.FlapParams.Promises.Algo != 0 {
 		planDays += self.FlapParams.Promises.MaxDays
 	} 
-	jp,err := NewJourneyPlanner(planDays)
+	jp,err := NewJourneyPlanner(self.db)
 	if (err != nil) {
 		return nil,nil,nil,nil,logError(err)
 	}

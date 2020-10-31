@@ -18,13 +18,13 @@ func TestNewFlight(t *testing.T) {
 		t.Error("NewFlight accepts end equal to start")
 	}
 	entry,err = NewFlight(from,1,to,2)
-	if  entry.distance !=0 {
+	if  entry.Distance !=0 {
 		t.Error("km !=0",entry)
 	}
-	if entry.start!= 1  {
+	if entry.Start!= 1  {
 		t.Error("startTime != 1", entry)
 	}
-	if entry.end != 2 {
+	if entry.End != 2 {
 		t.Error("endTime != 2",entry)
 	}
 	if entry.et != etFlight {
@@ -155,16 +155,16 @@ func populateFlights(th *TripHistory, num int,interval int) error {
 }
 
 func checkFlight(t *testing.T,flight Flight, i int,interval int) {
-	if  flight.start != EpochTime(i*interval) {
+	if  flight.Start != EpochTime(i*interval) {
 		t.Error("Incorrect start", i,flight)
 	}
-	if flight.end !=  EpochTime((i+1)*interval) {
+	if flight.End !=  EpochTime((i+1)*interval) {
 		t.Error("Incorrect end", flight)
 	}
-	if flight.from != NewICAOCode(string(i+64)) {
+	if flight.FromAirport != NewICAOCode(string(i+64)) {
 		t.Error("Incorrect from", flight)
 	}
-	if flight.to != NewICAOCode(string(i+65)) {
+	if flight.ToAirport != NewICAOCode(string(i+65)) {
 		t.Error("incorrect to", flight)
 	}
 }
@@ -174,7 +174,7 @@ func checkFlights(t *testing.T, th *TripHistory,start int,end int,interval int) 
 		checkFlight(t,th.entries[end-i],i,interval)
 	}
 	for i := (end-start)+1; i< MaxFlights; i++ {
-		if th.entries[i].start != EpochTime(0) {
+		if th.entries[i].Start != EpochTime(0) {
 			t.Error("Flight not empty",i, th.entries[i])
 		}
 	}
@@ -545,7 +545,7 @@ func TestUpdateOneFlight(t *testing.T) {
 	if th.entries[0].et != etFlight {
 		t.Error("Changed flight state",th.entries[0])
 	}
-	if d != th.entries[0].distance {
+	if d != th.entries[0].Distance {
 		t.Error("Returned wrong distance for one flight today",d)
 	}
 	d,err = th.Update(&params,SecondsInDay*2)
@@ -814,7 +814,7 @@ func TestEmpty(t *testing.T) {
 	}
 }
 
-func TestStartOfTripEmpty(t *testing.T) {
+func TeststartOfTripEmpty(t *testing.T) {
 	var th TripHistory
 	_,err := th.startOfTrip(0)
 	if err == nil {
@@ -822,7 +822,7 @@ func TestStartOfTripEmpty(t *testing.T) {
 	}
 }
 
-func TestStartOfTripInvalid(t *testing.T) {
+func TeststartOfTripInvalid(t *testing.T) {
 	var th TripHistory
 	_,err := th.startOfTrip(MaxFlights)
 	if err == nil {
@@ -830,7 +830,7 @@ func TestStartOfTripInvalid(t *testing.T) {
 	}
 }
 
-func TestStartOfTrip2Flights(t *testing.T) {
+func TeststartOfTrip2Flights(t *testing.T) {
 	var th TripHistory
 	th.AddFlight(createFlight(1,SecondsInDay,SecondsInDay+1))
 	th.AddFlight(createFlight(2,SecondsInDay*2+1,SecondsInDay*2+3))
@@ -851,7 +851,7 @@ func TestStartOfTrip2Flights(t *testing.T) {
 
 }
 
-func TestStartOfTripFull(t *testing.T) {
+func TeststartOfTripFull(t *testing.T) {
 	var th TripHistory
 	populateFlights(&th,100,1)
 	i,_:= th.startOfTrip(0)
@@ -864,7 +864,7 @@ func TestStartOfTripFull(t *testing.T) {
 	}
 }
 
-func TestStartOfTripEnds(t *testing.T) {
+func TeststartOfTripEnds(t *testing.T) {
 	var th TripHistory
 	populateFlights(&th,10,1)
 	th.entries[3].et= etTripEnd
@@ -883,7 +883,7 @@ func TestStartOfTripEnds(t *testing.T) {
 	}
 }
 
-func TestStartOfTripNoEnd(t *testing.T) {
+func TeststartOfTripNoEnd(t *testing.T) {
 	var th TripHistory
 	populateFlights(&th,3,1)
 	i,_ := th.startOfTrip(0)
@@ -896,7 +896,7 @@ func TestStartOfTripNoEnd(t *testing.T) {
 	}
 }
 
-func TestStartOfTripOneFlight(t *testing.T) {
+func TeststartOfTripOneFlight(t *testing.T) {
 	var th TripHistory
 	populateFlights(&th,1,1)
 	i,_ := th.startOfTrip(0)
@@ -916,7 +916,7 @@ func TestTripStartEndLengthEmpty(t *testing.T) {
 func TestTripStartEndLengthOneFlight(t *testing.T) {
 	var th TripHistory
 	populateFlights(&th,1,1)
-	th.entries[0].distance = 5
+	th.entries[0].Distance = 5
 	s,e,d := th.tripStartEndLength()
 	if !(s==1 && e==2 && d==5) {
 		t.Error("tripStartEndDistance returning incorrect value for 1 flight",s,e,d)
@@ -926,9 +926,9 @@ func TestTripStartEndLengthOneFlight(t *testing.T) {
 func TestTripStartEndLengthThreeFlights(t *testing.T) {
 	var th TripHistory
 	populateFlights(&th,3,1)
-	th.entries[0].distance = 5
-	th.entries[1].distance = 6
-	th.entries[2].distance = 7
+	th.entries[0].Distance = 5
+	th.entries[1].Distance = 6
+	th.entries[2].Distance = 7
 	s,e,d := th.tripStartEndLength()
 	if !(s==1 && e==4 && d==18) {
 		t.Error("tripStartEndDistance returning incorrect value for 1 flight",s,e,d)
@@ -938,10 +938,10 @@ func TestTripStartEndLengthThreeFlights(t *testing.T) {
 func TestTripStartEndLengthTwoTrips(t *testing.T) {
 	var th TripHistory
 	populateFlights(&th,3,1)
-	th.entries[0].distance = 5
+	th.entries[0].Distance = 5
 	th.entries[2].et = etTripEnd
-	th.entries[1].distance = 6
-	th.entries[2].distance = 7
+	th.entries[1].Distance = 6
+	th.entries[2].Distance = 7
 	s,e,d := th.tripStartEndLength()
 	if !(s==2 && e==4 && d==11) {
 		t.Error("tripStartEndDistance returning incorrect value for two trips",s,e,d)

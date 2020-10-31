@@ -2,9 +2,14 @@ package model
 
 import (
 	"github.com/richardmorrey/flap/pkg/flap"
+	"github.com/richardmorrey/flap/pkg/db"
 	"errors"
 	"math/rand"
 	"sync"
+	"strings"
+	"bytes"
+	"encoding/binary"
+	"fmt"
 )
 
 var  EDAYTOOFARAHEAD = errors.New("Value for days is too far ahead")
@@ -13,6 +18,8 @@ var  EZEROPLANNINGDAYS = errors.New("Zero planning days specified")
 type journeyFlight struct {
 	from flap.ICAOCode
 	to flap.ICAOCode
+	start flap.EpochTime
+	end flap.EpochTime
 }
 
 type journeyType uint8
@@ -20,54 +27,137 @@ type journeyType uint8
 const (
 	jtOutbound journeyType  = iota
 	jtInbound
+	jtPromise
 )
 
 type journey struct {
 	jt		journeyType
-	flight		journeyFlight
-	bot		botId
+	flight		flap.Flight
 	length		flap.Days
 }
 
-type plannerDay []journey
+// From implements db/Serialize
+func (self *journey) From(buff *bytes.Buffer) error {
+	
+	err := self.flight.From(buff)
+	if err != nil {
+		return err
+	}
+
+	err = binary.Read(buff,binary.LittleEndian,&self.jt)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Read(buff,binary.LittleEndian,&self.length)
+	return err
+}
+
+// To implemented as part of db/Serialize
+func (self *journey) To(buff *bytes.Buffer) error {
+
+	err := self.flight.To(buff)
+	if err != nil {
+		return err
+	}
+
+	err = binary.Write(buff,binary.LittleEndian,&self.jt)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Write(buff,binary.LittleEndian,&self.length)
+	return err
+}
+
+type plannerDay struct {
+	journies []journey
+}
+
+// To implements db/Serialize
+func (self *plannerDay) To(buff *bytes.Buffer) error {
+	n := int32(len(self.journies))
+	err := binary.Write(buff, binary.LittleEndian,&n)
+	if err != nil {
+		return logError(err)
+	}
+	for i:=int32(0); i < n; i++ {
+		err = self.journies[i].To(buff)
+		if (err !=nil) {
+			return logError(err)
+		}
+	}
+	return nil
+}
+
+// From implemments db/Serialize
+func (self *plannerDay) From(buff *bytes.Buffer) error {
+	var n int32
+	err := binary.Read(buff,binary.LittleEndian,&n)
+	if err != nil {
+		return logError(err)
+	}
+	var entry journey
+	self.journies =  make([]journey,1,5)
+	for  i:=int32(0); i < n; i++ {
+		err = entry.From(buff)
+		if (err != nil) {
+			return logError(err)
+		}
+		self.journies = append(self.journies,entry)
+	}
+	return nil
+}
 
 type journeyPlanner struct{
-	days []plannerDay
+	table db.Table
 	mux  sync.Mutex
 }
 
 var ENOJOURNEYSPLANNED = errors.New("No journeys have been planned for today")
+const journeyPlannerTableName = "journeyplanner"
 
 // NewJourneyPlanner is factory function for journeyPlanner
-func NewJourneyPlanner(planningDays flap.Days) (*journeyPlanner,error) {
-	if planningDays < 1 {
-		return nil, EZEROPLANNINGDAYS
-	}
+func NewJourneyPlanner(database db.Database) (*journeyPlanner,error) {
+
+	// Create planner
 	jp := new(journeyPlanner)
-	jp.days =make([]plannerDay,planningDays+2,planningDays+2)
+
+	// Create or open table
+	table,err := database.OpenTable(journeyPlannerTableName)
+	if  err == db.ETABLENOTFOUND { 
+		table,err = database.CreateTable(journeyPlannerTableName)
+	}
+	if err != nil {
+		return jp,err
+	}
+	jp.table  = table
 	return jp,nil
 }
 
-// Adds journey to a day. Day is 0-indexed with 0 meaning "today". Thread-safe.
-func (self *journeyPlanner) addJourney(j journey, day flap.Days) error {
+// Adds journey to the journey planner table keyed by date and passport. Thread-safe.
+func (self *journeyPlanner) addJourney(pp flap.Passport, j journey) error {
 
-	// Prevent mult-threaded write to self.days
+	// Prevent mult-threaded write to self.table
 	self.mux.Lock()
 	defer self.mux.Unlock()
 
-	// Check day isnt too far ahead
-	if day >= flap.Days(len(self.days)) {
-		return logError(EDAYTOOFARAHEAD)
-	}
+	// Build record key
+	t := j.flight.Start.ToTime()
+	recordKey := fmt.Sprintf("%s/%s",t.Format("2006-01-02"),pp.ToString())
 
-	// Make slice if this is the first journey on specified day
-	if self.days[day] == nil {
-		self.days[day] = make([]journey,0,100)
-	}
+	// Retreive any existing list for this day/traveller
+	var pd plannerDay
+	self.table.Get([]byte(recordKey),&pd)
 
-	// Add the journey
-	self.days[day] = append(self.days[day],j)
-	logDebug("Added journey. Day +",day," now has ", len(self.days[day]), " journeys.")
+	// Add journey to list
+	pd.journies = append(pd.journies,j)
+
+	// Save amended list
+	err := self.table.Put([]byte(recordKey),&pd)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -75,17 +165,19 @@ func (self *journeyPlanner) addJourney(j journey, day flap.Days) error {
 // traveller. Note outbound journey only is planned at this point.
 // Return journey is planned only at point submission of outbound
 // journey is accepted by Flight
-func (self *journeyPlanner) planTrip(from flap.ICAOCode, to flap.ICAOCode, length flap.Days, bot botId, day flap.Days) error {
-	j:= journey{jt:jtOutbound,flight:journeyFlight{from,to},length:length,bot:bot}
-	return self.addJourney(j,day)
+func (self *journeyPlanner) planTrip(from flap.ICAOCode, to flap.ICAOCode, length flap.Days, pp flap.Passport, startOfDay flap.EpochTime, fe *flap.Engine) error {
+	f,e := self.buildFlight(from,to,startOfDay,fe)
+	j:= journey{jt:jtOutbound,flight:*f,length:length}
+	return self.addJourney(pp,j)
 }
 
 // Plans the inbound journey for given outbound journey 
-func (self *journeyPlanner) planInbound(j * journey) error {
+func (self *journeyPlanner) planInbound(j * journey, pp flap.Passport, startOfDay flap.EpochTime,fe *flap.Engine) error {
 	
-	// Create journey for last day of tripd
-	j2 := journey{jt:jtInbound,flight:journeyFlight{j.flight.to,j.flight.from},bot:j.bot}
-	return self.addJourney(j2,j.length-1)
+	// Create return journey for last day of trip
+	f,e := self.buildFlight(j.flight.ToAirport,j.flight.FromAirport,startOfDay+flap.EpochTime(j.length*flap.SecondsInDay),fe)
+	jin := journey{jt:jtInbound,flight:*f,length:j.length}
+	return self.addJourney(pp,jin)
 }
 
 // flightLength calulates distance and duration of flight between given two airports
@@ -101,22 +193,22 @@ func (self *journeyPlanner) flightLength(from flap.Airport, to flap.Airport) (fl
 
 // Builds a flap Flight for a given journey flight and datetime, creating a
 // start time randomly within the given day
-func (self *journeyPlanner) buildFlight(jf *journeyFlight, startOfDay flap.EpochTime,fe *flap.Engine) (flap.EpochTime,flap.EpochTime,*flap.Flight,flap.Kilometres, error) {
+func (self *journeyPlanner) buildFlight(from flap.ICAOCode,to flap.ICAOCode, startOfDay flap.EpochTime,fe *flap.Engine) (*flap.Flight, error) {
 
 	// Retrieve airport records
-	fromAirport,err := fe.Airports.GetAirport(jf.from)
+	fromAirport,err := fe.Airports.GetAirport(from)
 	if (err != nil) {
-		return 0,0,nil,0,logError(err)
+		return nil,logError(err)
 	}
-	toAirport,err := fe.Airports.GetAirport(jf.to)
+	toAirport,err := fe.Airports.GetAirport(to)
 	if (err != nil) {
-		return 0,0,nil,0,logError(err)
+		return nil,logError(err)
 	}
 
 	// Calculate flight length
 	dist,duration,err := self.flightLength(fromAirport,toAirport)
 	if (err != nil) {
-		return 0,0,nil,0,logError(err)
+		return nil,logError(err)
 	}
 	
 	// Set start and end time, ensuring flight ends by end of first day to avoid overlap
@@ -126,7 +218,7 @@ func (self *journeyPlanner) buildFlight(jf *journeyFlight, startOfDay flap.Epoch
 
 	// Create flight
 	f,e := flap.NewFlight(fromAirport,start,toAirport,end)
-	return start,end,f,dist,e
+	return f,e
 }
 
 // Attempts to submit all flights in all journeys for the current day.
@@ -134,48 +226,97 @@ func (self *journeyPlanner) buildFlight(jf *journeyFlight, startOfDay flap.Epoch
 // journey is planned. Not thread-safe
 func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, startOfDay flap.EpochTime, fp *flightPaths, debit bool) error {
 
-	logInfo("submitFlights processing ", len(self.days[0])," journeys")
-
 	// Iterate through all journeys for today
-	for _, j := range(self.days[0])  {
-		
-		// Build flight
-		start,end,flight,distance,err := self.buildFlight(&(j.flight),startOfDay,fe)
-		if (err != nil) {
-			return logError(err)
-		}
+	prefix := startOfDay.ToTime().Format("2006-01-02")
+	it,err := self.NewIterator([]byte(prefix))
+	if err != nil {
+		return logError(err)
+	}
+	for it.Next() {
 
-		// Submit flight
-		var flights [1]flap.Flight
-		flights[0]=*flight
-		p,err := tb.getPassport(j.bot)
+		// Retrieve planned flights and traveller
+		changed:=false
+		plannedFlights := it.Value()
+		p,err := it.Passport()
 		if err != nil {
 			return logError(err)
 		}
-		err = fe.SubmitFlights(p,flights[:],start,debit)
-		// If successful  ...
-		if err == nil {
-			// ... plan journey ...
-			tb.GetBot(j.bot).stats.Submitted(distance)
-			if j.jt==jtOutbound {
-				err = self.planInbound(&j)
-				if err != nil {
-					return logError(err)
+		
+		// Submit all the flights
+		for _, j := range(plannedFlights.journies)  {
+		
+			// Submit flight
+			var flights [1]flap.Flight
+			flights[0]=j.flight
+			err = fe.SubmitFlights(p,flights[:],j.flight.Start,debit)
+			var bi botId
+			bi.fromPassport(p)
+
+			// If successful  ...
+			if err == nil {
+				// ... plan journey ...
+				tb.GetBot(bi).stats.Submitted(j.flight.Distance)
+				if j.jt==jtOutbound {
+					err = self.planInbound(&j,p,startOfDay,fe)
+					if err != nil {
+						return logError(err)
+					}
 				}
+				// ... and report
+				fp.addFlight(j.flight.FromAirport,j.flight.ToAirport,j.flight.Start,j.flight.End,fe.Airports,bi.band)
+				logDebug("Submitted flight for",p.ToString())
+			} else {
+				logDebug("Flight submission refused for",p.ToString(),":",j.flight.Start.ToTime())
+				tb.GetBot(bi).stats.Refused()
 			}
-			// ... and report
-			fp.addFlight(j.flight.from,j.flight.to,start,end,fe.Airports,j.bot.band)
-			logDebug("Submitted flight for",j.bot)
-		} else {
-			logDebug("Flight submission refused for",j.bot,":",start.ToTime())
-			tb.GetBot(j.bot).stats.Refused()
 		}
+
+		// Delete the record
+		//  TBD
 	}
 
-	// Delete the plan for today now it has been submitted
-	copy(self.days[:],self.days[1:])
-	self.days[len(self.days)-1]=plannerDay{}
 	return nil
 }
 
+type journeyPlannerIterator struct {
+	iterator db.Iterator
+}
+
+func (self *journeyPlannerIterator) Next() (bool) {
+	return self.iterator.Next() 
+}
+
+func (self *journeyPlannerIterator) Value() plannerDay {
+	var pd plannerDay
+	self.iterator.Value(&pd)
+	return pd
+}
+
+func (self *journeyPlannerIterator) Passport() (flap.Passport,error) {
+	var p flap.Passport
+	var key = string(self.iterator.Key())
+	parts := strings.Split(key,"/")
+	err :=  p.FromString(parts[1])
+	return p,err
+}
+
+func (self *journeyPlannerIterator) Error() error {
+	return self.iterator.Error()
+}
+
+func (self *journeyPlannerIterator) Release() error {
+	self.iterator.Release()
+	return self.iterator.Error()
+}
+
+func (self *journeyPlanner) NewIterator(prefix []byte) (*journeyPlannerIterator,error) {
+	iter := new(journeyPlannerIterator)
+	var err error
+	if prefix != nil {
+		iter.iterator,err=self.table.NewIterator(prefix)
+	} else {
+		iter.iterator,err=self.table.NewIterator(nil)
+	}
+	return iter,err
+}
 

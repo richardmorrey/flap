@@ -374,13 +374,13 @@ func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTi
 	ts := MaxEpochTime
 	te := tripEnd
 	for i:=0; i < len(flights); i++ {
-		travelled += flights[i].distance
-		distance += flights[i].distance + self.Administrator.params.TaxiOverhead
-		if flights[i].start < ts {
-			ts=flights[i].start
+		travelled += flights[i].Distance
+		distance += flights[i].Distance + self.Administrator.params.TaxiOverhead
+		if flights[i].Start < ts {
+			ts=flights[i].Start
 		}
-		if flights[i].end  > te {
-			te=flights[i].end
+		if flights[i].End  > te {
+			te=flights[i].End
 		}
 	}
 

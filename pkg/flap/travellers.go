@@ -11,6 +11,7 @@ import (
 )
 
 var ETABLENOTOPEN = errors.New("Table not open")
+var EPASSPORTSTRINGWRONGLENGTH = errors.New("Passport string is wrong length")
 
 type PassportNumber [9]byte
 type IssuingCountry [3]byte
@@ -29,6 +30,15 @@ func NewPassport(number string,issuer string) Passport {
 
 func (self *Passport) ToString() string {
 	return string(self.Number[:]) + " " + string(self.Issuer[:])
+}
+
+func (self *Passport) FromString(s string) error {
+	if  len(s) != 13 {
+		return EPASSPORTSTRINGWRONGLENGTH
+	}
+	copy(self.Number[:], s[:9])
+	copy(self.Issuer[:], s[10:])
+	return nil
 }
 
 type passportKey [20]byte
@@ -140,7 +150,7 @@ func (self *Traveller) submitFlight(flight *Flight,now EpochTime, taxiOH Kilomet
 	bac := self.balance
 	pd := self.kept.Distance
 	if debit {
-		self.balance -= (flight.distance + taxiOH)
+		self.balance -= (flight.Distance + taxiOH)
 	}
 
 	// Reset any kept promise

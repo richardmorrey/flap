@@ -106,7 +106,7 @@ func TestEngineSubmitFlightsTaxiOverhead(t *testing.T) {
 	engine.Administrator.SetParams(FlapParams{TaxiOverhead:100})
 	var flights []Flight
 	flights = append(flights,*createFlight(1,1,2))
-	flights[0].distance = 10
+	flights[0].Distance = 10
 	passport := NewPassport("987654321","uk")
 	err := engine.SubmitFlights(passport,flights,SecondsInDay,true)
 	if err != nil {
@@ -145,7 +145,7 @@ func TestEngineSubmitFlights(t *testing.T) {
 	if traveller.tripHistory.entries[2] != flights[0] {
 		t.Error("SubmitFlights failed to submit flights to traveller")
 	}
-	if traveller.tripHistory.entries[3].start != 0 {
+	if traveller.tripHistory.entries[3].Start != 0 {
 		t.Error("SubmitFlights failed to submit flights to traveller")
 	}
 }
@@ -171,7 +171,7 @@ func TestEngineSubmitFlightsInBatches(t *testing.T) {
 	if traveller.tripHistory.entries[1] != flights[0] {
 		t.Error("SubmitFlights failed to submit flights to traveller")
 	}
-	if traveller.tripHistory.entries[2].start != 0 {
+	if traveller.tripHistory.entries[2].Start != 0 {
 		t.Error("SubmitFlights failed to submit flights to traveller")
 	}
 	var flights2 []Flight
@@ -194,7 +194,7 @@ func TestEngineSubmitFlightsInBatches(t *testing.T) {
 	if traveller.tripHistory.entries[2] != flights[0] {
 		t.Error("SubmitFlights failed to submit flights to traveller",traveller.tripHistory.entries[2],flights[1])
 	}
-	if traveller.tripHistory.entries[3].start != 0 {
+	if traveller.tripHistory.entries[3].Start != 0 {
 		t.Error("SubmitFlights failed to submit flights to traveller")
 	}
 }
@@ -273,7 +273,7 @@ func TestUpdateTripsAndBackfillOne(t  *testing.T) {
 	if traveller.tripHistory.entries[0].et != etTripEnd {
 		t.Error("UpdateTripsAndBackfill failed to end trip of one traveller",traveller.tripHistory.AsJSON())
 	}
-	expectedBalance := 100 - (flights[0].distance+flights[1].distance)
+	expectedBalance := 100 - (flights[0].Distance+flights[1].Distance)
 	if traveller.balance !=  expectedBalance {
 		t.Error("UpdateTripsAndBackfill didnt backfill correctly", traveller.balance)
 	}
@@ -325,7 +325,7 @@ func testUpdateTripsThreaded(t *testing.T,threads int) {
 	if traveller.tripHistory.entries[0].et != etTripEnd {
 		t.Error("UpdateTripsAndBackfill failed to end trip of traveller 1",traveller.tripHistory.AsJSON())
 	}
-	expectedBalance := 100 - (flights13[0].distance+flights13[1].distance)
+	expectedBalance := 100 - (flights13[0].Distance+flights13[1].Distance)
 	if traveller.balance !=  expectedBalance {
 		t.Error("UpdateTripsAndBackfill didnt backfill traveller 1correctly", expectedBalance,traveller.balance)
 	}
@@ -340,7 +340,7 @@ func testUpdateTripsThreaded(t *testing.T,threads int) {
 	if traveller.tripHistory.entries[0].et != etFlight {
 		t.Error("UpdateTripsAndBackfill ended trip of traveller 2",traveller.tripHistory.AsJSON())
 	}
-	expectedBalance = -(flights2[0].distance+flights2[1].distance)
+	expectedBalance = -(flights2[0].Distance+flights2[1].Distance)
 	if traveller.balance !=  expectedBalance {
 		t.Error("UpdateTripsAndBackfill backfilled traveller 2", traveller.balance)
 	}
@@ -348,9 +348,9 @@ func testUpdateTripsThreaded(t *testing.T,threads int) {
 		t.Error("UpdateTripsAndBackfill set wrong value for totalGrounded", engine.Administrator.bs.totalGrounded)
 	}
 	if us.Travellers != 1 {
-		t.Error("Update returned no travellers when someone travelled yesterday",us.Travellers,flights2[1].start)
+		t.Error("Update returned no travellers when someone travelled yesterday",us.Travellers,flights2[1].Start)
 	}
-	if us.Distance != flights2[1].distance {
+	if us.Distance != flights2[1].Distance {
 		t.Error("Update returned no distance when someone travelled yesterday",us.Distance)
 	}
 	if us.Grounded != 2 {
@@ -553,7 +553,7 @@ func TestProposePromisesActive(t *testing.T) {
 		t.Error("Proposal doesnt include expected trip end date",p.entries[0])
 	}
 
-	if p.entries[0].Distance != plannedflights[0].distance+plannedflights[1].distance {
+	if p.entries[0].Distance != plannedflights[0].Distance+plannedflights[1].Distance {
 		t.Error("Proposal doesnt include expected trip distance",p.entries[0])
 	}
 	engine2 := NewEngine(db,0,"")
@@ -611,7 +611,7 @@ func TestProposePromisesActiveiWithTripEnd(t *testing.T) {
 		t.Error("Proposal doesnt include expected trip end date",p.entries[0])
 	}
 
-	if p.entries[0].Distance != plannedflights[0].distance+plannedflights[1].distance {
+	if p.entries[0].Distance != plannedflights[0].Distance+plannedflights[1].Distance {
 		t.Error("Proposal doesnt include expected trip distance",p.entries[0])
 	}
 
