@@ -15,13 +15,6 @@ import (
 var  EDAYTOOFARAHEAD = errors.New("Value for days is too far ahead")
 var  EZEROPLANNINGDAYS = errors.New("Zero planning days specified")
 
-type journeyFlight struct {
-	from flap.ICAOCode
-	to flap.ICAOCode
-	start flap.EpochTime
-	end flap.EpochTime
-}
-
 type journeyType uint8
 
 const (
@@ -166,7 +159,10 @@ func (self *journeyPlanner) addJourney(pp flap.Passport, j journey) error {
 // Return journey is planned only at point submission of outbound
 // journey is accepted by Flight
 func (self *journeyPlanner) planTrip(from flap.ICAOCode, to flap.ICAOCode, length flap.Days, pp flap.Passport, startOfDay flap.EpochTime, fe *flap.Engine) error {
-	f,e := self.buildFlight(from,to,startOfDay,fe)
+	f,err := self.buildFlight(from,to,startOfDay,fe)
+	if (err != nil) {
+		return err
+	}
 	j:= journey{jt:jtOutbound,flight:*f,length:length}
 	return self.addJourney(pp,j)
 }
@@ -175,7 +171,10 @@ func (self *journeyPlanner) planTrip(from flap.ICAOCode, to flap.ICAOCode, lengt
 func (self *journeyPlanner) planInbound(j * journey, pp flap.Passport, startOfDay flap.EpochTime,fe *flap.Engine) error {
 	
 	// Create return journey for last day of trip
-	f,e := self.buildFlight(j.flight.ToAirport,j.flight.FromAirport,startOfDay+flap.EpochTime(j.length*flap.SecondsInDay),fe)
+	f,err := self.buildFlight(j.flight.ToAirport,j.flight.FromAirport,startOfDay+flap.EpochTime(j.length*flap.SecondsInDay),fe)
+	if (err != nil)  {
+		return err
+	}
 	jin := journey{jt:jtInbound,flight:*f,length:j.length}
 	return self.addJourney(pp,jin)
 }
@@ -206,7 +205,7 @@ func (self *journeyPlanner) buildFlight(from flap.ICAOCode,to flap.ICAOCode, sta
 	}
 
 	// Calculate flight length
-	dist,duration,err := self.flightLength(fromAirport,toAirport)
+	_,duration,err := self.flightLength(fromAirport,toAirport)
 	if (err != nil) {
 		return nil,logError(err)
 	}
@@ -227,15 +226,13 @@ func (self *journeyPlanner) buildFlight(from flap.ICAOCode,to flap.ICAOCode, sta
 func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, startOfDay flap.EpochTime, fp *flightPaths, debit bool) error {
 
 	// Iterate through all journeys for today
-	prefix := startOfDay.ToTime().Format("2006-01-02")
-	it,err := self.NewIterator([]byte(prefix))
+	it,err := self.NewIterator(startOfDay)
 	if err != nil {
 		return logError(err)
 	}
 	for it.Next() {
 
 		// Retrieve planned flights and traveller
-		changed:=false
 		plannedFlights := it.Value()
 		p,err := it.Passport()
 		if err != nil {
@@ -309,14 +306,11 @@ func (self *journeyPlannerIterator) Release() error {
 	return self.iterator.Error()
 }
 
-func (self *journeyPlanner) NewIterator(prefix []byte) (*journeyPlannerIterator,error) {
+func (self *journeyPlanner) NewIterator(date flap.EpochTime) (*journeyPlannerIterator,error) {
+	prefix := date.ToTime().Format("2006-01-02")
 	iter := new(journeyPlannerIterator)
 	var err error
-	if prefix != nil {
-		iter.iterator,err=self.table.NewIterator(prefix)
-	} else {
-		iter.iterator,err=self.table.NewIterator(nil)
-	}
+	iter.iterator,err = self.table.NewIterator([]byte(prefix))
 	return iter,err
 }
 

@@ -3,49 +3,89 @@ package model
 import (
 	"testing"
 	"github.com/richardmorrey/flap/pkg/flap"
+	"github.com/richardmorrey/flap/pkg/db"
+	"os"
 )
 
-func TestNewJourneyPlannerZero(t *testing.T) {
-	_,err := NewJourneyPlanner(0)
-	if (err == nil) {
-		t.Error("NewJourneyPlanner accepted zero trip lengths")
+var JPTESTFOLDER="jptest"
+
+func setupJP(t *testing.T) *db.LevelDB{
+	if err := os.Mkdir(JPTESTFOLDER, 0700); err != nil {
+		t.Error("Failed to create test dir", err)
 	}
+	return db.NewLevelDB(JPTESTFOLDER)
+} 
+
+func teardownJP(db *db.LevelDB) {
+	db.Release()
+	os.RemoveAll(JPTESTFOLDER)
 }
+
 
 func TestNewJourneyPlanner(t *testing.T) {
-	jp,err := NewJourneyPlanner(10)
-	if (err != nil) {
-		t.Error("NewJourneyPlanner failed with 1 trip length")
-	}
-	if len(jp.days) != 12 {
-		t.Error("NewJourneyPlanner failed to create the correct number of days",len(jp.days))
-	}
-}
 
-func TestAddJourneyHigh(t *testing.T) {
-	jp,_ := NewJourneyPlanner(3)
-	err := jp.addJourney(journey{},flap.Days(len(jp.days)))
-	if  err != EDAYTOOFARAHEAD {
-		t.Error("addJourney accepts day greater than maximum")
+	db := setupJP(t)
+	defer teardownJP(db)
+	jp,err := NewJourneyPlanner(db)
+	if (err != nil) {
+		t.Error("Failed to create new journey planner")
+	}
+	if (jp == nil) {
+		t.Error("Failed to return journey planner")
 	}
 }
 
 func TestAddJourney(t *testing.T) {
-	jp,_ := NewJourneyPlanner(3)
-	j := journey{jt:jtInbound}
-	err := jp.addJourney(j,2)
+
+	db := setupJP(t)
+	defer teardownJP(db)
+	jp,err := NewJourneyPlanner(db)
+	if (err != nil) {
+		t.Error("Failed to create new journey planner")
+	}
+
+	f,_ := flap.NewFlight(flap.Airport{},flap.SecondsInDay,flap.Airport{},flap.SecondsInDay+1)
+	pp := flap.NewPassport("987654321","uk")
+
+	j := journey{jt:jtInbound,flight:*f}
+	err = jp.addJourney(pp,j)
 	if  err != nil {
 		t.Error("Failed to add journey")
 	}
-	if len(jp.days[2]) != 1 {
-		t.Error("Failed to add journey")
+
+	it,err := jp.NewIterator(flap.EpochTime(flap.SecondsInDay))
+	if err != nil {
+		t.Error("Failed to create iterator")
 	}
-	if jp.days[2][0] != j {
-		t.Error("Failed to add journey with correct value", jp.days[2][0])
+	for it.Next() {
+
+		pf := it.Value()
+		if len(pf.journies) != 1 {
+			t.Error("No planned jouurnies")
+		}
+		if pf.journies[0] !=  j {
+			t.Error("Retrieved journey doesnt match what was stored", pf.journies[0],j)
+		}
+		pp2,err := it.Passport()
+		if err != nil {
+			t.Error("Could retrieve passport")
+		}
+		if pp2 != pp {
+			t.Error("Retrieved passport doesnt match what was stored", pp2,pp)
+		}
 	}
+
 }
 
+/*
 func TestplanTrip(t *testing.T) {
+	db := setupJP(t)
+	defer teardownJP()
+	jp,err := NewJourneyPlanner(jp)
+	if (err != nil) {
+		t.Error("Failed to create new journey planner")
+	}
+
 	jp,_ := NewJourneyPlanner(3)
 	bot:= botId{1,2}
 	from:= flap.NewICAOCode("A")
@@ -54,8 +94,6 @@ func TestplanTrip(t *testing.T) {
 	if (err != nil)  {
 		t.Error("Failed to plan trip",err)
 	}
-	j := journey{jt:jtOutbound,flight:journeyFlight{from,to},length:10,bot:bot}
-	if jp.days[0][0] != j {
-		t.Error("Failed to set outbound journey correctly",jp.days[0][0])
-	}
 }
+*/
+
