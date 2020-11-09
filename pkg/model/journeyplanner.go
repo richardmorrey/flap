@@ -90,8 +90,9 @@ func (self *plannerDay) From(buff *bytes.Buffer) error {
 	if err != nil {
 		return logError(err)
 	}
+
 	var entry journey
-	self.journies =  make([]journey,1,5)
+	self.journies =  make([]journey,0,5)
 	for  i:=int32(0); i < n; i++ {
 		err = entry.From(buff)
 		if (err != nil) {
@@ -126,6 +127,11 @@ func NewJourneyPlanner(database db.Database) (*journeyPlanner,error) {
 	}
 	jp.table  = table
 	return jp,nil
+}
+
+// dropJourneyPlanner deletes the table holding all journey planner state
+func dropJourneyPlanner(database db.Database) error {
+	return database.DropTable(journeyPlannerTableName)
 }
 
 // Adds journey to the journey planner table keyed by date and passport. Thread-safe.
@@ -283,10 +289,10 @@ func (self *journeyPlannerIterator) Next() (bool) {
 	return self.iterator.Next() 
 }
 
-func (self *journeyPlannerIterator) Value() plannerDay {
+func (self *journeyPlannerIterator) Value() *plannerDay {
 	var pd plannerDay
 	self.iterator.Value(&pd)
-	return pd
+	return &pd
 }
 
 func (self *journeyPlannerIterator) Passport() (flap.Passport,error) {

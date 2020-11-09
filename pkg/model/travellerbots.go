@@ -38,7 +38,7 @@ func (self *botId) fromPassport(p flap.Passport) error {
 		return err
 	}
 	self.band = bandIndex(n)
-	n, err = strconv.ParseUint(string(p.Number[3:]), 10, 32)
+	n, err = strconv.ParseUint(string(p.Number[2:]), 10, 32)
 	if err != nil {
 		return err
 	}

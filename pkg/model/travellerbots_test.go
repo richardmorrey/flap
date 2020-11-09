@@ -171,3 +171,12 @@ func TestGetBot(t *testing.T) {
 
 }
 
+func TestFromPassport(t *testing.T) {
+	p := flap.NewPassport("991234567","A") 
+	var bot botId
+	expected := botId{99,1234567}
+	bot.fromPassport(p)
+	if bot != expected {
+		t.Error("fromPassport returned wrong botid", bot)
+	}
+}

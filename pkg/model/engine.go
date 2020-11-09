@@ -67,14 +67,6 @@ type plannedFlight struct {
 	to			flap.ICAOCode
 }
 
-type summaryStats struct {
-	dailyTotal		float64	
-	travelled		float64
-	travellers		float64
-	grounded		float64
-	share			float64
-}
-
 type verboseStats struct {
 	clearedDistanceDeltas	[]float64
 	clearedDaysDeltas	[]float64
@@ -96,8 +88,112 @@ func (self *verboseStats) reset() {
 	}
 	*self=ssReset
 }
-func (self *summaryStats) reset() {
-	*self = summaryStats{}
+
+type summaryStatsRow 	struct {
+	dailyTotal		float64	
+	travelled		float64
+	travellers		float64
+	grounded		float64
+	share			float64
+}
+
+type summaryStats struct {
+	rows []summaryStatsRow
+}
+
+// newRow starts a new record for counting stats
+func (self *summaryStats) newRow() {
+	self.rows = append(self.rows,summaryStatsRow{})
+}
+
+// add adds the provide numbers to summary for the latest day
+func (self *summaryStats) add(day summaryStatsRow) {
+	i := len(self.rows)-1
+	self.rows[i].dailyTotal += day.dailyTotal
+	self.rows[i].travelled += day.travelled
+	self.rows[i].travellers += day.travellers
+	self.rows[i].grounded += day.grounded
+	self.rows[i].share += day.share
+}
+
+// To implements db/Serialize
+func (self *summaryStats) To(buff *bytes.Buffer) error {
+	n := int32(len(self.rows))
+	err := binary.Write(buff, binary.LittleEndian,&n)
+	if err != nil {
+		return logError(err)
+	}
+	for i:=int32(0); i < n; i++ {
+		err = binary.Write(buff,binary.LittleEndian, &(self.rows[i]))
+		if (err !=nil) {
+			return logError(err)
+		}
+	}
+	return nil
+}
+
+// From implemments db/Serialize
+func (self *summaryStats) From(buff *bytes.Buffer) error {
+	var n int32
+	err := binary.Read(buff,binary.LittleEndian,&n)
+	if err != nil {
+		return logError(err)
+	}
+
+	var entry summaryStatsRow
+	self.rows =  make([]summaryStatsRow,0,100)
+	for  i:=int32(0); i < n; i++ {
+		err = binary.Read(buff,binary.LittleEndian,&entry)
+		if (err != nil) {
+			return logError(err)
+		}
+		self.rows = append(self.rows,entry)
+	}
+	return nil
+}
+
+const summaryStatsRecordKey="summarystats"
+
+// load loads engine state from given table
+func (self *summaryStats) load(t db.Table) error {
+	return t.Get([]byte(summaryStatsRecordKey),self)
+}
+
+// save saves engine state to given table
+func (self *summaryStats)  save(t db.Table) error {
+	return t.Put([]byte(summaryStatsRecordKey),self)
+}
+
+// gatherPoints gathers points for outputing graphs as well as outputting
+// csv file with the raw stats
+func (self* summaryStats) gatherPoints(path string,rdd flap.Days) (plotter.XYs, plotter.XYs) {
+
+	travelledPts := make(plotter.XYs, 0)
+	allowancePts := make(plotter.XYs, 0)
+	fn := filepath.Join(path,"summary.csv")
+	fh,_ := os.Create(fn)
+	if fh == nil {
+		return nil,nil
+	}
+
+	day := rdd
+	for _,row := range self.rows { 
+
+		// Summmary stats title
+		fh.WriteString("Day,DailyTotal,Travelled,Travellers,Grounded,Share\n")
+
+		// Summary stats line
+		line := fmt.Sprintf("%d,%.2f,%.2f,%d,%d,%.2f\n",day,
+				flap.Kilometres(row.dailyTotal),flap.Kilometres(row.travelled),
+				uint64(row.travellers),uint64(row.grounded),row.share)
+		fh.WriteString(line)
+		day += rdd
+	
+		// Update points for summary graph
+		travelledPts = append(travelledPts,plotter.XY{X:float64(day),Y:row.travelled})
+		allowancePts = append(allowancePts,plotter.XY{X:float64(day),Y:row.dailyTotal})
+	}
+	return  travelledPts,allowancePts
 }
 
 type Engine struct {
@@ -106,11 +202,7 @@ type Engine struct {
 	plannedFlights			[]plannedFlight
 	db				*db.LevelDB
 	table				db.Table
-	fh				*os.File
-	stats				summaryStats
 	verbose				verboseStats
-	allowancePts			plotter.XYs
-	travelledPts   			plotter.XYs
 }
 
 type modelState struct {
@@ -333,18 +425,19 @@ func (self* Engine) prepare() (*CountriesAirportsRoutes, *TravellerBots, *flap.E
 		return nil,nil,nil,nil,logError(err)
 	}
 
-	// Create journey planner with enough days
-	_,planDays := self.minmaxTripLength()
-	if self.FlapParams.Promises.Algo != 0 {
-		planDays += self.FlapParams.Promises.MaxDays
-	} 
+	// Reset journey planner
+	err = dropJourneyPlanner(self.db) 
+	if (err != nil) {
+		return nil,nil,nil,nil,logError(err)
+	}
 	jp,err := NewJourneyPlanner(self.db)
 	if (err != nil) {
 		return nil,nil,nil,nil,logError(err)
 	}
 
 	// Reset stats struct
-	self.stats.reset()
+	var dummy summaryStats
+	dummy.save(self.table)
 	return cars,travellerBots,fe,jp,nil
 }
 
@@ -425,6 +518,25 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 		return flap.UpdateBackfillStats{},0,logError(err)
 	}
 
+	// Update summary stats
+	var ss summaryStats
+	err = ss.load(self.table)
+	if err != nil {
+		return flap.UpdateBackfillStats{},0,logError(err)
+	}
+	ss.add(summaryStatsRow{
+		dailyTotal:float64(flapParams.DailyTotal)/float64(self.ModelParams.ReportDayDelta),
+		travellers:float64(us.Travellers)/float64(self.ModelParams.ReportDayDelta),
+		travelled:float64(us.Distance)/float64(self.ModelParams.ReportDayDelta),
+		grounded:float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta), 
+		share: float64(us.Share)/float64(self.ModelParams.ReportDayDelta)})
+	if i % self.ModelParams.ReportDayDelta == 0 {
+		ss.newRow()
+	}
+	err = ss.save(self.table)
+	if err != nil {
+		return flap.UpdateBackfillStats{},0,logError(err)
+	}
 	return us,flapParams.DailyTotal,nil
 }
 
@@ -472,9 +584,9 @@ func (self *Engine) Run() error {
 			return logError(err)
 		}
 
-		// Report daily stats
+		// Update verbose statistics and report as needed
 		tb.ReportDay(i,self.ModelParams.ReportDayDelta)
-		self.reportDay(i,currentDay,dt,us)
+		self.updateVerboseStats(i,currentDay,dt,us)
 		if i % self.ModelParams.VerboseReportDayDelta == 0 {
 			flightPaths= reportFlightPaths(flightPaths,currentDay,self.ModelParams.WorkingFolder) 
 		}
@@ -486,7 +598,7 @@ func (self *Engine) Run() error {
 	// Output final charts and finish
 	self.reportBandsCancelled(tb)
 	self.reportBandsDistance(tb)
-	self.reportBandsSummary()
+	self.reportSummary()
 	fmt.Printf("\nFinished\n")
 	return nil
 }
@@ -566,16 +678,10 @@ func (self *Engine) promisesAsJSON(t *flap.Traveller) string {
 	return string(jsonData)
 }
 
-// reportDay reports daily total set for the day as well as total distance
-// travelled and total travellers travelling
-func (self *Engine) reportDay(day flap.Days, currentDay flap.EpochTime, dt flap.Kilometres, us flap.UpdateBackfillStats) {
+// updateVerboseStats updates the data for verbose stats to reflect current day and outputs if it is time to do so
+func (self *Engine) updateVerboseStats(day flap.Days, currentDay flap.EpochTime, dt flap.Kilometres, us flap.UpdateBackfillStats) {
 	
-	// Update stats
-	self.stats.dailyTotal  += float64(dt)/float64(self.ModelParams.ReportDayDelta)
-	self.stats.travellers  += float64(us.Travellers)/float64(self.ModelParams.ReportDayDelta)
-	self.stats.travelled   += float64(us.Distance)/float64(self.ModelParams.ReportDayDelta)
-	self.stats.grounded    += float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta) 
-	self.stats.share       += float64(us.Share)/float64(self.ModelParams.ReportDayDelta)
+	// Update verbose stats
 	for _,v := range us.ClearedDistanceDeltas {
 		self.verbose.clearedDistanceDeltas = append(self.verbose.clearedDistanceDeltas, float64(v))
 	}
@@ -583,38 +689,6 @@ func (self *Engine) reportDay(day flap.Days, currentDay flap.EpochTime, dt flap.
 		self.verbose.clearedDaysDeltas = append(self.verbose.clearedDaysDeltas, float64(u))
 	}
 
-	// Output stats if needed ...
-	if day % self.ModelParams.ReportDayDelta == 0 {
-
-		// Summmary stats title
-		if self.fh == nil{
-			fn := filepath.Join(self.ModelParams.WorkingFolder,"summary.csv")
-			self.fh,_ = os.Create(fn)
-			if self.fh != nil {
-				self.fh.WriteString("Day,DailyTotal,Travelled,Travellers,Grounded,Share,RSquared\n")
-			}
-		}
-
-		// Summary stats line
-		if self.fh != nil {
-			line := fmt.Sprintf("%d,%.2f,%.2f,%d,%d,%.2f,%.2f\n",day,
-				flap.Kilometres(self.stats.dailyTotal),flap.Kilometres(self.stats.travelled),
-				uint64(self.stats.travellers),uint64(self.stats.grounded),self.stats.share,
-			        self.calcRSquared(us.BestFitPoints,us.BestFitConsts,currentDay))
-			self.fh.WriteString(line)
-		}
-	
-		// Update points for summary graph
-		if self.travelledPts == nil {
-			self.travelledPts = make(plotter.XYs, 0)
-		}
-		self.travelledPts = append(self.travelledPts,plotter.XY{X:float64(day),Y:self.stats.travelled})
-		if self.allowancePts == nil {
-			self.allowancePts = make(plotter.XYs, 0)
-		}
-		self.allowancePts = append(self.allowancePts,plotter.XY{X:float64(day),Y:self.stats.dailyTotal})
-		self.stats.reset()
-	}
 
 	// Output verbose data if requests
 	if self.ModelParams.VerboseReportDayDelta > 0 && day % self.ModelParams.VerboseReportDayDelta == 0 {
@@ -635,8 +709,13 @@ func (self *Engine) reportDay(day flap.Days, currentDay flap.EpochTime, dt flap.
 
 // reportSummary generates summary line chart comparing daily allowance with distance travelled
 // over time
-func (self* Engine) reportBandsSummary() {
+func (self* Engine) reportSummary() {
 
+	// Retreive stats
+	var ss summaryStats
+	ss.load(self.table)
+	travelledPts,allowancePts := ss.gatherPoints(self.ModelParams.WorkingFolder,self.ModelParams.ReportDayDelta)
+	
 	// Set axis labels
 	p, err := plot.New()
 	if err != nil {
@@ -646,17 +725,17 @@ func (self* Engine) reportBandsSummary() {
 	p.Y.Label.Text = "Distance (km)"
 
 	// Add the source points for each band
-	line, err := plotter.NewLine(self.allowancePts)
+	line, err := plotter.NewLine(allowancePts)
 	line.LineStyle.Width = 1
  	line.LineStyle.Dashes = []vg.Length{10}
      	line.LineStyle.DashOffs =  vg.Length(2)
 	line.LineStyle.Color = color.Black
 	p.Add(line)
-	_,_,_,ymax := plotter.XYRange(self.allowancePts)
+	_,_,_,ymax := plotter.XYRange(allowancePts)
 	if ymax > p.Y.Max {
 		p.Y.Max = ymax
 	}
-	line, err = plotter.NewLine(self.travelledPts)
+	line, err = plotter.NewLine(travelledPts)
 	p.Add(line)
 	line.LineStyle.Width = 1
 	palette,err := brewer.GetPalette(brewer.TypeSequential,"Reds",3)
@@ -665,7 +744,7 @@ func (self* Engine) reportBandsSummary() {
 	}
 	line.LineStyle.Color = palette.Colors()[2]
 	p.Add(line)
-	_,_,_,ymax = plotter.XYRange(self.travelledPts)
+	_,_,_,ymax = plotter.XYRange(travelledPts)
 	if ymax > p.Y.Max {
 		p.Y.Max = ymax
 	}
