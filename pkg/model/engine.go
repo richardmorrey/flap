@@ -15,6 +15,7 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"encoding/binary"
+	"encoding/gob"
 	"bytes"
 	"gonum.org/v1/gonum/stat"
 	"gonum.org/v1/gonum/floats"
@@ -90,32 +91,47 @@ func (self *verboseStats) reset() {
 }
 
 type summaryStatsRow 	struct {
-	dailyTotal		float64	
-	travelled		float64
-	travellers		float64
-	grounded		float64
-	share			float64
+	DailyTotal		float64	
+	Travelled		float64
+	Travellers		float64
+	Grounded		float64
+	Share			float64
 }
 
 type summaryStats struct {
-	rows []summaryStatsRow
+	Rows []summaryStatsRow
 }
 
 // newRow starts a new record for counting stats
 func (self *summaryStats) newRow() {
-	self.rows = append(self.rows,summaryStatsRow{})
+	self.Rows = append(self.Rows,summaryStatsRow{})
 }
 
 // add adds the provide numbers to summary for the latest day
 func (self *summaryStats) add(day summaryStatsRow) {
-	i := len(self.rows)-1
-	self.rows[i].dailyTotal += day.dailyTotal
-	self.rows[i].travelled += day.travelled
-	self.rows[i].travellers += day.travellers
-	self.rows[i].grounded += day.grounded
-	self.rows[i].share += day.share
+	i := len(self.Rows)
+	if i == 0 {
+		self.newRow()
+	} else {
+		i -= 1
+	}
+	self.Rows[i].DailyTotal += day.DailyTotal
+	self.Rows[i].Travelled += day.Travelled
+	self.Rows[i].Travellers += day.Travellers
+	self.Rows[i].Grounded += day.Grounded
+	self.Rows[i].Share += day.Share
 }
 
+func (self* summaryStats) To(b *bytes.Buffer) error {
+	enc := gob.NewEncoder(b) 
+	return enc.Encode(self)
+}
+
+func (self* summaryStats) From(b *bytes.Buffer) error {
+	dec := gob.NewDecoder(b)
+	return dec.Decode(self)
+}
+/*
 // To implements db/Serialize
 func (self *summaryStats) To(buff *bytes.Buffer) error {
 	n := int32(len(self.rows))
@@ -151,7 +167,7 @@ func (self *summaryStats) From(buff *bytes.Buffer) error {
 	}
 	return nil
 }
-
+*/
 const summaryStatsRecordKey="summarystats"
 
 // load loads engine state from given table
@@ -166,7 +182,7 @@ func (self *summaryStats)  save(t db.Table) error {
 
 // gatherPoints gathers points for outputing graphs as well as outputting
 // csv file with the raw stats
-func (self* summaryStats) gatherPoints(path string,rdd flap.Days) (plotter.XYs, plotter.XYs) {
+func (self* summaryStats) compile(path string,rdd flap.Days) (plotter.XYs, plotter.XYs) {
 
 	travelledPts := make(plotter.XYs, 0)
 	allowancePts := make(plotter.XYs, 0)
@@ -177,21 +193,21 @@ func (self* summaryStats) gatherPoints(path string,rdd flap.Days) (plotter.XYs, 
 	}
 
 	day := rdd
-	for _,row := range self.rows { 
+	for _,row := range self.Rows { 
 
 		// Summmary stats title
 		fh.WriteString("Day,DailyTotal,Travelled,Travellers,Grounded,Share\n")
 
 		// Summary stats line
 		line := fmt.Sprintf("%d,%.2f,%.2f,%d,%d,%.2f\n",day,
-				flap.Kilometres(row.dailyTotal),flap.Kilometres(row.travelled),
-				uint64(row.travellers),uint64(row.grounded),row.share)
+				flap.Kilometres(row.DailyTotal),flap.Kilometres(row.Travelled),
+				uint64(row.Travellers),uint64(row.Grounded),row.Share)
 		fh.WriteString(line)
 		day += rdd
 	
 		// Update points for summary graph
-		travelledPts = append(travelledPts,plotter.XY{X:float64(day),Y:row.travelled})
-		allowancePts = append(allowancePts,plotter.XY{X:float64(day),Y:row.dailyTotal})
+		travelledPts = append(travelledPts,plotter.XY{X:float64(day),Y:row.Travelled})
+		allowancePts = append(allowancePts,plotter.XY{X:float64(day),Y:row.DailyTotal})
 	}
 	return  travelledPts,allowancePts
 }
@@ -426,10 +442,7 @@ func (self* Engine) prepare() (*CountriesAirportsRoutes, *TravellerBots, *flap.E
 	}
 
 	// Reset journey planner
-	err = dropJourneyPlanner(self.db) 
-	if (err != nil) {
-		return nil,nil,nil,nil,logError(err)
-	}
+	dropJourneyPlanner(self.db) 
 	jp,err := NewJourneyPlanner(self.db)
 	if (err != nil) {
 		return nil,nil,nil,nil,logError(err)
@@ -520,16 +533,13 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 
 	// Update summary stats
 	var ss summaryStats
-	err = ss.load(self.table)
-	if err != nil {
-		return flap.UpdateBackfillStats{},0,logError(err)
-	}
+	ss.load(self.table)
 	ss.add(summaryStatsRow{
-		dailyTotal:float64(flapParams.DailyTotal)/float64(self.ModelParams.ReportDayDelta),
-		travellers:float64(us.Travellers)/float64(self.ModelParams.ReportDayDelta),
-		travelled:float64(us.Distance)/float64(self.ModelParams.ReportDayDelta),
-		grounded:float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta), 
-		share: float64(us.Share)/float64(self.ModelParams.ReportDayDelta)})
+		DailyTotal:float64(flapParams.DailyTotal)/float64(self.ModelParams.ReportDayDelta),
+		Travellers:float64(us.Travellers)/float64(self.ModelParams.ReportDayDelta),
+		Travelled:float64(us.Distance)/float64(self.ModelParams.ReportDayDelta),
+		Grounded:float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta), 
+		Share: float64(us.Share)/float64(self.ModelParams.ReportDayDelta)})
 	if i % self.ModelParams.ReportDayDelta == 0 {
 		ss.newRow()
 	}
@@ -714,7 +724,7 @@ func (self* Engine) reportSummary() {
 	// Retreive stats
 	var ss summaryStats
 	ss.load(self.table)
-	travelledPts,allowancePts := ss.gatherPoints(self.ModelParams.WorkingFolder,self.ModelParams.ReportDayDelta)
+	travelledPts,allowancePts := ss.compile(self.ModelParams.WorkingFolder,self.ModelParams.ReportDayDelta)
 	
 	// Set axis labels
 	p, err := plot.New()
