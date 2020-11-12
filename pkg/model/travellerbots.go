@@ -64,13 +64,22 @@ func (self *TravellerBots) getPassport(bot botId) (flap.Passport,error) {
 	return p,nil
 }
 
-type botStats struct {
+type botStatsRow struct {
 	distance flap.Kilometres
 	flightsTaken	 uint64
 	flightsRefused   uint64
 	tripsCancelled   uint64
 	tripsPlanned	 uint64
+}
+
+type botStats struct {
+	Rows []botStats
 	mux		 sync.Mutex
+}
+
+// newRow starts a new record for counting stats
+func (self *botStats) newRow() {
+	self.Rows = append(self.Rows,botStatsRow{})
 }
 
 // Submitted updates stats to reflect fact a journey
@@ -78,8 +87,8 @@ type botStats struct {
 func (self *botStats) Submitted(dist flap.Kilometres) {
 	self.mux.Lock()
 	defer self.mux.Unlock()
-	self.flightsTaken++
-	self.distance += dist
+	self.Rows[len(self.Rows)-1].flightsTaken++
+	self.Rows[len(self.Rows)-1].distance += dist
 }
 
 // Refused updates stats to relect fact a journey 
@@ -87,7 +96,7 @@ func (self *botStats) Submitted(dist flap.Kilometres) {
 func (self  *botStats) Refused() {
 	self.mux.Lock()
 	defer self.mux.Unlock()
-	self.flightsRefused++
+	self.Rows[len(self.Rows)-1].flightsRefused++
 }
 
 // Canclled updates stats to relect fact a promise
@@ -95,7 +104,7 @@ func (self  *botStats) Refused() {
 func (self  *botStats) Cancelled() {
 	self.mux.Lock()
 	defer self.mux.Unlock()
-	self.tripsCancelled++
+	self.Rows[len(self.Rows)-1].tripsCancelled++
 }
 
 // Planned updates stats to relect fact a promise
@@ -103,50 +112,77 @@ func (self  *botStats) Cancelled() {
 func (self  *botStats) Planned() {
 	self.mux.Lock()
 	defer self.mux.Unlock()
-	self.tripsPlanned++
+	self.Rows[len(self.Rows)-1].tripsPlanned++
 }
 
-// Report writes a single CSV row with stats
-func (self *travellerBot) ReportDay(day flap.Days) string {
+
+func (self* botStats) To(b *bytes.Buffer) error {
+	enc := gob.NewEncoder(b) 
+	return enc.Encode(self)
+}
+
+func (self* botStats) From(b *bytes.Buffer) error {
+	dec := gob.NewDecoder(b)
+	return dec.Decode(self)
+}
+
+const botStatsRecordKey="botstats"
+
+// load loads bot stats from given table
+func (self *botStats) load(t db.Table, index int) error {
+	key := fmt.Printf("%s-%2d",botStatsRecordKey,index)
+	err :=  t.Get([]byte(key),self)
+	if len(self.rows) == 0 {
+		self.newRow()
+	}
+	return err
+}
+
+// save saves bot stats to given table
+func (self *botStats)  save(t db.Table, index int) error {
+	key := fmt.Printf("%s-%2d",botStatsRecordKey,index)
+	return t.Put([]byte(summaryStatsRecordKey),self)
+}
+
+type botStatsCompiled struct {
+	lines string
+	travelled plotter.XYs
+	cancelled plotter.XYs
+}
+
+// compile collates stats across all days for reporting
+func (self *botStats) compile() botStatsCompiled {
 	
 	// One thread at a time
 	self.stats.mux.Lock()
 	defer self.stats.mux.Unlock()
 
-	// Format stats
-	var cancelled float64
-	if (self.stats.tripsPlanned+self.stats.tripsCancelled) > 0 {
-		cancelled = (float64(self.stats.tripsCancelled)/float64(self.stats.tripsPlanned+self.stats.tripsCancelled))*100
-	}
-	distance := float64(self.stats.distance)/float64(flap.Kilometres(self.numInstances))
-	line := fmt.Sprintf("%f,%f,%f,",
-		(float64(self.stats.flightsRefused)/float64(self.stats.flightsTaken+self.stats.flightsRefused))*100,
-		cancelled,distance)
+	// Create items to return
+	travelledPts := make(plotter.XYs, 0)
+	allowancePts := make(plotter.XYs, 0)
+	var lines []string
+	for _,row := range self.Rows { 
 
-	// Add points for summary graphs
-	if self.travelledPts == nil {
-		self.travelledPts = make(plotter.XYs, 0)
-	}
-	self.travelledPts = append(self.travelledPts,plotter.XY{X:float64(day),Y:distance})
-	if self.cancelledPts == nil {
-		self.cancelledPts = make(plotter.XYs, 0)
-	}
-	self.cancelledPts = append(self.cancelledPts,plotter.XY{X:float64(day),Y:cancelled})
+		// Format stats
+		var cancelled float64
+		if (row.tripsPlanned+row.tripsCancelled) > 0 {
+			cancelled = (float64(row.tripsCancelled)/float64(row.tripsPlanned+row.tripsCancelled))*100
+		}
+		distance := float64(row.distance)/float64(flap.Kilometres(self.numInstances))
+		line := fmt.Sprintf("%f,%f,%f,",
+			(float64(row.flightsRefused)/float64(row.flightsTaken+row.flightsRefused))*100,
+			cancelled,distance)
 
-	// Reset counters
-	self.stats.flightsTaken = 0
-	self.stats.flightsRefused = 0
-	self.stats.distance = 0
-	self.stats.tripsCancelled = 0
-	self.stats.tripsPlanned = 0
-	return line
+		self.travelledPts = append(self.travelledPts,plotter.XY{X:float64(day),Y:distance})
+		self.cancelledPts = append(self.cancelledPts,plotter.XY{X:float64(day),Y:cancelled})
+	}
+	return botStatsCompiled{lines, travelledPts, cancelledPts}
 }
 
 type TravellerBots struct {
 	bots	[]travellerBot
 	countryWeights *countryWeights
 	fh		*os.File
-	statsFolder    string
 	tripLengths	[]flap.Days
 }
 
@@ -161,34 +197,13 @@ func (self *TravellerBots) GetBot(id botId) *travellerBot {
 	return &(self.bots[id.band])
 }
 
-// ReportStats reports daily stats for each bot band into
-// an appropriately named csv file in the working folder
-func (self *TravellerBots) ReportDay(day flap.Days, rdd flap.Days) {
-
-	if day %  rdd == 0 {
-
-		// Open file if not open
-		if self.fh == nil{
-			fn := filepath.Join(self.statsFolder,"bands.csv")
-			self.fh,_ = os.Create(fn)
-			if self.fh != nil {
-				line:="Day"
-				for bb := bandIndex(0); bb < bandIndex(len(self.bots)); bb++ {
-					line += fmt.Sprintf(",refusedpercent_%d,cancelledpercent_%d,distance_%d",bb,bb,bb) 
-				}
-				line +="\n"
-				self.fh.WriteString(line)
-			}
+// updateStats adds new bot stats records if necessary and persists
+func (self *TravellerBots) update(rdd flap.Days) {
+	for bb := bandIndex(0); bb < bandIndex(len(self.bots)); bb++ {
+		if day %  rdd == 0 {
+			self.bots[bb].newRow()
 		}
-
-		// Write line
-		line := fmt.Sprintf("%d,",day)
-		for bb := bandIndex(0); bb < bandIndex(len(self.bots)); bb++ {
-			line += self.bots[bb].ReportDay(day)
-		}
-		line=strings.TrimRight(line,",")
-		line+="\n"
-		self.fh.WriteString(line)
+		self.bots[bb].save()
 	}
 }
 
@@ -199,7 +214,6 @@ func (self *TravellerBots) Build(modelParams ModelParams,flapParams flap.FlapPar
 	if (len(modelParams.BotSpecs) == 0) {
 		return flap.EINVALIDARGUMENT
 	}
-	self.statsFolder=modelParams.WorkingFolder
 
 	// Calculate total bot weight
 	var weightTotal  weight
@@ -223,6 +237,7 @@ func (self *TravellerBots) Build(modelParams ModelParams,flapParams flap.FlapPar
 		} else {
 			bot.planner = new(simplePlanner)
 		}
+		bot.stats.load()
 		bot.planner.build(botspec,flapParams)
 		if (err != nil) {
 			return logError(err)
@@ -313,4 +328,123 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 	}
 	return nil
 } 
+
+
+// RepotBandsSummary outputs csv and charts summarising band stats over the course of the whoel model
+func (self *travellerBots) ReportSummary(mp ModelParams) {
+
+	// Compile results
+	var compiled []botStatsCompiled
+	for bb := bandIndex(0); bb < bandIndex(len(tb.bots)); bb++ {
+		compiledBands = append(compiled, tb,compile)
+	}
+	
+	// Output CSV
+	fn := filepath.Join(mp.WorkingFolder,"bands.csv")
+	fh,_ = os.Create(fn)
+	if self.fh == nil {
+		return
+	}
+	line:="Day"
+	for i,_ := range(compiledBands) {
+		line += fmt.Sprintf(",refusedpercent_%d,cancelledpercent_%d,distance_%d",i,i,i) 
+	}
+	line +="\n"
+	fh.WriteString(line)
+	for _,line := range(lines) {
+		var lineOut string
+		for _,compiled := range(compiledBands) {
+			lineOut += compiled.line
+		}
+		lineiOut=strings.TrimRight(line,",")
+		lineOut+="\n"
+		fh.WriteString(line)
+	}
+
+	// Output graphs
+	reportBandsDistance(compiled)
+	reportBandsCancelled(compiled)
+}
+
+// reportBandsDistance generates filled line charts covering the covered bands for distance travelled
+// over time.
+func reportBandsDistance(compiled []botStatsCompiledi, mp ModelParams) {
+
+	// Set axis labels
+	p, err := plot.New()
+	if err != nil {
+		return
+	}
+	p.X.Label.Text = "Day"
+	p.Y.Label.Text = "Distance (km)"
+
+	// Add the source points for each band
+	palette,err := brewer.GetPalette(brewer.TypeSequential,"Reds",len(compiled))
+	if err != nil {
+		return 
+	}
+	for i,compiledBand := range(compiled) {
+		line, err := plotter.NewLine(compiledBand[i].travelledPts)
+		if err != nil {
+			return
+		}
+		line.FillColor = palette.Colors()[i]
+		p.Add(line)
+
+		// Update y ranges
+		_,_,_,ymax := plotter.XYRange(compiledBand.travelledPts)
+		if ymax > p.Y.Max {
+			p.Y.Max = ymax
+		}
+	}
+
+	// Set the axis ranges
+	p.X.Max= float64(mp.DaysToRun)
+	p.X.Min = 1
+	p.Y.Min = 0
+
+	// Save the plot to a PNG file.
+	fp := filepath.Join(mp.WorkingFolder,"distancebyband.png")
+	w:= vg.Length(mp.LargeChartWidth)*vg.Centimeter
+	p.Save(w, w/2, fp); 
+}
+
+// reportBandsCancelled generates filled line charts covering the covered bands for distance travelled
+// and % trips cancelled over time.
+func reportBandsCancelled(compiled []botStatsCompiled,mp ModelParams) {
+
+	// Set axis labels
+	p, err := plot.New()
+	if err != nil {
+		return
+	}
+	p.X.Label.Text = "Day"
+	p.Y.Label.Text = "Trips Cancelled (%)"
+
+	// Add the source points for each band
+	palette,err := brewer.GetPalette(brewer.TypeSequential,"Reds",len(compiled))
+	if err != nil {
+		return 
+	}
+	for i,compiledBand := range(compiled) {
+		line, err := plotter.NewLine(compiledBand.cancelledPts)
+		if err != nil {
+			return
+		}
+		line.FillColor = palette.Colors()[i]
+		p.Add(line)
+	}
+
+	// Set the axis ranges
+	p.X.Max= float64(mp.DaysToRun)
+	p.X.Min = 1
+	p.Y.Min = 0
+	p.Y.Max = 100
+
+	// Save the plot to a PNG file.
+	fp := filepath.Join(mp.WorkingFolder,"cancelledbyband.png")
+	w:= vg.Length(mp.LargeChartWidth)*vg.Centimeter
+	p.Save(w, w/2, fp); 
+}
+
 

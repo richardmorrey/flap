@@ -108,18 +108,18 @@ func (self *summaryStats) newRow() {
 }
 
 // add adds the provide numbers to summary for the latest day
-func (self *summaryStats) add(day summaryStatsRow) {
-	i := len(self.Rows)
-	if i == 0 {
-		self.newRow()
-	} else {
-		i -= 1
-	}
+func (self *summaryStats) update(day summaryStatsRow, rdd flap.Days) {
+	self.load()
+	i := len(self.Rows) -1
 	self.Rows[i].DailyTotal += day.DailyTotal
 	self.Rows[i].Travelled += day.Travelled
 	self.Rows[i].Travellers += day.Travellers
 	self.Rows[i].Grounded += day.Grounded
 	self.Rows[i].Share += day.Share
+	if i % rdd  == 0 {
+		ss.newRow()
+	}
+	err = ss.save(self.table)
 }
 
 func (self* summaryStats) To(b *bytes.Buffer) error {
@@ -131,48 +131,19 @@ func (self* summaryStats) From(b *bytes.Buffer) error {
 	dec := gob.NewDecoder(b)
 	return dec.Decode(self)
 }
-/*
-// To implements db/Serialize
-func (self *summaryStats) To(buff *bytes.Buffer) error {
-	n := int32(len(self.rows))
-	err := binary.Write(buff, binary.LittleEndian,&n)
-	if err != nil {
-		return logError(err)
-	}
-	for i:=int32(0); i < n; i++ {
-		err = binary.Write(buff,binary.LittleEndian, &(self.rows[i]))
-		if (err !=nil) {
-			return logError(err)
-		}
-	}
-	return nil
-}
 
-// From implemments db/Serialize
-func (self *summaryStats) From(buff *bytes.Buffer) error {
-	var n int32
-	err := binary.Read(buff,binary.LittleEndian,&n)
-	if err != nil {
-		return logError(err)
-	}
-
-	var entry summaryStatsRow
-	self.rows =  make([]summaryStatsRow,0,100)
-	for  i:=int32(0); i < n; i++ {
-		err = binary.Read(buff,binary.LittleEndian,&entry)
-		if (err != nil) {
-			return logError(err)
-		}
-		self.rows = append(self.rows,entry)
-	}
-	return nil
-}
-*/
 const summaryStatsRecordKey="summarystats"
 
 // load loads engine state from given table
 func (self *summaryStats) load(t db.Table) error {
-	return t.Get([]byte(summaryStatsRecordKey),self)
+	err :=  t.Get([]byte(summaryStatsRecordKey),self)
+	if err != nil {
+		return err
+	}
+	if len(self.rows) == 0 {
+		self.newRow()
+	}
+	return err
 }
 
 // save saves engine state to given table
@@ -180,7 +151,15 @@ func (self *summaryStats)  save(t db.Table) error {
 	return t.Put([]byte(summaryStatsRecordKey),self)
 }
 
-// gatherPoints gathers points for outputing graphs as well as outputting
+// update 
+func (self *summaryStats) update(rdd flap.Days) {
+	if i % rdd  == 0 {
+		ss.newRow()
+	}
+	err = ss.save(self.table)
+}
+
+// compile gathers points covering the whole modelling period for outputing graphs as well
 // csv file with the raw stats
 func (self* summaryStats) compile(path string,rdd flap.Days) (plotter.XYs, plotter.XYs) {
 
@@ -361,6 +340,18 @@ func (self *Engine) Build() error {
 	if err != nil {
 		return logError(err)
 	}
+	
+	// Reset journey planner
+	dropJourneyPlanner(self.db) 
+	jp,err := NewJourneyPlanner(self.db)
+	if (err != nil) {
+		return logError(err)
+	}
+
+	// Reset stats struct
+	var dummy summaryStats
+	dummy.save(self.table)
+
 	fmt.Printf("...Finished\n")
 	return nil
 }
@@ -440,17 +431,6 @@ func (self* Engine) prepare() (*CountriesAirportsRoutes, *TravellerBots, *flap.E
 	if (err != nil) {
 		return nil,nil,nil,nil,logError(err)
 	}
-
-	// Reset journey planner
-	dropJourneyPlanner(self.db) 
-	jp,err := NewJourneyPlanner(self.db)
-	if (err != nil) {
-		return nil,nil,nil,nil,logError(err)
-	}
-
-	// Reset stats struct
-	var dummy summaryStats
-	dummy.save(self.table)
 	return cars,travellerBots,fe,jp,nil
 }
 
@@ -532,18 +512,14 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 	}
 
 	// Update summary stats
-	var ss summaryStats
-	ss.load(self.table)
-	ss.add(summaryStatsRow{
+	ss.update(summaryStatsRow{
 		DailyTotal:float64(flapParams.DailyTotal)/float64(self.ModelParams.ReportDayDelta),
 		Travellers:float64(us.Travellers)/float64(self.ModelParams.ReportDayDelta),
 		Travelled:float64(us.Distance)/float64(self.ModelParams.ReportDayDelta),
 		Grounded:float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta), 
-		Share: float64(us.Share)/float64(self.ModelParams.ReportDayDelta)})
-	if i % self.ModelParams.ReportDayDelta == 0 {
-		ss.newRow()
-	}
-	err = ss.save(self.table)
+		Share: float64(us.Share)/float64(self.ModelParams.ReportDayDelta)},
+		self.ModelParams.ReportDayDelta)
+	tb.updateStats(self.ModelParams.ReportDayDelta)
 	if err != nil {
 		return flap.UpdateBackfillStats{},0,logError(err)
 	}
@@ -568,7 +544,7 @@ func (self *Engine) Run() error {
 		return logError(err)
 	}
 
-	// Calculate number of days needed to "prewarm" the model
+	// Calculate number of days needed to warm the model
 	_,planDays := self.minmaxTripLength()
 	if self.FlapParams.Promises.Algo != 0 {
 		planDays += self.FlapParams.Promises.MaxDays
@@ -606,14 +582,13 @@ func (self *Engine) Run() error {
 	}
 
 	// Output final charts and finish
-	self.reportBandsCancelled(tb)
-	self.reportBandsDistance(tb)
 	self.reportSummary()
+	tb.reportSummary(self.ModelParams)
 	fmt.Printf("\nFinished\n")
 	return nil
 }
 
-// ShowTraveller reports the trip history for the specificied traveller bot in JSON and KML format
+// ShowTraveller reports the trip history for the specificied traveller both in JSON and KML format
 func (self *Engine) ShowTraveller(band uint64,bot uint64) (flap.Passport,string,string,string,error){
 
 	// Load country weights (need to establish issuing country of passport)
@@ -766,87 +741,6 @@ func (self* Engine) reportSummary() {
 
 	// Save the plot to a PNG file.
 	fp := filepath.Join(self.ModelParams.WorkingFolder,"summary.png")
-	w:= vg.Length(self.ModelParams.LargeChartWidth)*vg.Centimeter
-	p.Save(w, w/2, fp); 
-}
-
-// reportBandsDistance generates filled line charts covering the covered bands for distance travelled
-// over time.
-func (self* Engine) reportBandsDistance(bots *TravellerBots) {
-
-	// Set axis labels
-	p, err := plot.New()
-	if err != nil {
-		return
-	}
-	p.X.Label.Text = "Day"
-	p.Y.Label.Text = "Distance (km)"
-
-	// Add the source points for each band
-	palette,err := brewer.GetPalette(brewer.TypeSequential,"Reds",len(bots.bots))
-	if err != nil {
-		return 
-	}
-	for i := len(bots.bots)-1; i >= 0; i-- {
-		line, err := plotter.NewLine(bots.bots[i].travelledPts)
-		if err != nil {
-			return
-		}
-		line.FillColor = palette.Colors()[i]
-		p.Add(line)
-
-		// Update y ranges
-		_,_,_,ymax := plotter.XYRange(bots.bots[i].travelledPts)
-		if ymax > p.Y.Max {
-			p.Y.Max = ymax
-		}
-	}
-
-	// Set the axis ranges
-	p.X.Max= float64(self.ModelParams.DaysToRun)
-	p.X.Min = 1
-	p.Y.Min = 0
-
-	// Save the plot to a PNG file.
-	fp := filepath.Join(self.ModelParams.WorkingFolder,"distancebyband.png")
-	w:= vg.Length(self.ModelParams.LargeChartWidth)*vg.Centimeter
-	p.Save(w, w/2, fp); 
-}
-
-// reportBandsCancelled generates filled line charts covering the covered bands for distance travelled
-// and % trips cancelled over time.
-func (self* Engine) reportBandsCancelled(bots *TravellerBots) {
-
-	// Set axis labels
-	p, err := plot.New()
-	if err != nil {
-		return
-	}
-	p.X.Label.Text = "Day"
-	p.Y.Label.Text = "Trips Cancelled (%)"
-
-	// Add the source points for each band
-	palette,err := brewer.GetPalette(brewer.TypeSequential,"Reds",len(bots.bots))
-	if err != nil {
-		return 
-	}
-	for i := len(bots.bots)-1; i >= 0; i-- {
-		line, err := plotter.NewLine(bots.bots[i].cancelledPts)
-		if err != nil {
-			return
-		}
-		line.FillColor = palette.Colors()[i]
-		p.Add(line)
-	}
-
-	// Set the axis ranges
-	p.X.Max= float64(self.ModelParams.DaysToRun)
-	p.X.Min = 1
-	p.Y.Min = 0
-	p.Y.Max = 100
-
-	// Save the plot to a PNG file.
-	fp := filepath.Join(self.ModelParams.WorkingFolder,"cancelledbyband.png")
 	w:= vg.Length(self.ModelParams.LargeChartWidth)*vg.Centimeter
 	p.Save(w, w/2, fp); 
 }
