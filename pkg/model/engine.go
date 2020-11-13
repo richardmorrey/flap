@@ -108,18 +108,18 @@ func (self *summaryStats) newRow() {
 }
 
 // add adds the provide numbers to summary for the latest day
-func (self *summaryStats) update(day summaryStatsRow, rdd flap.Days) {
-	self.load()
+func (self *summaryStats) update(day summaryStatsRow, rdd flap.Days, t db.Table) {
+	self.load(t)
 	i := len(self.Rows) -1
 	self.Rows[i].DailyTotal += day.DailyTotal
 	self.Rows[i].Travelled += day.Travelled
 	self.Rows[i].Travellers += day.Travellers
 	self.Rows[i].Grounded += day.Grounded
 	self.Rows[i].Share += day.Share
-	if i % rdd  == 0 {
-		ss.newRow()
+	if i % int(rdd)  == 0 {
+		self.newRow()
 	}
-	err = ss.save(self.table)
+	self.save(t)
 }
 
 func (self* summaryStats) To(b *bytes.Buffer) error {
@@ -140,7 +140,7 @@ func (self *summaryStats) load(t db.Table) error {
 	if err != nil {
 		return err
 	}
-	if len(self.rows) == 0 {
+	if len(self.Rows) == 0 {
 		self.newRow()
 	}
 	return err
@@ -149,14 +149,6 @@ func (self *summaryStats) load(t db.Table) error {
 // save saves engine state to given table
 func (self *summaryStats)  save(t db.Table) error {
 	return t.Put([]byte(summaryStatsRecordKey),self)
-}
-
-// update 
-func (self *summaryStats) update(rdd flap.Days) {
-	if i % rdd  == 0 {
-		ss.newRow()
-	}
-	err = ss.save(self.table)
 }
 
 // compile gathers points covering the whole modelling period for outputing graphs as well
@@ -415,7 +407,7 @@ func (self* Engine) prepare() (*CountriesAirportsRoutes, *TravellerBots, *flap.E
 	if travellerBots == nil {
 		return nil,nil,nil,nil,EFAILEDTOCREATETRAVELLERBOTS
 	}
-	err = travellerBots.Build(self.ModelParams,self.FlapParams)
+	err = travellerBots.Build(self.ModelParams,self.FlapParams,self.table)
 	if (err != nil) {
 		return nil,nil,nil,nil,logError(err)
 	}
@@ -431,6 +423,13 @@ func (self* Engine) prepare() (*CountriesAirportsRoutes, *TravellerBots, *flap.E
 	if (err != nil) {
 		return nil,nil,nil,nil,logError(err)
 	}
+
+	// Load Journey planner
+	jp,err := NewJourneyPlanner(self.db)
+	if (err != nil) {
+		return nil,nil,nil,nil,logError(err)
+	}
+
 	return cars,travellerBots,fe,jp,nil
 }
 
@@ -512,14 +511,15 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 	}
 
 	// Update summary stats
+	var ss summaryStats
 	ss.update(summaryStatsRow{
 		DailyTotal:float64(flapParams.DailyTotal)/float64(self.ModelParams.ReportDayDelta),
 		Travellers:float64(us.Travellers)/float64(self.ModelParams.ReportDayDelta),
 		Travelled:float64(us.Distance)/float64(self.ModelParams.ReportDayDelta),
 		Grounded:float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta), 
 		Share: float64(us.Share)/float64(self.ModelParams.ReportDayDelta)},
-		self.ModelParams.ReportDayDelta)
-	tb.updateStats(self.ModelParams.ReportDayDelta)
+		self.ModelParams.ReportDayDelta,self.table)
+	tb.rotateStats(i,self.ModelParams.ReportDayDelta,self.table)
 	if err != nil {
 		return flap.UpdateBackfillStats{},0,logError(err)
 	}
@@ -571,7 +571,6 @@ func (self *Engine) Run() error {
 		}
 
 		// Update verbose statistics and report as needed
-		tb.ReportDay(i,self.ModelParams.ReportDayDelta)
 		self.updateVerboseStats(i,currentDay,dt,us)
 		if i % self.ModelParams.VerboseReportDayDelta == 0 {
 			flightPaths= reportFlightPaths(flightPaths,currentDay,self.ModelParams.WorkingFolder) 
@@ -604,7 +603,7 @@ func (self *Engine) ShowTraveller(band uint64,bot uint64) (flap.Passport,string,
 	if travellerBots == nil {
 		return p,"","","",logError(EFAILEDTOCREATETRAVELLERBOTS)
 	}
-	err = travellerBots.Build(self.ModelParams,self.FlapParams)
+	err = travellerBots.Build(self.ModelParams,self.FlapParams,self.table)
 	if (err != nil) {
 		return p,"","","",logError(err)
 	}

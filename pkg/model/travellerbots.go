@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/richardmorrey/flap/pkg/flap"
+	"github.com/richardmorrey/flap/pkg/db"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -9,8 +10,13 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"gonum.org/v1/plot/plotter"
 	"strconv"
+	"encoding/gob"
+	"bytes"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/vg"
+	"gonum.org/v1/plot/palette/brewer"
 )
 
 var ECOULDNTFINDWEIGHT= errors.New("Couldnt find country weight for bot")
@@ -22,8 +28,6 @@ type travellerBot struct {
 	numInstances   botIndex
 	planner	       botPlanner
 	stats	       botStats
-	cancelledPts   plotter.XYs
-	travelledPts   plotter.XYs
 }
 
 type botId struct {
@@ -73,8 +77,8 @@ type botStatsRow struct {
 }
 
 type botStats struct {
-	Rows []botStats
-	mux		 sync.Mutex
+	Rows []botStatsRow
+	mux  sync.Mutex
 }
 
 // newRow starts a new record for counting stats
@@ -130,9 +134,9 @@ const botStatsRecordKey="botstats"
 
 // load loads bot stats from given table
 func (self *botStats) load(t db.Table, index int) error {
-	key := fmt.Printf("%s-%2d",botStatsRecordKey,index)
+	key := fmt.Sprintf("%s-%2d",botStatsRecordKey,index)
 	err :=  t.Get([]byte(key),self)
-	if len(self.rows) == 0 {
+	if len(self.Rows) == 0 {
 		self.newRow()
 	}
 	return err
@@ -140,41 +144,43 @@ func (self *botStats) load(t db.Table, index int) error {
 
 // save saves bot stats to given table
 func (self *botStats)  save(t db.Table, index int) error {
-	key := fmt.Printf("%s-%2d",botStatsRecordKey,index)
+	key := fmt.Sprintf("%s-%2d",botStatsRecordKey,index)
 	return t.Put([]byte(summaryStatsRecordKey),self)
 }
 
 type botStatsCompiled struct {
-	lines string
+	lines []string
 	travelled plotter.XYs
 	cancelled plotter.XYs
 }
 
 // compile collates stats across all days for reporting
-func (self *botStats) compile() botStatsCompiled {
+func (self *botStats) compile(numInstances botIndex, rdd flap.Days) botStatsCompiled {
 	
 	// One thread at a time
-	self.stats.mux.Lock()
-	defer self.stats.mux.Unlock()
+	self.mux.Lock()
+	defer self.mux.Unlock()
 
 	// Create items to return
 	travelledPts := make(plotter.XYs, 0)
-	allowancePts := make(plotter.XYs, 0)
+	cancelledPts := make(plotter.XYs, 0)
 	var lines []string
-	for _,row := range self.Rows { 
+	for i,row := range self.Rows { 
+
 
 		// Format stats
+		var day = float64(i*int(rdd))
 		var cancelled float64
 		if (row.tripsPlanned+row.tripsCancelled) > 0 {
 			cancelled = (float64(row.tripsCancelled)/float64(row.tripsPlanned+row.tripsCancelled))*100
 		}
-		distance := float64(row.distance)/float64(flap.Kilometres(self.numInstances))
+		distance := float64(row.distance)/float64(flap.Kilometres(numInstances))
 		line := fmt.Sprintf("%f,%f,%f,",
 			(float64(row.flightsRefused)/float64(row.flightsTaken+row.flightsRefused))*100,
 			cancelled,distance)
 
-		self.travelledPts = append(self.travelledPts,plotter.XY{X:float64(day),Y:distance})
-		self.cancelledPts = append(self.cancelledPts,plotter.XY{X:float64(day),Y:cancelled})
+		travelledPts = append(travelledPts,plotter.XY{X:day,Y:distance})
+		cancelledPts = append(cancelledPts,plotter.XY{X:day,Y:cancelled})
 	}
 	return botStatsCompiled{lines, travelledPts, cancelledPts}
 }
@@ -197,18 +203,18 @@ func (self *TravellerBots) GetBot(id botId) *travellerBot {
 	return &(self.bots[id.band])
 }
 
-// updateStats adds new bot stats records if necessary and persists
-func (self *TravellerBots) update(rdd flap.Days) {
-	for bb := bandIndex(0); bb < bandIndex(len(self.bots)); bb++ {
+// rotateStats adds new bot stats records if necessary and persists
+func (self *TravellerBots) rotateStats(day flap.Days,rdd flap.Days,t db.Table) {
+	for i,bot :=  range(self.bots) {
 		if day %  rdd == 0 {
-			self.bots[bb].newRow()
+			bot.stats.newRow()
 		}
-		self.bots[bb].save()
+		bot.stats.save(t,i)
 	}
 }
 
 // Build constructs bot configurations for each band from provided model params
-func (self *TravellerBots) Build(modelParams ModelParams,flapParams flap.FlapParams) error {
+func (self *TravellerBots) Build(modelParams ModelParams,flapParams flap.FlapParams, t db.Table) error {
 
 	// Check arguments
 	if (len(modelParams.BotSpecs) == 0) {
@@ -226,7 +232,7 @@ func (self *TravellerBots) Build(modelParams ModelParams,flapParams flap.FlapPar
 	if err != nil {
 		return logError(err)
 	}
-	for _, botspec := range modelParams.BotSpecs {
+	for i, botspec := range modelParams.BotSpecs {
 		var bot travellerBot
 		bot.numInstances= botIndex((float64(botspec.Weight)/float64(weightTotal))*float64(modelParams.TotalTravellers))
 		if (bot.numInstances > 0) {
@@ -237,7 +243,7 @@ func (self *TravellerBots) Build(modelParams ModelParams,flapParams flap.FlapPar
 		} else {
 			bot.planner = new(simplePlanner)
 		}
-		bot.stats.load()
+		bot.stats.load(t,i)
 		bot.planner.build(botspec,flapParams)
 		if (err != nil) {
 			return logError(err)
@@ -331,18 +337,18 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 
 
 // RepotBandsSummary outputs csv and charts summarising band stats over the course of the whoel model
-func (self *travellerBots) ReportSummary(mp ModelParams) {
+func (self *TravellerBots) reportSummary(mp ModelParams) {
 
 	// Compile results
-	var compiled []botStatsCompiled
-	for bb := bandIndex(0); bb < bandIndex(len(tb.bots)); bb++ {
-		compiledBands = append(compiled, tb,compile)
+	var compiledBands []botStatsCompiled
+	for _,bot := range(self.bots) {
+		compiledBands = append(compiledBands, bot.stats.compile(bot.numInstances, mp.ReportDayDelta))
 	}
 	
 	// Output CSV
 	fn := filepath.Join(mp.WorkingFolder,"bands.csv")
-	fh,_ = os.Create(fn)
-	if self.fh == nil {
+	fh,_ := os.Create(fn)
+	if fh == nil {
 		return
 	}
 	line:="Day"
@@ -351,24 +357,24 @@ func (self *travellerBots) ReportSummary(mp ModelParams) {
 	}
 	line +="\n"
 	fh.WriteString(line)
-	for _,line := range(lines) {
+	for i:=0; i < len(compiledBands[0].lines); i++ {
 		var lineOut string
 		for _,compiled := range(compiledBands) {
-			lineOut += compiled.line
+			lineOut += compiled.lines[i]
 		}
-		lineiOut=strings.TrimRight(line,",")
+		lineOut=strings.TrimRight(line,",")
 		lineOut+="\n"
 		fh.WriteString(line)
 	}
 
 	// Output graphs
-	reportBandsDistance(compiled)
-	reportBandsCancelled(compiled)
+	reportBandsDistance(compiledBands,mp)
+	reportBandsCancelled(compiledBands,mp)
 }
 
 // reportBandsDistance generates filled line charts covering the covered bands for distance travelled
 // over time.
-func reportBandsDistance(compiled []botStatsCompiledi, mp ModelParams) {
+func reportBandsDistance(compiled []botStatsCompiled, mp ModelParams) {
 
 	// Set axis labels
 	p, err := plot.New()
@@ -384,7 +390,7 @@ func reportBandsDistance(compiled []botStatsCompiledi, mp ModelParams) {
 		return 
 	}
 	for i,compiledBand := range(compiled) {
-		line, err := plotter.NewLine(compiledBand[i].travelledPts)
+		line, err := plotter.NewLine(compiledBand.travelled)
 		if err != nil {
 			return
 		}
@@ -392,7 +398,7 @@ func reportBandsDistance(compiled []botStatsCompiledi, mp ModelParams) {
 		p.Add(line)
 
 		// Update y ranges
-		_,_,_,ymax := plotter.XYRange(compiledBand.travelledPts)
+		_,_,_,ymax := plotter.XYRange(compiledBand.travelled)
 		if ymax > p.Y.Max {
 			p.Y.Max = ymax
 		}
@@ -427,7 +433,7 @@ func reportBandsCancelled(compiled []botStatsCompiled,mp ModelParams) {
 		return 
 	}
 	for i,compiledBand := range(compiled) {
-		line, err := plotter.NewLine(compiledBand.cancelledPts)
+		line, err := plotter.NewLine(compiledBand.cancelled)
 		if err != nil {
 			return
 		}
