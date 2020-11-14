@@ -108,15 +108,15 @@ func (self *summaryStats) newRow() {
 }
 
 // add adds the provide numbers to summary for the latest day
-func (self *summaryStats) update(day summaryStatsRow, rdd flap.Days, t db.Table) {
+func (self *summaryStats) update(increment summaryStatsRow,dayOfModel flap.Days, rdd flap.Days, t db.Table) {
 	self.load(t)
 	i := len(self.Rows) -1
-	self.Rows[i].DailyTotal += day.DailyTotal
-	self.Rows[i].Travelled += day.Travelled
-	self.Rows[i].Travellers += day.Travellers
-	self.Rows[i].Grounded += day.Grounded
-	self.Rows[i].Share += day.Share
-	if i % int(rdd)  == 0 {
+	self.Rows[i].DailyTotal +=increment.DailyTotal
+	self.Rows[i].Travelled += increment.Travelled
+	self.Rows[i].Travellers += increment.Travellers
+	self.Rows[i].Grounded += increment.Grounded
+	self.Rows[i].Share += increment.Share
+	if dayOfModel % rdd  == 0 {
 		self.newRow()
 	}
 	self.save(t)
@@ -296,17 +296,19 @@ func (self *Engine) Release() {
 }
 
 const modelTableName="model"
+
 // Build prepares all persitent data files in order to be able to run the model in the configured data folder. It
 // (a) Builds the countries-airports-routes and the country weights file that drive flight selection.
 // (b) Ensures the Flap library Travellers Table is empty
+// (c) Resets statistics and flight plans from previous model runs.
 func (self *Engine) Build() error {
 	
 	fmt.Printf("Building...\n")
 
 	//  Reset flap and load airports
-	err := flap.Reset(self.db)
+	flap.Reset(self.db)
 	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
-	err = fe.Administrator.SetParams(self.FlapParams)
+	err := fe.Administrator.SetParams(self.FlapParams)
 	if (err != nil) {
 		return logError(err)
 	}
@@ -335,15 +337,14 @@ func (self *Engine) Build() error {
 	
 	// Reset journey planner
 	dropJourneyPlanner(self.db) 
-	jp,err := NewJourneyPlanner(self.db)
-	if (err != nil) {
-		return logError(err)
+
+	// Reset stats
+	var ss summaryStats
+	ss.save(self.table)
+	var bs botStats
+	for i,_ := range self.ModelParams.BotSpecs {
+		bs.save(self.table,i)
 	}
-
-	// Reset stats struct
-	var dummy summaryStats
-	dummy.save(self.table)
-
 	fmt.Printf("...Finished\n")
 	return nil
 }
@@ -518,7 +519,7 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 		Travelled:float64(us.Distance)/float64(self.ModelParams.ReportDayDelta),
 		Grounded:float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta), 
 		Share: float64(us.Share)/float64(self.ModelParams.ReportDayDelta)},
-		self.ModelParams.ReportDayDelta,self.table)
+		i,self.ModelParams.ReportDayDelta,self.table)
 	tb.rotateStats(i,self.ModelParams.ReportDayDelta,self.table)
 	if err != nil {
 		return flap.UpdateBackfillStats{},0,logError(err)

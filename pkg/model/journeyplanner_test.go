@@ -76,24 +76,3 @@ func TestAddJourney(t *testing.T) {
 	}
 
 }
-
-/*
-func TestplanTrip(t *testing.T) {
-	db := setupJP(t)
-	defer teardownJP()
-	jp,err := NewJourneyPlanner(jp)
-	if (err != nil) {
-		t.Error("Failed to create new journey planner")
-	}
-
-	jp,_ := NewJourneyPlanner(3)
-	bot:= botId{1,2}
-	from:= flap.NewICAOCode("A")
-	to:=flap.NewICAOCode("B")
-	err:=jp.planTrip(from,to,10,bot,0)
-	if (err != nil)  {
-		t.Error("Failed to plan trip",err)
-	}
-}
-*/
-

@@ -4,7 +4,29 @@ import (
 	"testing"
 	"reflect"
 	"github.com/richardmorrey/flap/pkg/flap"
+	"github.com/richardmorrey/flap/pkg/db"
+	"os"
 )
+
+var TBTESTFOLDER="tbtest"
+
+func setupTB(t *testing.T) (*db.LevelDB, db.Table) {
+	if err := os.Mkdir(TBTESTFOLDER, 0700); err != nil {
+		t.Error("Failed to create test dir", err)
+	}
+	db :=  db.NewLevelDB(TBTESTFOLDER); 
+	table,err := db.CreateTable("TESTTABLE");
+	if err != nil {
+		t.Error("Failed to create test table",err)
+	}
+	return db, table
+} 
+
+func teardownTB(db *db.LevelDB) {
+	db.Release()
+	os.RemoveAll(TBTESTFOLDER)
+}
+
 
 func buildCountryWeights(nEntries int) *countryWeights{
 	countryWeights := newCountryWeights()
@@ -16,23 +38,28 @@ func buildCountryWeights(nEntries int) *countryWeights{
 }
 
 func TestEmptySpecs(t *testing.T) {
+	db,table := setupTB(t)
+	defer teardownTB(db)
 	ts := NewTravellerBots(buildCountryWeights(1))
 	params := ModelParams{TotalTravellers:0}
 	params.BotSpecs= make([]BotSpec,0,10)
-	err := ts.Build(params,flap.FlapParams{})
+	err := ts.Build(params,flap.FlapParams{},table)
 	if (err == nil) {
 		t.Error("Accepted zero bot specs",err)
 	}
 }
 
 func TestOneSpec(t *testing.T) {
+	db,table := setupTB(t)
+	defer teardownTB(db)
+
 	ts := NewTravellerBots(buildCountryWeights(1))
 	params := ModelParams{TotalTravellers:2}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:12345})
-	err := ts.Build(params,flap.FlapParams{})
+	err := ts.Build(params,flap.FlapParams{},table)
 	if (err != nil) {
-		t.Error("Failed b:uild from one bot spec",err)
+		t.Error("Failed build from one bot spec",err)
 	}
 	if (len(ts.bots) != 1) {
 		t.Error("Failed to Create 1 bot from 1 bot spec",err)
@@ -43,18 +70,22 @@ func TestOneSpec(t *testing.T) {
 		t.Error("Failed to build planner",err)
 	}
 	expected := travellerBot{countryStep:5,numInstances:2,planner:&p}
+	expected.stats.load(table,0)
 	if !reflect.DeepEqual(ts.bots[0],expected) {
 		t.Error("traveller bot has incorrect value",ts.bots[0],expected)
 	}
 }
 
 func TestTwoSpecs(t *testing.T) {
+	db,table := setupTB(t)
+	defer teardownTB(db)
+
 	ts := NewTravellerBots(buildCountryWeights(1))
 	params := ModelParams{TotalTravellers:2}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:1})
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:1})
-	err := ts.Build(params,flap.FlapParams{})
+	err := ts.Build(params,flap.FlapParams{},table)
 	if (err != nil) {
 		t.Error("Failed build from one bot spec",err)
 	}
@@ -67,6 +98,7 @@ func TestTwoSpecs(t *testing.T) {
 		t.Error("Failed to build planner",err)
 	}
 	expected := travellerBot{countryStep:10,numInstances:1,planner:&p}
+	expected.stats.load(table,0)
 	if !reflect.DeepEqual(ts.bots[0],expected) {
 		t.Error("traveller bot has incorrect value",ts.bots[0],expected)
 	}
@@ -76,13 +108,16 @@ func TestTwoSpecs(t *testing.T) {
 }
 
 func TestThreeSpecs(t *testing.T) {
+	db,table := setupTB(t)
+	defer teardownTB(db)
+
 	ts := NewTravellerBots(buildCountryWeights(3))
 	params := ModelParams{TotalTravellers:11}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:1})
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.2,Weight:2})
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.3,Weight:8})
-	err := ts.Build(params,flap.FlapParams{})
+	err := ts.Build(params,flap.FlapParams{},table)
 	if (err != nil) {
 		t.Error("Failed build from three bot specs",err)
 	}
@@ -95,14 +130,17 @@ func TestThreeSpecs(t *testing.T) {
 		t.Error("Failed to build planner",err)
 	}
 	expected := travellerBot{countryStep:60,numInstances:1,planner:&p}
+	expected.stats.load(table,0)
 	if !reflect.DeepEqual(ts.bots[0],expected) {
 		t.Error("traveller bot has incorrect value",ts.bots[0],expected)
 	}
 	err = p.build(params.BotSpecs[1],flap.FlapParams{})
 	if err != nil {
-		t.Error("Failed to build planner",err)
+		t.Error("Faitaled to build planner",err)
 	}
 	expected = travellerBot{countryStep:30,numInstances:2,planner:&p}
+	expected.stats.load(table,0)
+
 	if !reflect.DeepEqual(ts.bots[1],expected) {
 		t.Error("traveller bot has incorrect value",ts.bots[1],expected)
 	} 
@@ -111,18 +149,23 @@ func TestThreeSpecs(t *testing.T) {
 		t.Error("Failed to build planner",err)
 	}
 	expected = travellerBot{countryStep:7.5,numInstances:8,planner:&p}
+	expected.stats.load(table,0)
+
 	if !reflect.DeepEqual(ts.bots[2],expected) {
 		t.Error("traveller bot has incorrect value",ts.bots[2],expected)
 	}
 }
 
 func TestGetBot(t *testing.T) {
+	db,table := setupTB(t)
+	defer teardownTB(db)
+
 	ts := NewTravellerBots(buildCountryWeights(2))
 	params := ModelParams{TotalTravellers:10}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:1})
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.2,Weight:9})
-	ts.Build(params,flap.FlapParams{})
+	ts.Build(params,flap.FlapParams{},table)
 	p,_ := ts.getPassport(botId{0,0})
 	if p != flap.NewPassport("000000000","A")  {
 		t.Error("getPassport returned wrong passport for 0,0 ",p)

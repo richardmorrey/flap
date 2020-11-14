@@ -145,7 +145,7 @@ func (self *botStats) load(t db.Table, index int) error {
 // save saves bot stats to given table
 func (self *botStats)  save(t db.Table, index int) error {
 	key := fmt.Sprintf("%s-%2d",botStatsRecordKey,index)
-	return t.Put([]byte(summaryStatsRecordKey),self)
+	return t.Put([]byte(key),self)
 }
 
 type botStatsCompiled struct {
@@ -178,7 +178,7 @@ func (self *botStats) compile(numInstances botIndex, rdd flap.Days) botStatsComp
 		line := fmt.Sprintf("%f,%f,%f,",
 			(float64(row.flightsRefused)/float64(row.flightsTaken+row.flightsRefused))*100,
 			cancelled,distance)
-
+		lines = append(lines,line)
 		travelledPts = append(travelledPts,plotter.XY{X:day,Y:distance})
 		cancelledPts = append(cancelledPts,plotter.XY{X:day,Y:cancelled})
 	}
@@ -204,12 +204,12 @@ func (self *TravellerBots) GetBot(id botId) *travellerBot {
 }
 
 // rotateStats adds new bot stats records if necessary and persists
-func (self *TravellerBots) rotateStats(day flap.Days,rdd flap.Days,t db.Table) {
-	for i,bot :=  range(self.bots) {
-		if day %  rdd == 0 {
-			bot.stats.newRow()
+func (self *TravellerBots) rotateStats(dayOfModel flap.Days,rdd flap.Days,t db.Table) {
+	for i:= 0 ; i < len(self.bots); i++ {
+		if dayOfModel %  rdd == 0 {
+			self.bots[i].stats.newRow()
 		}
-		bot.stats.save(t,i)
+		self.bots[i].stats.save(t,i)
 	}
 }
 
@@ -358,13 +358,13 @@ func (self *TravellerBots) reportSummary(mp ModelParams) {
 	line +="\n"
 	fh.WriteString(line)
 	for i:=0; i < len(compiledBands[0].lines); i++ {
-		var lineOut string
+		lineOut := fmt.Sprintf("%d,",flap.Days(i+1) *mp.ReportDayDelta)
 		for _,compiled := range(compiledBands) {
 			lineOut += compiled.lines[i]
 		}
-		lineOut=strings.TrimRight(line,",")
+		lineOut=strings.TrimRight(lineOut,",")
 		lineOut+="\n"
-		fh.WriteString(line)
+		fh.WriteString(lineOut)
 	}
 
 	// Output graphs
