@@ -74,6 +74,8 @@ type botStatsRow struct {
 	flightsRefused   uint64
 	tripsCancelled   uint64
 	tripsPlanned	 uint64
+	date		flap.EpochTime
+	entries		int
 }
 
 type botStats struct {
@@ -119,7 +121,16 @@ func (self  *botStats) Planned() {
 	self.Rows[len(self.Rows)-1].tripsPlanned++
 }
 
-
+// rotate rotates row if needed and saves stats 
+func (self *botStats) rotate(date flap.EpochTime, rdd flap.Days, t db.Table) {
+	i:= len(self.Rows) -1
+	self.Rows[i].date = date
+	self.Rows[i].entries +=1
+	if self.Rows[i].entries == int(rdd) {
+		self.newRow()
+	}
+	self.save(t,i)
+}
 func (self* botStats) To(b *bytes.Buffer) error {
 	enc := gob.NewEncoder(b) 
 	return enc.Encode(self)
@@ -204,12 +215,9 @@ func (self *TravellerBots) GetBot(id botId) *travellerBot {
 }
 
 // rotateStats adds new bot stats records if necessary and persists
-func (self *TravellerBots) rotateStats(dayOfModel flap.Days,rdd flap.Days,t db.Table) {
+func (self *TravellerBots) rotateStats(date flap.EpochTime,rdd flap.Days,t db.Table) {
 	for i:= 0 ; i < len(self.bots); i++ {
-		if dayOfModel %  rdd == 0 {
-			self.bots[i].stats.newRow()
-		}
-		self.bots[i].stats.save(t,i)
+		self.bots[i].stats.rotate(date,rdd,t)
 	}
 }
 

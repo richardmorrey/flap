@@ -96,6 +96,8 @@ type summaryStatsRow 	struct {
 	Travellers		float64
 	Grounded		float64
 	Share			float64
+	Date			flap.EpochTime
+	entries			int
 }
 
 type summaryStats struct {
@@ -108,17 +110,20 @@ func (self *summaryStats) newRow() {
 }
 
 // add adds the provide numbers to summary for the latest day
-func (self *summaryStats) update(increment summaryStatsRow,dayOfModel flap.Days, rdd flap.Days, t db.Table) {
+func (self *summaryStats) update(increment summaryStatsRow, rdd flap.Days, t db.Table) {
 	self.load(t)
 	i := len(self.Rows) -1
+	if self.Rows[i].entries == int(rdd)  {
+		i += 1 
+		self.newRow()
+	}
 	self.Rows[i].DailyTotal +=increment.DailyTotal
 	self.Rows[i].Travelled += increment.Travelled
 	self.Rows[i].Travellers += increment.Travellers
 	self.Rows[i].Grounded += increment.Grounded
 	self.Rows[i].Share += increment.Share
-	if dayOfModel % rdd  == 0 {
-		self.newRow()
-	}
+	self.Rows[i].Date = increment.Date
+	self.Rows[i].entries += 1
 	self.save(t)
 }
 
@@ -163,11 +168,17 @@ func (self* summaryStats) compile(path string,rdd flap.Days) (plotter.XYs, plott
 		return nil,nil
 	}
 
+	
+	// Summmary stats title
+	fh.WriteString("Date,DailyTotal,Travelled,Travellers,Grounded,Share\n")
+
 	day := rdd
 	for _,row := range self.Rows { 
 
-		// Summmary stats title
-		fh.WriteString("Day,DailyTotal,Travelled,Travellers,Grounded,Share\n")
+		// Skip incomplete rows
+	//	if row.entries < int(rdd) {
+	//		continue
+	//	}
 
 		// Summary stats line
 		line := fmt.Sprintf("%d,%.2f,%.2f,%d,%d,%.2f\n",day,
@@ -513,14 +524,17 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 
 	// Update summary stats
 	var ss summaryStats
-	ss.update(summaryStatsRow{
-		DailyTotal:float64(flapParams.DailyTotal)/float64(self.ModelParams.ReportDayDelta),
-		Travellers:float64(us.Travellers)/float64(self.ModelParams.ReportDayDelta),
-		Travelled:float64(us.Distance)/float64(self.ModelParams.ReportDayDelta),
-		Grounded:float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta), 
-		Share: float64(us.Share)/float64(self.ModelParams.ReportDayDelta)},
-		i,self.ModelParams.ReportDayDelta,self.table)
-	tb.rotateStats(i,self.ModelParams.ReportDayDelta,self.table)
+	if i>0 {
+		ss.update(summaryStatsRow{
+			DailyTotal:float64(flapParams.DailyTotal)/float64(self.ModelParams.ReportDayDelta),
+			Travellers:float64(us.Travellers)/float64(self.ModelParams.ReportDayDelta),
+			Travelled:float64(us.Distance)/float64(self.ModelParams.ReportDayDelta),
+			Grounded:float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta), 
+			Share: float64(us.Share)/float64(self.ModelParams.ReportDayDelta),
+			Date: currentDay},
+			self.ModelParams.ReportDayDelta,self.table)
+		tb.rotateStats(currentDay,self.ModelParams.ReportDayDelta,self.table)
+	}
 	if err != nil {
 		return flap.UpdateBackfillStats{},0,logError(err)
 	}

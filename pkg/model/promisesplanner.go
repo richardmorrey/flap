@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math"
 	"math/rand"
+	"fmt"
 )
 
 var ENOSPACEFORTRIP = errors.New("No space for trip")
@@ -180,7 +181,7 @@ func (self *promisesPlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now 
 		return 0,logError(err)
 	}
 	plannedflights[0]=*f
-	f,err = flap.NewFlight(toAirport,ede-2,fromAirport,ede-1)
+	f,err = flap.NewFlight(toAirport,ede+(flap.SecondsInDay-2),fromAirport,(ede+flap.SecondsInDay-1))
 	if (err != nil) {
 		return 0,logError(err)
 	}
@@ -197,10 +198,11 @@ func (self *promisesPlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now 
 	// Make promise
 	err = fe.Make(pp,proposal)
 	if err == nil {
-		logDebug("Made promise for trip on Day ",epochStartDay)
+		logline := fmt.Sprintf("Made promise for %s for trip from %s to %s leaving %s returning %s", pp.ToString(),fromAirport.Code.ToString(), toAirport.Code.ToString(), sds.ToTime(), ede.ToTime())
+		logDebug(logline)
 	} else {
 		return 0, logError(err)
 	}
-	return flap.EpochTime(ts*flap.SecondsInDay),err
+	return sds,err
 }
 

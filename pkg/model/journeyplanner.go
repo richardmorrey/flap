@@ -143,7 +143,8 @@ func (self *journeyPlanner) addJourney(pp flap.Passport, j journey) error {
 
 	// Build record key
 	t := j.flight.Start.ToTime()
-	recordKey := fmt.Sprintf("%s/%s",t.Format("2006-01-02"),pp.ToString())
+	recordKey := fmt.Sprintf("%s/%s",t.UTC().Format("2006-01-02"),pp.ToString())
+	logDebug("Adding journey key=",recordKey," start time:", j.flight.Start.ToTime())
 
 	// Retreive any existing list for this day/traveller
 	var pd plannerDay
@@ -165,6 +166,7 @@ func (self *journeyPlanner) addJourney(pp flap.Passport, j journey) error {
 // Return journey is planned only at point submission of outbound
 // journey is accepted by Flight
 func (self *journeyPlanner) planTrip(from flap.ICAOCode, to flap.ICAOCode, length flap.Days, pp flap.Passport, startOfDay flap.EpochTime, fe *flap.Engine) error {
+	logDebug("planTrip for: ", pp.ToString(), " starting ", startOfDay.ToTime())
 	f,err := self.buildFlight(from,to,startOfDay,fe)
 	if (err != nil) {
 		return err
@@ -177,7 +179,8 @@ func (self *journeyPlanner) planTrip(from flap.ICAOCode, to flap.ICAOCode, lengt
 func (self *journeyPlanner) planInbound(j * journey, pp flap.Passport, startOfDay flap.EpochTime,fe *flap.Engine) error {
 	
 	// Create return journey for last day of trip
-	f,err := self.buildFlight(j.flight.ToAirport,j.flight.FromAirport,startOfDay+flap.EpochTime(j.length*flap.SecondsInDay),fe)
+	outboundStartOfDay := j.flight.Start - j.flight.Start % flap.SecondsInDay
+	f,err := self.buildFlight(j.flight.ToAirport,j.flight.FromAirport,outboundStartOfDay + flap.EpochTime(j.length*flap.SecondsInDay),fe)
 	if (err != nil)  {
 		return err
 	}
@@ -216,7 +219,7 @@ func (self *journeyPlanner) buildFlight(from flap.ICAOCode,to flap.ICAOCode, sta
 		return nil,logError(err)
 	}
 	
-	// Set start and end time, ensuring flight ends by end of first day to avoid overlap
+	// Set start and end time, ensuring flight ends by end day to avoid overlap
 	// with return journey
 	start := startOfDay + flap.EpochTime(rand.Intn(int(flap.SecondsInDay-duration-1)))
 	end := start + duration
@@ -256,6 +259,8 @@ func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, sta
 			bi.fromPassport(p)
 
 			// If successful  ...
+			logFlight :=  fmt.Sprintf("%s from %s to %s leaving %s returning %s", p.ToString(),j.flight.FromAirport.ToString(), j.flight.ToAirport.ToString(), j.flight.Start.ToTime(), j.flight.End.ToTime())
+
 			if err == nil {
 				// ... plan journey ...
 				tb.GetBot(bi).stats.Submitted(j.flight.Distance)
@@ -267,9 +272,9 @@ func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, sta
 				}
 				// ... and report
 				fp.addFlight(j.flight.FromAirport,j.flight.ToAirport,j.flight.Start,j.flight.End,fe.Airports,bi.band)
-				logDebug("Submitted flight for",p.ToString())
+				logDebug("Flight submitted:", logFlight)
 			} else {
-				logDebug("Flight submission refused for",p.ToString(),":",j.flight.Start.ToTime())
+				logDebug("Flight rejected:", logFlight)
 				tb.GetBot(bi).stats.Refused()
 			}
 		}
@@ -313,7 +318,7 @@ func (self *journeyPlannerIterator) Release() error {
 }
 
 func (self *journeyPlanner) NewIterator(date flap.EpochTime) (*journeyPlannerIterator,error) {
-	prefix := date.ToTime().Format("2006-01-02")
+	prefix := date.ToTime().UTC().Format("2006-01-02")
 	iter := new(journeyPlannerIterator)
 	var err error
 	iter.iterator,err = self.table.NewIterator([]byte(prefix))
