@@ -583,7 +583,7 @@ func (self *Engine) Run(warmOnly bool) error {
 	currentDay := flap.EpochTime(self.ModelParams.StartDay.Unix()) - flap.EpochTime(uint64(planDays*flap.SecondsInDay))
 	flightPaths := newFlightPaths(currentDay)
 	logInfo("Running ", planDays, " day prewarm and ", daysToRun," day model")
-	for i:=flap.Days(-planDays); i <= daysToRun; i++ {
+	for i:=flap.Days(-planDays); i < daysToRun; i++ {
 		
 		// Run model for one day
 		us,dt,err := self.modelDay(currentDay,cars,tb,fe,jp,flightPaths)
