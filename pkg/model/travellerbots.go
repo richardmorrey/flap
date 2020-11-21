@@ -69,13 +69,13 @@ func (self *TravellerBots) getPassport(bot botId) (flap.Passport,error) {
 }
 
 type botStatsRow struct {
-	distance flap.Kilometres
-	flightsTaken	 uint64
-	flightsRefused   uint64
-	tripsCancelled   uint64
-	tripsPlanned	 uint64
-	date		flap.EpochTime
-	entries		int
+	Distance flap.Kilometres
+	FlightsTaken	 uint64
+	FlightsRefused   uint64
+	TripsCancelled   uint64
+	TripsPlanned	 uint64
+	Date		flap.EpochTime
+	Entries		int
 }
 
 type botStats struct {
@@ -93,8 +93,8 @@ func (self *botStats) newRow() {
 func (self *botStats) Submitted(dist flap.Kilometres) {
 	self.mux.Lock()
 	defer self.mux.Unlock()
-	self.Rows[len(self.Rows)-1].flightsTaken++
-	self.Rows[len(self.Rows)-1].distance += dist
+	self.Rows[len(self.Rows)-1].FlightsTaken++
+	self.Rows[len(self.Rows)-1].Distance += dist
 }
 
 // Refused updates stats to relect fact a journey 
@@ -102,7 +102,7 @@ func (self *botStats) Submitted(dist flap.Kilometres) {
 func (self  *botStats) Refused() {
 	self.mux.Lock()
 	defer self.mux.Unlock()
-	self.Rows[len(self.Rows)-1].flightsRefused++
+	self.Rows[len(self.Rows)-1].FlightsRefused++
 }
 
 // Canclled updates stats to relect fact a promise
@@ -110,7 +110,7 @@ func (self  *botStats) Refused() {
 func (self  *botStats) Cancelled() {
 	self.mux.Lock()
 	defer self.mux.Unlock()
-	self.Rows[len(self.Rows)-1].tripsCancelled++
+	self.Rows[len(self.Rows)-1].TripsCancelled++
 }
 
 // Planned updates stats to relect fact a promise
@@ -118,15 +118,15 @@ func (self  *botStats) Cancelled() {
 func (self  *botStats) Planned() {
 	self.mux.Lock()
 	defer self.mux.Unlock()
-	self.Rows[len(self.Rows)-1].tripsPlanned++
+	self.Rows[len(self.Rows)-1].TripsPlanned++
 }
 
 // rotate rotates row if needed and saves stats 
 func (self *botStats) rotate(date flap.EpochTime, rdd flap.Days, t db.Table) {
 	i:= len(self.Rows) -1
-	self.Rows[i].date = date
-	self.Rows[i].entries +=1
-	if self.Rows[i].entries == int(rdd) {
+	self.Rows[i].Date = date
+	self.Rows[i].Entries +=1
+	if self.Rows[i].Entries == int(rdd) {
 		self.newRow()
 	}
 	self.save(t,i)
@@ -178,16 +178,20 @@ func (self *botStats) compile(numInstances botIndex, rdd flap.Days) botStatsComp
 	var lines []string
 	for i,row := range self.Rows { 
 
+		// Skip incomplete rows
+		if row.Entries != int(rdd) {
+			continue
+		}
 
 		// Format stats
 		var day = float64(i*int(rdd))
 		var cancelled float64
-		if (row.tripsPlanned+row.tripsCancelled) > 0 {
-			cancelled = (float64(row.tripsCancelled)/float64(row.tripsPlanned+row.tripsCancelled))*100
+		if (row.TripsPlanned+row.TripsCancelled) > 0 {
+			cancelled = (float64(row.TripsCancelled)/float64(row.TripsPlanned+row.TripsCancelled))*100
 		}
-		distance := float64(row.distance)/float64(flap.Kilometres(numInstances))
+		distance := float64(row.Distance)/float64(flap.Kilometres(numInstances))
 		line := fmt.Sprintf("%f,%f,%f,",
-			(float64(row.flightsRefused)/float64(row.flightsTaken+row.flightsRefused))*100,
+			(float64(row.FlightsRefused)/float64(row.FlightsTaken+row.FlightsRefused))*100,
 			cancelled,distance)
 		lines = append(lines,line)
 		travelledPts = append(travelledPts,plotter.XY{X:day,Y:distance})

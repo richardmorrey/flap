@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"github.com/richardmorrey/flap/pkg/model"
+	"github.com/richardmorrey/flap/pkg/flap"
 	"flag"
 	"os"
 	"strconv"
+	"time"
 )
 
 func ShowHelp() {
@@ -88,9 +90,47 @@ func main() {
 				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
 			} else {
 				defer engine.Release()
-				err := engine.Run()
+				err := engine.Run(false)
 				if err != nil {
 					fmt.Printf("\nFailed to run model with error '%s'\n",err)
+				}
+			}
+		case "warm":
+			engine,err := model.NewEngine(*configfile)
+			if err != nil {
+				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
+			} else {
+				defer engine.Release()
+				err := engine.Run(true)
+				if err != nil {
+					fmt.Printf("\nFailed to warm model with error '%s'\n",err)
+				}
+			}
+		case "runoneday":
+			startOfDay,err := time.Parse("2006-01-02",flag.Arg(1))
+			if (err != nil) {
+				fmt.Printf("\nFailed to parse time with error '%s'\n",err)
+			} else {
+				engine,err := model.NewEngine(*configfile)
+				if err != nil {
+					fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
+				} else {
+					defer engine.Release()
+					err = engine.RunOneDay(flap.EpochTime(startOfDay.Unix()))
+					if err != nil {
+						fmt.Printf("\nFailed to run for one day with error '%s'\n",err)
+					}
+				}
+			}
+		case "report":
+			engine,err := model.NewEngine(*configfile)
+			if err != nil {
+				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
+			} else {
+				defer engine.Release()
+				err := engine.Report()
+				if err != nil {
+					fmt.Printf("\nFailed to report with error '%s'\n",err)
 				}
 			}
 		case "show":

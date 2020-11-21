@@ -271,7 +271,9 @@ func (self *journeyPlanner) submitFlights(tb *TravellerBots,fe *flap.Engine, sta
 					}
 				}
 				// ... and report
-				fp.addFlight(j.flight.FromAirport,j.flight.ToAirport,j.flight.Start,j.flight.End,fe.Airports,bi.band)
+				if fp != nil { 
+					fp.addFlight(j.flight.FromAirport,j.flight.ToAirport,j.flight.Start,j.flight.End,fe.Airports,bi.band)
+				}
 				logDebug("Flight submitted:", logFlight)
 			} else {
 				logDebug("Flight rejected:", logFlight)

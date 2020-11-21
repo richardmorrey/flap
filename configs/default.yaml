@@ -28,7 +28,7 @@ flapparams:
 modelparams:
   # Logging level 0 - off, 1 - errors only, 2 - info,
   # 3 - debug. Log output to <workingfolder>/flap.log
-  loglevel: 2
+  loglevel: 3
   # Folder to hold working databases and all output files
   workingfolder: ./working
   # Folder to place input data files
@@ -41,7 +41,7 @@ modelparams:
   # distance balances.
   trialdays: 365
   # Total days for which to run the model, including trial days.
-  daystorun: 4000
+  daystorun: 2000
   # Total number of travellers to simulate
   totaltravellers: 1000
   # Definition of one or more "bands" of travellers, with
@@ -88,7 +88,7 @@ modelparams:
   # Delta to report for. A row is written to summary.csv and bands.csv
   # every reportdaydelta days. A KML file including all flights taken
   # is written out every reportdaydelta days.
-  reportdaydelta: 10
+  reportdaydelta: 100
   # Delta for verbose reporting - promise distributions and regressions.
   # No verbose reporting if value is missing or 0.
   verbosereportdaydelta: 1000

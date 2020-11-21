@@ -97,7 +97,7 @@ type summaryStatsRow 	struct {
 	Grounded		float64
 	Share			float64
 	Date			flap.EpochTime
-	entries			int
+	Entries			int
 }
 
 type summaryStats struct {
@@ -113,7 +113,7 @@ func (self *summaryStats) newRow() {
 func (self *summaryStats) update(increment summaryStatsRow, rdd flap.Days, t db.Table) {
 	self.load(t)
 	i := len(self.Rows) -1
-	if self.Rows[i].entries == int(rdd)  {
+	if self.Rows[i].Entries == int(rdd)  {
 		i += 1 
 		self.newRow()
 	}
@@ -123,7 +123,7 @@ func (self *summaryStats) update(increment summaryStatsRow, rdd flap.Days, t db.
 	self.Rows[i].Grounded += increment.Grounded
 	self.Rows[i].Share += increment.Share
 	self.Rows[i].Date = increment.Date
-	self.Rows[i].entries += 1
+	self.Rows[i].Entries += 1
 	self.save(t)
 }
 
@@ -176,9 +176,9 @@ func (self* summaryStats) compile(path string,rdd flap.Days) (plotter.XYs, plott
 	for _,row := range self.Rows { 
 
 		// Skip incomplete rows
-	//	if row.entries < int(rdd) {
-	//		continue
-	//	}
+		if row.Entries < int(rdd) {
+			continue
+		}
 
 		// Summary stats line
 		line := fmt.Sprintf("%d,%.2f,%.2f,%d,%d,%.2f\n",day,
@@ -459,7 +459,7 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 	}
 
 	// Calculate day of model
-	i := flap.Days(currentDay/flap.SecondsInDay) - flap.Days(flap.EpochTime(self.ModelParams.StartDay.Unix())/flap.SecondsInDay)
+	i := 1 + (flap.Days(currentDay/flap.SecondsInDay) - flap.Days(flap.EpochTime(self.ModelParams.StartDay.Unix())/flap.SecondsInDay))
 
 	// For each travller: Update triphistory and backfill those with distance accounts in
 	// deficit.
@@ -543,7 +543,7 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 
 // Runs the model with configuration as specified in ModelParams, writing results out
 // to multiple CSV files in the specified working folder.
-func (self *Engine) Run() error {
+func (self *Engine) Run(warmOnly bool) error {
 
 	// Set up data structures
 	err := flap.Reset(self.db)
@@ -572,12 +572,18 @@ func (self *Engine) Run() error {
 		return logError(err)
 	}
 
+	// Calculate days to run
+	var daysToRun flap.Days
+	if !warmOnly {
+		daysToRun += self.ModelParams.DaysToRun
+	}
+
 	// Model for each of the plan days and the days for the model
 	// proper
 	currentDay := flap.EpochTime(self.ModelParams.StartDay.Unix()) - flap.EpochTime(uint64(planDays*flap.SecondsInDay))
 	flightPaths := newFlightPaths(currentDay)
-	logInfo("Running ", planDays, " day prewarm and ",self.ModelParams.DaysToRun," day model")
-	for i:=flap.Days(-planDays); i <= self.ModelParams.DaysToRun; i++ {
+	logInfo("Running ", planDays, " day prewarm and ", daysToRun," day model")
+	for i:=flap.Days(-planDays); i <= daysToRun; i++ {
 		
 		// Run model for one day
 		us,dt,err := self.modelDay(currentDay,cars,tb,fe,jp,flightPaths)
@@ -600,6 +606,38 @@ func (self *Engine) Run() error {
 	tb.reportSummary(self.ModelParams)
 	fmt.Printf("\nFinished\n")
 	return nil
+}
+
+// Report generates summary reports
+func (self *Engine) Report() error {
+	
+	_,tb,_,_,err := self.prepare()
+	if err != nil {
+		return logError(err)
+	}
+
+	// Output final charts and finish
+	self.reportSummary()
+	tb.reportSummary(self.ModelParams)
+	fmt.Printf("\nFinished\n")
+	return nil
+}
+
+// RunOneDay runs the model for the one specified day
+func (self *Engine) RunOneDay(startOfDay flap.EpochTime) error {
+	
+	cars,tb,fe,jp,err := self.prepare()
+	if err != nil {
+		return logError(err)
+	}
+
+	err = fe.Administrator.SetParams(self.FlapParams)
+	if err != nil {
+		return logError(err)
+	}
+
+	_,_,err = self.modelDay(startOfDay,cars,tb,fe,jp,nil)
+	return err
 }
 
 // ShowTraveller reports the trip history for the specificied traveller both in JSON and KML format
