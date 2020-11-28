@@ -29,13 +29,13 @@ type Database interface
 
 type Reader interface 
 {
-	Get([]byte,Serialize) error
+	Get(string,Serialize) error
 }
 
 type Writer interface
 {
- 	Put([]byte,Serialize) error
-	Delete([]byte) error
+ 	Put(string,Serialize) error
+	Delete(string) error
 }
 
 type Table interface
@@ -62,7 +62,7 @@ type BatchWrite interface
 
 type Iterator interface {
 	Next() (bool)
-	Key() ([]byte)
+	Key() (string)
 	Value(s Serialize)
 	Error() (error)
 	Release() error
@@ -83,8 +83,8 @@ func (self *LevelIterator) Next() (bool) {
 }
 
 // Thin wrapper on LevelDB method
-func (self *LevelIterator) Key() ([]byte) {
-	return self.iterator.Key()
+func (self *LevelIterator) Key() (string) {
+	return string(self.iterator.Key())
 }
 
 // Thin wrapper on LevelDB method
@@ -115,8 +115,8 @@ func (self *LevelSnapshot) Release() error {
 }
 
 // Get is thin wrapper on LevelDB.Get
-func (self *LevelSnapshot) Get(key []byte,s Serialize) error {
-	blob, err := self.snapshot.Get(key,nil)
+func (self *LevelSnapshot) Get(key string,s Serialize) error {
+	blob, err := self.snapshot.Get([]byte(key),nil)
 	if err != nil {
 		return err
 	}
@@ -145,19 +145,19 @@ type LevelBatchWrite struct {
 }
 
 // Put is thin wrapper on leveldb Batch put 
-func (self *LevelBatchWrite) Put(key []byte, s Serialize) error {
+func (self *LevelBatchWrite) Put(key string, s Serialize) error {
 	var buff bytes.Buffer
 	err := s.To(&buff)
 	if err != nil {
 		return err
 	}
-	self.batch.Put(key,buff.Bytes())
+	self.batch.Put([]byte(key),buff.Bytes())
 	return self.write(false)
 }
 
 // Delete is thin wrapper on leveldb Batch put
-func (self* LevelBatchWrite) Delete(key [] byte) error {
-	self.batch.Delete(key)
+func (self* LevelBatchWrite) Delete(key string) error {
+	self.batch.Delete([]byte(key))
 	return self.write(false)
 }
 
@@ -192,8 +192,8 @@ type LevelTable struct
 }
 
 // Get is thin wrapper on LevelDB.Get
-func (self *LevelTable) Get(key []byte,s Serialize) error {
-	blob, err := self.db.Get(key,nil)
+func (self *LevelTable) Get(key string,s Serialize) error {
+	blob, err := self.db.Get([]byte(key),nil)
 	if err != nil {
 		return err
 	}
@@ -202,18 +202,18 @@ func (self *LevelTable) Get(key []byte,s Serialize) error {
 }
 
 // Put is thin wrapper on LevelDB.Put
-func (self *LevelTable) Put(key []byte, s Serialize) error {
+func (self *LevelTable) Put(key string, s Serialize) error {
 	var buff bytes.Buffer
 	err := s.To(&buff)
 	if err != nil {
 		return err
 	}
-	return self.db.Put(key,buff.Bytes(),nil)
+	return self.db.Put([]byte(key),buff.Bytes(),nil)
 }
 
 // Delete is thin wrapper on LevelDB.Delete
-func (self *LevelTable) Delete(key []byte) error {
-	return self.db.Delete(key,nil)
+func (self *LevelTable) Delete(key string) error {
+	return self.db.Delete([]byte(key),nil)
 }
 
 // NewIterator creates a thin wrapper around leveldb.Iterator

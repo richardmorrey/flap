@@ -87,12 +87,12 @@ func TestPutGet(t *testing.T) {
 	defer teardown(db)
 	table,_ := db.CreateTable("songs")
 	sIn := Song{title:"Waylon Jennings Live"}
-	err := table.Put([]byte("The Mountain Goats"), &sIn)
+	err := table.Put("The Mountain Goats", &sIn)
 	if err  != nil {
 		t.Error("Failed to put entry",err)
 	}
 	var sOut Song
-	err = table.Get([]byte("The Mountain Goats"),&sOut)
+	err = table.Get("The Mountain Goats",&sOut)
 	if  err != nil {
 		t.Error("Failed to get entry", err)
 	}
@@ -106,7 +106,7 @@ func TestDropTable(t *testing.T) {
 	defer teardown(db)
 	table,_ := db.CreateTable("songs")
 	sIn := Song{title:"Waylon Jennings Live"}
-	table.Put([]byte("The Mountain Goats"), &sIn)
+	table.Put("The Mountain Goats", &sIn)
 	db.CloseTable("songs")
 
 	err := db.DropTable("labels")
@@ -139,24 +139,24 @@ func TestDelete(t *testing.T) {
 	defer teardown(db)
 	table,_ := db.CreateTable("songs")
 	sIn := Song{title:"Waylon Jennings Live"}
-	err := table.Put([]byte("The Mountain Goats"), &sIn)
+	err := table.Put("The Mountain Goats", &sIn)
 	if err  != nil {
 		t.Error("Failed to put entry",err)
 	}
 	var sOut Song
-	err = table.Get([]byte("The Mountain Goats"),&sOut)
+	err = table.Get("The Mountain Goats",&sOut)
 	if  err != nil {
 		t.Error("Failed to get entry", err)
 	}
 	if sOut.title != "Waylon Jennings Live" {
 		t.Error("Failed to get entry", sOut.title)
 	}
-	err = table.Delete([]byte("The Mountain Goats"))
+	err = table.Delete("The Mountain Goats")
 	if err != nil {
 		t.Error("Failed to delete entry", err)
 	}
 	sOut.title=""
-	err = table.Get([]byte("The Mountain Goats"),&sOut)
+	err = table.Get("The Mountain Goats",&sOut)
 	if  err == nil {
 		t.Error("Succeded in geting deleted entry", err)
 	}
@@ -175,7 +175,7 @@ func TestIterate(t *testing.T) {
 		"The Go-betweens": Song{title:"Born to a Family"},
 	}
 	for artist, song := range(songlist) {
-		table.Put([]byte(artist), &song)
+		table.Put(artist, &song)
 	}
 	songlistretrieved := map[string]Song{}
 	iterator,err := table.NewIterator(nil)
@@ -185,7 +185,7 @@ func TestIterate(t *testing.T) {
 	var sOut Song
 	for iterator.Next() {
 		iterator.Value(&sOut)
-		songlistretrieved[string(iterator.Key())] = sOut
+		songlistretrieved[iterator.Key()] = sOut
 	}
 	if !reflect.DeepEqual(songlistretrieved,songlist) {
 		t.Error("Retrieved song list doesnt match", songlist, songlistretrieved)
@@ -202,7 +202,7 @@ func TestIterateSnapshot(t *testing.T) {
 		"The Go-betweens": Song{title:"Born to a Family"},
 	}
 	for artist, song := range(songlist) {
-		table.Put([]byte(artist), &song)
+		table.Put(artist, &song)
 	}
 
 	songlistretrieved := map[string]Song{}
@@ -217,7 +217,7 @@ func TestIterateSnapshot(t *testing.T) {
 	var sOut Song
 	for iterator.Next() {
 		iterator.Value(&sOut)
-		songlistretrieved[string(iterator.Key())] = sOut
+		songlistretrieved[iterator.Key()] = sOut
 	}
 	if !reflect.DeepEqual(songlistretrieved,songlist) {
 		t.Error("Retrieved song list doesnt match", songlist, songlistretrieved)
@@ -234,7 +234,7 @@ func TestIteratePrefix(t *testing.T) {
 		"The Go-betweens": Song{title:"Born to a Family"},
 	}
 	for artist, song := range(songlist) {
-		table.Put([]byte(artist), &song)
+		table.Put(artist, &song)
 	}
 
 	songlistretrieved := map[string]Song{}
@@ -245,7 +245,7 @@ func TestIteratePrefix(t *testing.T) {
 	var sOut Song
 	for iterator.Next() {
 		iterator.Value(&sOut)
-		songlistretrieved[string(iterator.Key())] = sOut
+		songlistretrieved[iterator.Key()] = sOut
 	}
 	if reflect.DeepEqual(songlistretrieved,songlist) {
 		t.Error("Retrieved song list matches", songlist, songlistretrieved)
@@ -270,7 +270,7 @@ func TestBatchWrite(t *testing.T) {
 		t.Error("Failed to create BatchWrite")
 	}
 	for artist, song := range(songlist) {
-		table.Put([]byte(artist), &song)
+		table.Put(artist, &song)
 		if err != nil {
 			t.Error("BatchWrite put failed with error",err)
 		}
@@ -281,7 +281,7 @@ func TestBatchWrite(t *testing.T) {
 	var sOut Song
 	for iterator.Next() {
 		iterator.Value(&sOut)
-		songlistretrieved[string(iterator.Key())] = sOut
+		songlistretrieved[iterator.Key()] = sOut
 	}
 	if !reflect.DeepEqual(songlistretrieved,songlist) {
 		t.Error("BatchWrite didnt write full song list", songlist, songlistretrieved)
