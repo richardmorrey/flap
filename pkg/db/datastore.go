@@ -41,8 +41,9 @@ type DatastoreSnapshot struct {
 }
 
 type DatastoreTable struct {
-	client *datastore.Client
-	kind string
+	ctx 	context.Context
+	client 	*datastore.Client
+	kind 	string
 }
 
 // Release is thin wrapper on DatastoreDB method
@@ -87,44 +88,54 @@ func (self* DatastoreBatchWrite) write(flush bool) error {
 	return ENOTIMPLEMENTED
 }
 
-type datastoreEntity struct {
-	blob []byte
+type DatastoreEntity struct {
+	Blob []byte
 }
 
 // Get is thin wrapper on DatastoreDB.Get
 func (self *DatastoreTable) Get(key string,s Serialize) error {
 
 	// Build key
-	//k := datastore.NameKey(self.kind, key, nil)
-	e := new(datastoreEntity)
+	k := datastore.NameKey(self.kind, key, nil)
+	e := new(DatastoreEntity)
 
 	// Get value
-//	if err := self.clent.Get(ctx, k, e); err != nil {
-//		return err
-//	}
+	if err := self.client.Get(self.ctx, k, e); err != nil {
+		return err
+	}
 
 	// Deserialize
-	buff := bytes.NewBuffer(e.blob)
+	buff := bytes.NewBuffer(e.Blob)
 	return s.From(buff)
-
-/*
-	old := e.Value
-	e.Value = "Hello World!"
-
-	if _, err := dsClient.Put(ctx, k, e); err != nil {
-		// Handle error.
-	}
-*/
 }
 
 // Put is thin wrapper on DatastoreDB.Put
 func (self *DatastoreTable) Put(key string, s Serialize) error {
-	return ENOTIMPLEMENTED
+	
+	// Build key
+	k := datastore.NameKey(self.kind, key, nil)
+
+	// Serialize value
+	var buff bytes.Buffer
+	err := s.To(&buff)
+	if err != nil {
+		return err
+	}
+
+	// Put value
+	e := DatastoreEntity{buff.Bytes()}
+ 	_, err = self.client.Put(self.ctx, k, &e)
+	return err
 }
 
 // Delete is thin wrapper on DatastoreDB.Delete
 func (self *DatastoreTable) Delete(key string) error {
-	return ENOTIMPLEMENTED
+	
+	// Build key
+	k := datastore.NameKey(self.kind, key, nil)
+
+	// Delete  value
+	return self.client.Delete(self.ctx, k)
 }
 
 // NewIterator creates a thin wrapper around leveldb.Iterator
@@ -151,6 +162,7 @@ func (self *DatastoreTable) close() {
 
 type DatastoreDB struct
 {
+	ctx context.Context
 	client *datastore.Client
 	tables map[string]*DatastoreTable
 }
@@ -161,8 +173,8 @@ type DatastoreDB struct
 func NewDatastoreDB(projectname string) *DatastoreDB {
 	db := new(DatastoreDB)
 	db.tables = make(map[string]*DatastoreTable)
-	ctx := context.Background()
-	client, err := datastore.NewClient(ctx,projectname)
+	db.ctx = context.Background()
+	client, err := datastore.NewClient(db.ctx,projectname)
 	if err != nil {
 		return nil
 	}
@@ -177,6 +189,7 @@ func (self *DatastoreDB) OpenTable(name string) (Table,error) {
 	if self.tables[name] == nil {
 		t := new(DatastoreTable)
 		t.client=self.client
+		t.ctx=self.ctx
 		t.kind=name
 		self.tables[name] = t
 	}
