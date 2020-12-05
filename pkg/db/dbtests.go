@@ -136,7 +136,7 @@ func dotestIterate(db Database,t *testing.T) {
 		table.Put(artist, &song)
 	}
 	songlistretrieved := map[string]Song{}
-	iterator,err := table.NewIterator(nil)
+	iterator,err := table.NewIterator("")
 	if err != nil {
 		t.Error("Failed to create Iterator", err)
 	}
@@ -166,7 +166,7 @@ func dotestIterateSnapshot(db Database,t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create snapshot")
 	}
-	iterator,err := ss.NewIterator(nil)
+	iterator,err := ss.NewIterator("")
 	if err != nil {
 		t.Error("Failed to create iterator from snapshot", err)
 	}
@@ -192,7 +192,7 @@ func dotestIteratePrefix(db Database,t *testing.T) {
 	}
 
 	songlistretrieved := map[string]Song{}
-	iterator,err := table.NewIterator([]byte("The"))
+	iterator,err := table.NewIterator("The")
 	if err != nil {
 		t.Error("Failed to create Iterator", err)
 	}
@@ -229,7 +229,7 @@ func dotestBatchWrite(db Database,t *testing.T) {
 	}
 	bw.Release()
 	songlistretrieved := map[string]Song{}
-	iterator,err := table.NewIterator(nil)
+	iterator,err := table.NewIterator("")
 	var sOut Song
 	for iterator.Next() {
 		iterator.Value(&sOut)

@@ -26,16 +26,6 @@ func TestDatastoreCreateTable(t *testing.T) {
 	dotestCreateTable(db,t)
 }
 
-func TestDatastoreOpenTable(t *testing.T) {
-	db := setupDatastore(t)
-	if db == nil {
-		return
-	}
-
-	defer teardownDatastore(db)
-	dotestOpenTable(db,t)
-}
-
 func TestDatastorePutGet(t *testing.T) {
 	db := setupDatastore(t)
 	if db == nil {

@@ -42,7 +42,7 @@ type Table interface
 {
 	Reader
 	Writer
-	NewIterator([]byte) (Iterator,error)
+	NewIterator(string) (Iterator,error)
 	TakeSnapshot() (Snapshot,error)
 	MakeBatch(int) (BatchWrite,error)
 }
@@ -51,7 +51,7 @@ type Snapshot interface
 {
 	Reader
 	Release() error
-	NewIterator([]byte) (Iterator,error)
+	NewIterator(string) (Iterator,error)
 }
 
 type BatchWrite interface
@@ -127,10 +127,10 @@ func (self *LevelSnapshot) Get(key string,s Serialize) error {
 // NewIterator creates a thin wrapper around leveldb.Iterator
 // It is effectively the factory function for the LevelIterator
 // struct.
-func (self *LevelSnapshot) NewIterator(prefix []byte) (Iterator,error) {
+func (self *LevelSnapshot) NewIterator(prefix string) (Iterator,error) {
 	iter := new(LevelIterator)
-	if prefix != nil {
-		iter.iterator=self.snapshot.NewIterator(util.BytesPrefix(prefix),nil)
+	if prefix != "" {
+		iter.iterator=self.snapshot.NewIterator(util.BytesPrefix([]byte(prefix)),nil)
 	} else {
 		iter.iterator=self.snapshot.NewIterator(nil,nil)
 	}
@@ -219,10 +219,10 @@ func (self *LevelTable) Delete(key string) error {
 // NewIterator creates a thin wrapper around leveldb.Iterator
 // It is effectively the factory function for the LevelIterator
 // struct.
-func (self *LevelTable) NewIterator(prefix []byte) (Iterator,error) {
+func (self *LevelTable) NewIterator(prefix string) (Iterator,error) {
 	iter := new(LevelIterator)
-	if prefix != nil {
-		iter.iterator=self.db.NewIterator(util.BytesPrefix(prefix),nil)
+	if prefix != "" {
+		iter.iterator=self.db.NewIterator(util.BytesPrefix([]byte(prefix)),nil)
 	} else {
 		iter.iterator=self.db.NewIterator(nil,nil)
 	}
