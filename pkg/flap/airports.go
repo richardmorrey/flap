@@ -92,7 +92,7 @@ func (self  *Airports) LoadAirports(filepath string) error {
 		if err != nil {
 			return err
 		}
-		err = self.table.Put([]byte(line[5]),&ap)
+		err = self.table.Put(line[5],&ap)
 		if (err != nil) {
 			return err
 		} 
@@ -110,7 +110,7 @@ func (self *Airports) GetAirport(code  ICAOCode) (Airport,error) {
 		return Airport{},ETABLENOTOPEN
 	}
 
-	err := self.table.Get(code[:],&airport)
+	err := self.table.Get(code.ToString(),&airport)
 	if (err != nil) {
 		return Airport{},err
 	}

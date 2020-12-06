@@ -133,8 +133,8 @@ func TestAddFlight(t *testing.T) {
 }
 
 func createFlight(i int, start int, end int) *Flight {
-	f,_ :=  NewFlight(Airport{NewICAOCode(string(i+64)),LatLon{float64(i),float64(i)}},EpochTime(start),
-		Airport{NewICAOCode(string(i+65)),LatLon{float64(i+1),float64(i+1)}},EpochTime(end))
+	f,_ :=  NewFlight(Airport{NewICAOCode(string(rune(i+64))),LatLon{float64(i),float64(i)}},EpochTime(start),
+		Airport{NewICAOCode(string(rune(i+65))),LatLon{float64(i+1),float64(i+1)}},EpochTime(end))
 	return f
 }
 
@@ -161,10 +161,10 @@ func checkFlight(t *testing.T,flight Flight, i int,interval int) {
 	if flight.End !=  EpochTime((i+1)*interval) {
 		t.Error("Incorrect end", flight)
 	}
-	if flight.FromAirport != NewICAOCode(string(i+64)) {
+	if flight.FromAirport != NewICAOCode(string(rune(i+64))) {
 		t.Error("Incorrect from", flight)
 	}
-	if flight.ToAirport != NewICAOCode(string(i+65)) {
+	if flight.ToAirport != NewICAOCode(string(rune(i+65))) {
 		t.Error("incorrect to", flight)
 	}
 }

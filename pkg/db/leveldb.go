@@ -155,7 +155,7 @@ func (self *LevelBatchWrite) Put(key string, s Serialize) error {
 	return self.write(false)
 }
 
-// Delete is thin wrapper on leveldb Batch put
+// Delete is thin wrapper on leveldb Batch delete
 func (self* LevelBatchWrite) Delete(key string) error {
 	self.batch.Delete([]byte(key))
 	return self.write(false)

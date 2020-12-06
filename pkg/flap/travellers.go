@@ -6,8 +6,7 @@ import (
 	"encoding/binary"
 	"bytes"
 	"errors"
-	//"unsafe"
-	//"fmt"
+	"encoding/hex"
 )
 
 var ETABLENOTOPEN = errors.New("Table not open")
@@ -40,8 +39,6 @@ func (self *Passport) FromString(s string) error {
 	copy(self.Issuer[:], s[10:])
 	return nil
 }
-
-type passportKey [20]byte
 
 type Traveller struct {
 	passport    Passport
@@ -165,13 +162,14 @@ func (self *Traveller) submitFlight(flight *Flight,now EpochTime, taxiOH Kilomet
 // Passport struct. as the SHA1 of fields in the passport structure.
 // Note hash algorithm is use to ensure no hotspots when iterating over
 //keys by prefix.
-func (self *Passport) generateKey() (passportKey,error) {
+func (self *Passport) generateKey() (string,error) {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.LittleEndian,self)
 	if err != nil {
-		return passportKey{},err
+		return "",err
 	}
-	return sha1.Sum(buf.Bytes()), nil
+	sha1 := sha1.Sum(buf.Bytes())
+	return hex.EncodeToString(sha1[:]), nil
 }
 
 type Travellers struct {
@@ -305,14 +303,10 @@ func (self *TravellersIterator) Release() error {
 	return self.iterator.Error()
 }
 
-func (self *Travellers) NewIterator(prefix []byte) (*TravellersIterator,error) {
+func (self *Travellers) NewIterator(prefix string) (*TravellersIterator,error) {
 	iter := new(TravellersIterator)
 	var err error
-	if prefix != nil {
-		iter.iterator,err=self.table.NewIterator(prefix)
-	} else {
-		iter.iterator,err=self.table.NewIterator(nil)
-	}
+	iter.iterator,err=self.table.NewIterator(prefix)
 	return iter,err
 }
 
@@ -330,14 +324,10 @@ func (self* TravellersSnapshot) Release() error {
 	return self.ss.Release()
 }
 
-func (self *TravellersSnapshot) NewIterator(prefix []byte) (*TravellersIterator,error) {
+func (self *TravellersSnapshot) NewIterator(prefix string) (*TravellersIterator,error) {
 	iter := new(TravellersIterator)
 	var err error
-	if prefix != nil {
-		iter.iterator,err=self.ss.NewIterator(prefix)
-	} else {
-		iter.iterator,err=self.ss.NewIterator(nil)
-	}
+	iter.iterator,err=self.ss.NewIterator(prefix)
 	return iter,err
 }
 

@@ -260,7 +260,7 @@ func (self *CountriesAirportsRoutes) getCountry(countryCode flap.IssuingCountry)
 	}
 
 	var country Country
-	err := self.table.Get(countryCode[:],&country)
+	err := self.table.Get(string(countryCode[:]),&country)
 	return country,err
 }
 
@@ -283,7 +283,7 @@ func (self  *CountriesAirportsRoutes) putCountry(cs countryState) error {
 	}
 
 	// Put record
-	err := self.table.Put(cs.countryCode[:], cs.country)
+	err := self.table.Put(string(cs.countryCode[:]), cs.country)
 	if err != nil {
 		return logError(err)
 	}

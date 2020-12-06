@@ -44,19 +44,19 @@ const backfillRecordKey="backfill"
 func (self *Administrator)  Load() {
 
 	// FLAP Parameters
-	logError(self.table.Get([]byte(paramsRecordKey),&self.params))
+	logError(self.table.Get(paramsRecordKey,&self.params))
 
 	// Promises predictor
 	self.createPredictor()
 	if self.validPredictor() {
-		logError(self.table.Get([]byte(predictorRecordKey), self.predictor))
+		logError(self.table.Get(predictorRecordKey, self.predictor))
 	}
 
 	// Promises correction
-	logError(self.table.Get([]byte(correctionRecordKey), &self.pc))
+	logError(self.table.Get(correctionRecordKey, &self.pc))
 
 	// Backfill state
-	logError(self.table.Get([]byte(backfillRecordKey), &self.bs))
+	logError(self.table.Get(backfillRecordKey, &self.bs))
 
 }
 
@@ -64,27 +64,27 @@ func (self *Administrator)  Load() {
 func (self* Administrator) Save() error {
 
 	// FLAP parameters
-	err := self.table.Put([]byte(paramsRecordKey),&(self.params))
+	err := self.table.Put(paramsRecordKey,&(self.params))
 	if err != nil {
 		return logError(err)
 	}
 
 	// Promises predictor
 	if self.validPredictor() {
-		err = self.table.Put([]byte(predictorRecordKey), self.predictor)
+		err = self.table.Put(predictorRecordKey, self.predictor)
 		if err != nil {
 			return logError(err)
 		}
 	}
 
 	// Promises correction
-	err = self.table.Put([]byte(correctionRecordKey), &self.pc)
+	err = self.table.Put(correctionRecordKey, &self.pc)
 	if err != nil {
 		return logError(err)
 	}
 
 	// Backfill state
-	err = self.table.Put([]byte(backfillRecordKey), &self.bs)
+	err = self.table.Put(backfillRecordKey, &self.bs)
 	if err != nil {
 		return logError(err)
 	}
@@ -121,7 +121,7 @@ func (self *Administrator) SetParams(params FlapParams) error {
 	for n:=params.Threads; n != 0 ; n=n & (n-1) {
 		bits++;
 	}
-	if bits >  1 {
+	if bits >  1 || params.Threads > 16 {
 		return EINVALIDFLAPPARAMS
 	}
 

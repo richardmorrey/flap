@@ -141,7 +141,7 @@ const summaryStatsRecordKey="summarystats"
 
 // load loads engine state from given table
 func (self *summaryStats) load(t db.Table) error {
-	err :=  t.Get([]byte(summaryStatsRecordKey),self)
+	err :=  t.Get(summaryStatsRecordKey,self)
 	if err != nil {
 		return err
 	}
@@ -153,7 +153,7 @@ func (self *summaryStats) load(t db.Table) error {
 
 // save saves engine state to given table
 func (self *summaryStats)  save(t db.Table) error {
-	return t.Put([]byte(summaryStatsRecordKey),self)
+	return t.Put(summaryStatsRecordKey,self)
 }
 
 // compile gathers points covering the whole modelling period for outputing graphs as well
@@ -235,12 +235,12 @@ const modelstateRecordKey="modelstate"
 
 // load loads engine state from given table
 func (self *modelState) load(t db.Table) error {
-	return t.Get([]byte(modelstateRecordKey),self)
+	return t.Get(modelstateRecordKey,self)
 }
 
 // save saves engine state to given table
 func (self *modelState)  save(t db.Table) error {
-	return t.Put([]byte(modelstateRecordKey),self)
+	return t.Put(modelstateRecordKey,self)
 }
 
 // NewEngine is factory function for Engine

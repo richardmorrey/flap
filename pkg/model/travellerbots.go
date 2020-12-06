@@ -146,7 +146,7 @@ const botStatsRecordKey="botstats"
 // load loads bot stats from given table
 func (self *botStats) load(t db.Table, index int) error {
 	key := fmt.Sprintf("%s-%2d",botStatsRecordKey,index)
-	err :=  t.Get([]byte(key),self)
+	err :=  t.Get(key,self)
 	if len(self.Rows) == 0 {
 		self.newRow()
 	}
@@ -156,7 +156,7 @@ func (self *botStats) load(t db.Table, index int) error {
 // save saves bot stats to given table
 func (self *botStats)  save(t db.Table, index int) error {
 	key := fmt.Sprintf("%s-%2d",botStatsRecordKey,index)
-	return t.Put([]byte(key),self)
+	return t.Put(key,self)
 }
 
 type botStatsCompiled struct {

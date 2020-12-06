@@ -4,6 +4,7 @@ import (
 	"github.com/richardmorrey/flap/pkg/db"
 	"encoding/binary"
 	"encoding/gob"
+	"encoding/hex"
 	"bytes"
 	"math"
 	"errors"
@@ -223,8 +224,8 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 	logDebug("Backfilling with ", threads," threads")
 	stats := make(chan UpdateBackfillStats, threads)
 	var wg sync.WaitGroup
-	delta := (math.MaxUint8+1)/threads
-	for i := uint(0); i < math.MaxUint8; i+=delta {
+	delta := 16/threads
+	for i := uint(0); i < 16; i+=delta {
 		wg.Add(1)
 		t :=  func(s byte,e byte) {stats <- self.updateSomeTravellers(s,e,ut.Share,now,ss);wg.Done()}
 		go t(byte(i),byte(i+delta-1))
@@ -287,7 +288,8 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 
 		// Iterate over current start byte
 		prefix[0]=byte(pc)
-		it,err := ss.NewIterator(prefix[:])
+		prefixstr := hex.EncodeToString(prefix[:])
+		it,err := ss.NewIterator(prefixstr[1:])
 		if err != nil {
 			us.Err=err
 			return us

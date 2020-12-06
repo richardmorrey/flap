@@ -23,12 +23,12 @@ func newCountryWeights() *countryWeights {
 const cwFieldName="country weights"
 // save saves the country weights to given table
 func (self *countryWeights) save(table db.Table) error  {
-	return table.Put([]byte(cwFieldName), self)
+	return table.Put(cwFieldName, self)
 }
 
 // load attempts to load the country weights from given table
 func (self *countryWeights) load(table db.Table) error {
-	return table.Get([]byte(cwFieldName), self)
+	return table.Get(cwFieldName, self)
 }
 
 // update  adds country held in countryState to the list of country weights

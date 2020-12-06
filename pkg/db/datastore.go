@@ -123,11 +123,28 @@ func (self *DatastoreSnapshot) NewIterator(prefix string) (Iterator,error) {
 // Thin wrapper on DatastoreDB batch writer
 type DatastoreBatchWrite struct {
 	batchSize int
+	table *DatastoreTable
+	keys []*datastore.Key
+	entities []*DatastoreEntity
 }
 
 // Put is thin wrapper on leveldb Batch put 
 func (self *DatastoreBatchWrite) Put(key string, s Serialize) error {
-	return ENOTIMPLEMENTED
+	
+	// Generate key and entity to store
+	k := datastore.NameKey(self.table.kind, key, nil)
+	var buff bytes.Buffer
+	err := s.To(&buff)
+	if err != nil {
+		return err
+	}
+
+	// Add to batch and attempt write
+	self.keys = append(self.keys,k)
+	e := new(DatastoreEntity)
+	e.Blob = buff.Bytes()
+	self.entities = append(self.entities,e)
+	return self.write(false)
 }
 
 // Delete is thin wrapper on leveldb Batch put
@@ -137,12 +154,20 @@ func (self* DatastoreBatchWrite) Delete(key string) error {
 
 // Release forces write of any remaining data in the current batch
 func (self* DatastoreBatchWrite) Release() error {
-	return ENOTIMPLEMENTED
+	return self.write(true)
 }
 
 // write provides convenient way to write in batches of fixed size
 func (self* DatastoreBatchWrite) write(flush bool) error {
-	return ENOTIMPLEMENTED
+	if flush || len(self.keys) % self.batchSize == 0 {
+		_, err := self.table.client.PutMulti(self.table.ctx, self.keys, self.entities)
+		if err == nil {
+			self.keys = self.keys[:0]
+			self.entities = self.entities[:0]
+		}
+		return err
+	}
+	return nil
 }
 
 type DatastoreEntity struct {
@@ -207,7 +232,12 @@ func (self *DatastoreTable) TakeSnapshot() (Snapshot,error) {
 
 // MakeBatch creates a new DatastoreDB batch object for batch writes
 func (self* DatastoreTable) MakeBatch(batchSize int) (BatchWrite,error) {
-	return nil,ENOTIMPLEMENTED
+	b := new(DatastoreBatchWrite)
+	b.batchSize =  batchSize
+	b.table = self
+	b.keys = make([]*datastore.Key,0,batchSize)
+	b.entities = make([]*DatastoreEntity,0,batchSize)
+	return b,nil
 }
 
 // close closes a table, of which there is no concept in datastore

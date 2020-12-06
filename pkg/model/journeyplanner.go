@@ -148,13 +148,13 @@ func (self *journeyPlanner) addJourney(pp flap.Passport, j journey) error {
 
 	// Retreive any existing list for this day/traveller
 	var pd plannerDay
-	self.table.Get([]byte(recordKey),&pd)
+	self.table.Get(recordKey,&pd)
 
 	// Add journey to list
 	pd.journies = append(pd.journies,j)
 
 	// Save amended list
-	err := self.table.Put([]byte(recordKey),&pd)
+	err := self.table.Put(recordKey,&pd)
 	if err != nil {
 		return err
 	}
@@ -323,7 +323,7 @@ func (self *journeyPlanner) NewIterator(date flap.EpochTime) (*journeyPlannerIte
 	prefix := date.ToTime().UTC().Format("2006-01-02")
 	iter := new(journeyPlannerIterator)
 	var err error
-	iter.iterator,err = self.table.NewIterator([]byte(prefix))
+	iter.iterator,err = self.table.NewIterator(prefix)
 	return iter,err
 }
 

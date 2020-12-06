@@ -293,15 +293,27 @@ func TestUpdateTripsAndBackfillOne(t  *testing.T) {
 
 }
 
-func TestUpdateTripsAndBackfillThreaded(t *testing.T) {
-	for threads:=1; threads <= 256; threads *=2 {
-		testUpdateTripsThreaded(t,threads)
+func TestUpdateTripsAndBackfillThreadedDatastore(t *testing.T) {
+	for threads:=1; threads <= 1; threads *=2 {
+		db := db.NewDatastoreDB("flaptest")
+		if db == nil {
+			t.Error("Failed to create db object")
+		}
+		testUpdateTripsThreaded(t,threads,db)
+		dropTravellers(db)
+		db.Release()
 	}
 }
 
-func testUpdateTripsThreaded(t *testing.T,threads int) {
-	db:= enginesetup(t)
-	defer engineteardown(db)
+func TestUpdateTripsAndBackfillThreaded(t *testing.T) {
+	for threads:=1; threads <= 16; threads *=2 {
+		db := enginesetup(t)
+		testUpdateTripsThreaded(t,threads,db)
+		engineteardown(db)
+	}
+}
+
+func testUpdateTripsThreaded(t *testing.T,threads int, db db.Database) {
 	engine := NewEngine(db,0,"")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,Threads:byte(threads)}
 	err := engine.Administrator.SetParams(paramsIn)
