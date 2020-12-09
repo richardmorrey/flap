@@ -294,7 +294,7 @@ func TestUpdateTripsAndBackfillOne(t  *testing.T) {
 }
 
 func TestUpdateTripsAndBackfillThreadedDatastore(t *testing.T) {
-	for threads:=1; threads <= 1; threads *=2 {
+	for threads:=1; threads <= 16; threads *=2 {
 		db := db.NewDatastoreDB("flaptest")
 		if db == nil {
 			t.Error("Failed to create db object")
@@ -314,7 +314,7 @@ func TestUpdateTripsAndBackfillThreaded(t *testing.T) {
 }
 
 func testUpdateTripsThreaded(t *testing.T,threads int, db db.Database) {
-	engine := NewEngine(db,0,"")
+	engine := NewEngine(db,3,".")
 	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,Threads:byte(threads)}
 	err := engine.Administrator.SetParams(paramsIn)
 	if err != nil {

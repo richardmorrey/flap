@@ -291,7 +291,7 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 		prefixstr := hex.EncodeToString(prefix[:])
 		it,err := ss.NewIterator(prefixstr[1:])
 		if err != nil {
-			us.Err=err
+			us.Err= logError(err)
 			return us
 		}
 		for it.Next() {
