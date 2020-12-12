@@ -20,6 +20,19 @@ func (self *Song) From(buff *bytes.Buffer) error {
 	return nil
 }
 
+type Character struct {
+	char  string
+}
+
+func (self *Character) To(buff *bytes.Buffer) error {
+	buff.WriteString(self.char)
+	return nil
+}
+
+func (self *Character) From(buff *bytes.Buffer) error {
+	self.char,_ = buff.ReadString(0)
+	return nil
+}
 
 func dotestCreateTable(db Database,t *testing.T) {
 	_,err := db.CreateTable("bands")
@@ -148,6 +161,38 @@ func dotestIterate(db Database,t *testing.T) {
 	if !reflect.DeepEqual(songlistretrieved,songlist) {
 		t.Error("Retrieved song list doesnt match", songlist, songlistretrieved)
 	}
+} 
+
+func dotestIterateSnapshotASCII(db Database,t *testing.T) {
+	table,_ := db.CreateTable("characters")
+	for i :=0; i < 256; i++ {
+		v := Character{char:string(rune(i))}
+		table.Put(string(rune(i)), &v)
+	}
+	ss,err := table.TakeSnapshot()
+	if err != nil {
+		t.Error("Failed to create snapshot")
+	}
+	for i :=0; i < 256; i++ {
+		iterator,err := ss.NewIterator(string(rune(i)))
+		if err != nil {
+			t.Error("Failed to create iterator from snapshot", err)
+		}
+		var sOut Character
+		if !iterator.Next(){
+			t.Error("Failed to iterate single value")
+		}
+		iterator.Value(&sOut)
+		if sOut.char !=string(rune(i)){
+			t.Error("Failed to get expected value",sOut,rune(i))
+		}
+		if iterator.Next() {
+			t.Error("Succeeded in iterating past single value")
+		}
+		if iterator.Error() != nil {
+			t.Error("Reporting error at end of successful iteration")
+		}
+	}
 }
 
 func dotestIterateSnapshot(db Database,t *testing.T) {
@@ -175,9 +220,39 @@ func dotestIterateSnapshot(db Database,t *testing.T) {
 		iterator.Value(&sOut)
 		songlistretrieved[iterator.Key()] = sOut
 	}
+	if iterator.Error() != nil {
+		t.Error("Reporting error at end of successful iteration")
+	}
 	if !reflect.DeepEqual(songlistretrieved,songlist) {
 		t.Error("Retrieved song list doesnt match", songlist, songlistretrieved)
 	}
+}
+
+func dotestIterateSnapshotPrefixEmpty(db Database,t *testing.T) {
+	table,_ := db.CreateTable("songs")
+	songlist:= map[string]Song{
+		"The Kinks": Song{title:"Sitting in My Hotel"},
+		"Sacred Paws": Song{title:"Wet Graffiti"},
+		"The Go-betweens": Song{title:"Born to a Family"},
+	}
+	for artist, song := range(songlist) {
+		table.Put(artist, &song)
+	}
+	ss,err := table.TakeSnapshot()
+	if err != nil {
+		t.Error("Failed to create snapshot")
+	}
+	iterator,err := ss.NewIterator("A")
+	if err != nil {
+		t.Error("Failed to create Iterator", err)
+	}
+	if iterator.Next() {
+		t.Error("Next returning true for emtpy iterator")
+	}	
+	if iterator.Error() != nil {
+		t.Error("Reporting error at end of successful iteration")
+	}
+
 }
 
 func dotestIteratePrefix(db Database,t *testing.T) {
@@ -201,12 +276,35 @@ func dotestIteratePrefix(db Database,t *testing.T) {
 		iterator.Value(&sOut)
 		songlistretrieved[iterator.Key()] = sOut
 	}
+	if iterator.Error() != nil {
+		t.Error("Reporting error at end of successful iteration")
+	}
+
 	if reflect.DeepEqual(songlistretrieved,songlist) {
 		t.Error("Retrieved song list matches", songlist, songlistretrieved)
 	}
 	delete(songlist,"Sacred Paws")
 	if !reflect.DeepEqual(songlistretrieved,songlist) {
 		t.Error("Retrieved song lists dont match", songlist, songlistretrieved)
+	}
+}
+
+func dotestIteratePrefixEmpty(db Database,t *testing.T) {
+	table,_ := db.CreateTable("songs")
+	songlist:= map[string]Song{
+		"The Kinks": Song{title:"Sitting in My Hotel"},
+		"Sacred Paws": Song{title:"Wet Graffiti"},
+		"The Go-betweens": Song{title:"Born to a Family"},
+	}
+	for artist, song := range(songlist) {
+		table.Put(artist, &song)
+	}
+	iterator,err := table.NewIterator("A")
+	if err != nil {
+		t.Error("Failed to create Iterator", err)
+	}
+	if iterator.Next() {
+		t.Error("Next returning true for emtpy iterator")
 	}
 }
 

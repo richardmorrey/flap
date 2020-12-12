@@ -42,8 +42,20 @@ type BotSpec struct {
 	MonthWeights		[]weight
 }
 
+type DBType		uint8
+const (
+	dbLevel DBType = iota
+	dbDatastore
+)
+
+type DBSpec struct {
+	DBType			DBType
+	ConnectionString	string
+}
+
 type ModelParams struct {
 	WorkingFolder		string
+	DBSpec			DBSpec
 	DataFolder		string
 	TrialDays		flap.Days
 	DTAlgo			string
@@ -198,7 +210,7 @@ type Engine struct {
 	FlapParams 			flap.FlapParams
 	ModelParams			ModelParams
 	plannedFlights			[]plannedFlight
-	db				*db.LevelDB
+	db				db.Database
 	table				db.Table
 	verbose				verboseStats
 }
@@ -277,7 +289,12 @@ func NewEngine(configFilePath string) (*Engine,error) {
 	NewLogger(e.ModelParams.LogLevel,e.ModelParams.WorkingFolder)
 
 	// Create db
-	e.db = db.NewLevelDB(e.ModelParams.WorkingFolder)
+	switch (e.ModelParams.DBSpec.DBType) {
+		case dbDatastore:
+			e.db = db.NewDatastoreDB(e.ModelParams.DBSpec.ConnectionString)
+		default:
+			e.db = db.NewLevelDB(e.ModelParams.WorkingFolder)
+	}
 
 	// Create model table
 	table,err := e.db.OpenTable(modelTableName)

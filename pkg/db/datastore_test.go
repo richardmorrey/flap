@@ -66,6 +66,16 @@ func TestDatastoreIterate(t *testing.T) {
 	dotestIterate(db,t)
 }
 
+func TestDatastoreIteratePrefixEmpty(t *testing.T) {
+	db := setupDatastore(t)
+	if db == nil {
+		return
+	}
+
+	defer teardownDatastore(db)
+	dotestIteratePrefixEmpty(db,t)
+}
+
 func TestDatastoreIterateSnapshot(t *testing.T) {
 	db := setupDatastore(t)
 	if db == nil {
@@ -74,6 +84,26 @@ func TestDatastoreIterateSnapshot(t *testing.T) {
 
 	defer teardownDatastore(db)
 	dotestIterateSnapshot(db,t)
+}
+
+func TestDatastoreIterateSnapshotPrefixEmpty(t *testing.T) {
+	db := setupDatastore(t)
+	if db == nil {
+		return
+	}
+
+	defer teardownDatastore(db)
+	dotestIterateSnapshotPrefixEmpty(db,t)
+}
+
+func TestDatastoreIterateSnapshotASCII(t *testing.T) {
+	db := setupDatastore(t)
+	if db == nil {
+		return
+	}
+
+	defer teardownDatastore(db)
+	dotestIterateSnapshotASCII(db,t)
 }
 
 func TestDatastoreIteratePrefix(t *testing.T) {

@@ -77,10 +77,27 @@ func TestIterateSnapshot(t *testing.T) {
 	dotestIterateSnapshot(db,t)
 }
 
+func TestIterateSnapshotPrefixEmpty(t *testing.T) {
+	db := NewLevelDB(LEVELDBFOLDER)
+	defer teardown(db)
+	dotestIterateSnapshotPrefixEmpty(db,t)
+}
+func TestIterateSnapshotASCII(t *testing.T) {
+	db := NewLevelDB(LEVELDBFOLDER)
+	defer teardown(db)
+	dotestIterateSnapshotASCII(db,t)
+}
+
 func TestIteratePrefix(t *testing.T) {
 	db := NewLevelDB(LEVELDBFOLDER)
 	defer teardown(db)
 	dotestIteratePrefix(db,t)
+}
+
+func TestIteratePrefixEmpty(t *testing.T) {
+	db := NewLevelDB(LEVELDBFOLDER)
+	defer teardown(db)
+	dotestIteratePrefixEmpty(db,t)
 }
 
 func TestBatchWrite(t *testing.T) {

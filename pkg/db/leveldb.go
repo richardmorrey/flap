@@ -25,6 +25,7 @@ type Database interface
 	CloseTable(string) error
 	DropTable(string) error
 	CreateTable(string) (Table,error)
+	Release() error
 }
 
 type Reader interface 

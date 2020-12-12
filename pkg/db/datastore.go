@@ -8,13 +8,18 @@ import (
 	"google.golang.org/api/iterator"
 )
 
+// buildDatastoreQuery emulates querying with a prefix by building a
+// quuery for all keys greater than the given prefix but less than
+// the given prefix with the larged possbile unicode character 
+// appended
 func buildDatastoreQuery(kind string, prefix string) *datastore.Query {
 	
 	var q *datastore.Query
 
 	if prefix != "" {
 		keystart := datastore.NameKey(kind, prefix, nil)
-		keyend := datastore.NameKey(kind, prefix+"\ufffd", nil)
+		keyendstr := prefix+"\ufffd"
+		keyend := datastore.NameKey(kind, keyendstr, nil)
 		q = datastore.NewQuery(kind).Filter("__key__  >=", keystart).
 		Filter("__key__  <", keyend)
 	} else {
@@ -45,8 +50,9 @@ type DatastoreIterator struct {
 // Thin wrapper on DatastoreDB method
 func (self *DatastoreIterator) Next() (bool) {
     if self.i != nil {
-	self.k, self.err = self.i.Next(self.e)
-	if self.err != iterator.Done {
+	var err error
+	self.k, err = self.i.Next(self.e)
+	if err != iterator.Done {
         	return true
 	}
     }
