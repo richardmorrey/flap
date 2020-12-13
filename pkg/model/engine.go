@@ -326,15 +326,13 @@ func (self *Engine) Release() {
 const modelTableName="model"
 
 // Build prepares all persitent data files in order to be able to run the model in the configured data folder. It
-// (a) Builds the countries-airports-routes and the country weights file that drive flight selection.
-// (b) Ensures the Flap library Travellers Table is empty
-// (c) Resets statistics and flight plans from previous model runs.
+// builds the countries-airports-routes and the country weights file that drive flight selection.
 func (self *Engine) Build() error {
 	
 	fmt.Printf("Building...\n")
 
 	//  Reset flap and load airports
-	flap.Reset(self.db)
+	self.Reset(true)
 	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
 	err := fe.Administrator.SetParams(self.FlapParams)
 	if (err != nil) {
@@ -363,16 +361,6 @@ func (self *Engine) Build() error {
 		return logError(err)
 	}
 	
-	// Reset journey planner
-	dropJourneyPlanner(self.db) 
-
-	// Reset stats
-	var ss summaryStats
-	ss.save(self.table)
-	var bs botStats
-	for i,_ := range self.ModelParams.BotSpecs {
-		bs.save(self.table,i)
-	}
 	fmt.Printf("...Finished\n")
 	return nil
 }
@@ -441,24 +429,14 @@ func (self* Engine) prepare() (*CountriesAirportsRoutes, *TravellerBots, *flap.E
 		return nil,nil,nil,nil,logError(err)
 	}
 	
-	// Create engine and load airports
-	err = flap.Reset(self.db)
+	// Create engine
 	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
-	err = fe.Administrator.SetParams(self.FlapParams)
-	if (err != nil) {
-		return nil,nil,nil,nil,logError(err)
-	}
-	err =fe.Airports.LoadAirports(filepath.Join(self.ModelParams.DataFolder,"airports.dat"))
-	if (err != nil) {
-		return nil,nil,nil,nil,logError(err)
-	}
 
 	// Load Journey planner
 	jp,err := NewJourneyPlanner(self.db)
 	if (err != nil) {
 		return nil,nil,nil,nil,logError(err)
 	}
-
 	return cars,travellerBots,fe,jp,nil
 }
 
@@ -558,15 +536,40 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 	return us,flapParams.DailyTotal,nil
 }
 
+// Resets state of  model and/or flap engine.
+// If destroy is true, all state is destroyed and otherwise only
+// state associated with current model run.
+func (self *Engine) Reset(destroy bool) error {
+
+	// Delete journey planner state
+	dropJourneyPlanner(self.db) 
+
+	// Delete model run state
+	self.table.Delete(modelstateRecordKey)
+	self.table.Delete(summaryStatsRecordKey)
+	self.table.Delete(botStatsRecordKey)
+
+	// Destroy model
+	if destroy {
+		dropCountriesAirportsRoutes(self.db)
+		self.table.Delete(cwFieldName)
+	}
+
+	// Delete flap state
+	return flap.Reset(self.db,destroy)
+}
+
 // Runs the model with configuration as specified in ModelParams, writing results out
 // to multiple CSV files in the specified working folder.
 func (self *Engine) Run(warmOnly bool) error {
 
-	// Set up data structures
-	err := flap.Reset(self.db)
+	// Reset journey planner
+	err := self.Reset(false)
 	if err != nil {
 		return logError(err)
 	}
+
+	// Set up data structures
 	cars,tb,fe,jp,err := self.prepare()
 	if err != nil {
 		return logError(err)
@@ -582,11 +585,17 @@ func (self *Engine) Run(warmOnly bool) error {
 		planDays += self.FlapParams.Promises.MaxDays
 	} 
 
-	// Reset model state
+	// Initialize model state and stats
 	var ms modelState
 	err = ms.save(self.table)
 	if err != nil {
 		return logError(err)
+	}
+	var ss summaryStats
+	ss.save(self.table)
+	var bs botStats
+	for i,_ := range self.ModelParams.BotSpecs {
+		bs.save(self.table,i)
 	}
 
 	// Calculate days to run
@@ -689,10 +698,6 @@ func (self *Engine) ShowTraveller(band uint64,bot uint64) (flap.Passport,string,
 	//  Initialize flap
 	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
 	err = fe.Administrator.SetParams(self.FlapParams)
-	if (err != nil) {
-		return p,"","","",logError(err)
-	}
-	err =fe.Airports.LoadAirports(filepath.Join(self.ModelParams.DataFolder,"airports.dat"))
 	if (err != nil) {
 		return p,"","","",logError(err)
 	}

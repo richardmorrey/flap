@@ -55,7 +55,7 @@ func NewAirports(database db.Database)  *Airports{
 }
 
 // Drops airports table from given database
-func dropAirports(database db.Database) error {
+func DropAirports(database db.Database) error {
 	return database.DropTable(airportsTableName)
 }
 

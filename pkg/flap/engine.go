@@ -105,19 +105,22 @@ func NewEngine(database db.Database, logLevel LogLevel,logFolder string) *Engine
 }
 
 // Reset drops ALL FLAP tables from given database
-// Call with care.
-func Reset(database db.Database) error {
+// holding state related to travellers. If destroy is true
+// all tables are dropped
+func Reset(database db.Database, destroy bool) error {
 	err := dropAdministrator(database)
-	if err != nil && err != db.ETABLENOTFOUND {
-		return err
-	}
-	err = dropAirports(database)
 	if err != nil && err != db.ETABLENOTFOUND {
 		return err
 	}
 	err = dropTravellers(database)
 	if err != nil && err != db.ETABLENOTFOUND {
 		return err
+	}
+	if destroy {
+		err = DropAirports(database)
+		if err != nil && err != db.ETABLENOTFOUND {
+			return err
+		}
 	}
 	return nil
 }

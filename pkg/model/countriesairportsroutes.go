@@ -68,14 +68,20 @@ type CountriesAirportsRoutes struct {
 	res		[]RouteWithWeight
 } 
 
+const carTableName = "countriesairportsroutes"
+
+// dropCountriesAirportsRoutes deletes the table holding all journey planner state
+func dropCountriesAirportsRoutes(database db.Database) error {
+	return database.DropTable(carTableName)
+}
 
 // NewCountriesAirportsRoutes creates a new instance of CountryAirportsRoutes
 // ensuring a table is created for its contents in the provided database
 func NewCountriesAirportsRoutes(database db.Database) *CountriesAirportsRoutes {
 	car := new(CountriesAirportsRoutes)
-	table,err := database.OpenTable("countriesairportsroutes")
+	table,err := database.OpenTable(carTableName)
 	if err != nil {
-		table,err = database.CreateTable("countriesairportsroutes")
+		table,err = database.CreateTable(carTableName)
 		if err != nil {
 			return nil
 		}

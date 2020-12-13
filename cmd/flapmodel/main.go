@@ -65,6 +65,18 @@ Works like show but returns kml for import into Google Earth instead of JSON.
 promises <botspec> <index>
 Works like show but returns made promises instead of the trip history.
 
+warm
+Resets and then warms for a new model run
+
+oneday <YYYY-mm-dd>
+Runs model for the specified day. SHould be preceded by a "warm"
+
+reset
+Deletes all state associated with current model run
+
+destroy
+Destroys all state including the built model
+
 `)
 	os.Exit(0)
 }
@@ -73,6 +85,28 @@ func main() {
 	configfile := flag.String("configfile","./config.yaml","File path of yaml config file to use")
 	flag.Parse()
 	switch flag.Arg(0){
+		case "destroy":
+			engine,err := model.NewEngine(*configfile)
+			if err != nil {
+				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
+			} else {
+				defer engine.Release()
+	 			err := engine.Reset(true)
+	 			if err != nil {
+		 			fmt.Printf("\nFailed to build model with error '%s'\n",err)
+				}
+			}
+		case "reset":
+			engine,err := model.NewEngine(*configfile)
+			if err != nil {
+				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
+			} else {
+				defer engine.Release()
+	 			err := engine.Reset(false)
+	 			if err != nil {
+		 			fmt.Printf("\nFailed to build model with error '%s'\n",err)
+				}
+			}
 		case "build":
 			engine,err := model.NewEngine(*configfile)
 			if err != nil {
