@@ -334,6 +334,7 @@ func (self *Engine) Build() error {
 	//  Reset flap and load airports
 	self.Reset(true)
 	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
+	defer fe.Release()
 	err := fe.Administrator.SetParams(self.FlapParams)
 	if (err != nil) {
 		return logError(err)
@@ -574,6 +575,7 @@ func (self *Engine) Run(warmOnly bool) error {
 	if err != nil {
 		return logError(err)
 	}
+	defer fe.Release()
 	err = fe.Administrator.SetParams(self.FlapParams)
 	if err != nil {
 		return logError(err)
@@ -656,11 +658,7 @@ func (self *Engine) RunOneDay(startOfDay flap.EpochTime) error {
 	if err != nil {
 		return logError(err)
 	}
-
-	err = fe.Administrator.SetParams(self.FlapParams)
-	if err != nil {
-		return logError(err)
-	}
+	defer fe.Release()
 
 	_,_,err = self.modelDay(startOfDay,cars,tb,fe,jp,nil)
 	return err
@@ -697,11 +695,8 @@ func (self *Engine) ShowTraveller(band uint64,bot uint64) (flap.Passport,string,
 
 	//  Initialize flap
 	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
-	err = fe.Administrator.SetParams(self.FlapParams)
-	if (err != nil) {
-		return p,"","","",logError(err)
-	}
-
+	defer fe.Release()
+	
 	// Resolve given spec to a passport and look up in the travellers db
 	p,err = travellerBots.getPassport(botId{bandIndex(band),botIndex(bot)})
 	if err != nil {

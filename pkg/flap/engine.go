@@ -426,3 +426,8 @@ func (self *Engine) Make(passport Passport, proposal *Proposal) error {
 	return err
 }
 
+// Release saves state and clears up resources when instance is finished with
+func (self *Engine) Release() {
+	self.Administrator.Save()
+}
+
