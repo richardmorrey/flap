@@ -7,7 +7,7 @@ import (
 	"context"
 	"google.golang.org/api/iterator"
 )
-
+const dataStoreMaxBatch = 500
 // buildDatastoreQuery emulates querying with a prefix by building a
 // quuery for all keys greater than the given prefix but less than
 // the given prefix with the larged possbile unicode character 
@@ -177,7 +177,7 @@ func (self* DatastoreBatchWrite) write(flush bool) error {
 }
 
 type DatastoreEntity struct {
-	Blob []byte
+	Blob []byte `datastore:",noindex"`
 }
 
 // Get is thin wrapper on DatastoreDB.Get
@@ -239,7 +239,10 @@ func (self *DatastoreTable) TakeSnapshot() (Snapshot,error) {
 // MakeBatch creates a new DatastoreDB batch object for batch writes
 func (self* DatastoreTable) MakeBatch(batchSize int) (BatchWrite,error) {
 	b := new(DatastoreBatchWrite)
-	b.batchSize =  batchSize
+	b.batchSize = dataStoreMaxBatch 
+	if batchSize < dataStoreMaxBatch  {
+		b.batchSize = batchSize
+	}
 	b.table = self
 	b.keys = make([]*datastore.Key,0,batchSize)
 	b.entities = make([]*DatastoreEntity,0,batchSize)
@@ -297,19 +300,31 @@ func (self *DatastoreDB) CloseTable(name string) error {
 func (self *DatastoreDB) DropTable(name string) error {
 
 	// Get keys for all entries
-	q := datastore.NewQuery(name)
-	keys, err := self.client.GetAll(self.ctx,q.KeysOnly(),nil)
-	if err != nil {
-		return err
-	}
+	q := datastore.NewQuery(name).Limit(dataStoreMaxBatch)
 
-	// Check for some entries
-	if len(keys) == 0 {
-		return ETABLENOTFOUND
-	}
+	deleted := false
+	for ;; {
+		keys, err := self.client.GetAll(self.ctx,q.KeysOnly(),nil) 
+		if err != nil {
+			return err
+		}
 
-	// Delete all entries
-	return self.client.DeleteMulti(self.ctx,keys)
+		// Check for some entries
+		if len(keys) == 0 {
+			if !deleted {
+				return ETABLENOTFOUND
+			} else {
+				return nil
+			}
+		}
+		deleted = true
+		
+		// Delete all entries
+		err = self.client.DeleteMulti(self.ctx,keys)
+		if err != nil {
+			return err
+		}
+	}
 }
 
 // Release closes all current table instances. To ensure resource clean-up it must be
