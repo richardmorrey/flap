@@ -2,90 +2,57 @@ package main
 
 import (
 	"log"
-	"net/http"
-	"encoding/json"
 	"os"
+	"errors"
+	"net/http"
 	"time"
 	//"fmt"
-	oidc "github.com/coreos/go-oidc"
-	"golang.org/x/net/context"
-	//"golang.org/x/oauth2"
+	"flag"
 	"github.com/gorilla/mux"
 )
 
-var (
-	clientID     = os.Getenv("GOOGLE_OAUTH2_CLIENT_ID")
-	clientSecret = os.Getenv("GOOGLE_OAUTH2_CLIENT_SECRET")
-)
-
-// middlewareIdToken function validates openid id token
-func middlewareIdToken(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		 	pathParams := mux.Vars(r)
-			if raw, ok := pathParams["token"]; !ok {
-				http.Error(w,"Missing argument: id", http.StatusForbidden)
-			} else {
-				parsed,err:= validateIDToken(raw)
-				if err == nil {
-					log.Printf("Authenticated user %s\n", parsed)
-					next.ServeHTTP(w, r)
-				} else {
-					http.Error(w, "Forbidden", http.StatusForbidden)
-				}
-			}
-		})
-}
-
-// validateIDToken validates and parses a raw openid id token
-func validateIDToken(rawIDToken string) (string,error) {
-	
-	// Create verifier
-	ctx := context.Background()
-	provider, err := oidc.NewProvider(ctx, "https://accounts.google.com")
-	if err != nil {
-		return "",err
-	}
-	oidcConfig := &oidc.Config{
-		ClientID: clientID,
-	}
-	verifier := provider.Verifier(oidcConfig)
-
-	// Verify id token
-	idToken, err := verifier.Verify(ctx, rawIDToken)
-	if err != nil {
-		return "",err
-	}
-
-	// Parse token to JSON
-	parsed := new(json.RawMessage)
-	if err := idToken.Claims(parsed); err != nil {
-		return "",err
-	}
-
-	// Render json as string
-	data, err := json.MarshalIndent(parsed, "", "    ")
-	if err != nil {
-		return  "",err
-	}
-	return string(data),nil
-}
-
-// flightHistory returns flight history for specified user 
-func flightHistory(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte("flight history will go here"))
-}
+var ERESTAPIMODENOTSPECIFIED = errors.New("Rest API mode not specified.")
 
 // main is main
 func main() {
-
-	// Top level router
-	r := mux.NewRouter()
 	
-	// REST API router
-	api := r.PathPrefix("/api/v1").Subrouter()
-	api.HandleFunc("/flighthistory/id/{token}", flightHistory).Methods(http.MethodGet)
-	api.Use(middlewareIdToken)
+	// Parse command-line
+	configfile := flag.String("configfile","./config.yaml","File path of yaml config file to use")
+	flag.Parse()
+
+	// Create logger
+	NewLogger(llInfo)
+
+	// Create top level router
+	r := mux.NewRouter()
+
+	// Initialize REST API
+	var api restAPI
+	err := ERESTAPIMODENOTSPECIFIED
+	switch flag.Arg(0){
+
+		case "admin":
+			api = new(adminRestAPI)
+
+		break
+
+		case "user":
+			api = new(userRestAPI)
+		break
+
+		default:
+		break
+
+	}
+	if api != nil {
+		err = api.init(r,*configfile)
+	}
+
+	// Exit on failure
+	if err != nil {
+		logError(err)
+		os.Exit(0)
+	}
 
 	// Static content
 	r.PathPrefix("/app/").Handler(http.FileServer(http.Dir(".")))

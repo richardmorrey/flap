@@ -94,7 +94,7 @@
 	  var user = GoogleAuth.currentUser.get();
 	  var id_token = user.getAuthResponse().id_token;
 	  var xhr = new XMLHttpRequest();
-	  xhr.open('GET', '/api/v1/flighthistory/id/'+id_token);
+	  xhr.open('GET', '/user/v1/flighthistory/id/'+id_token);
 	  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 	  xhr.onload = function() {
 				   alert(xhr.responseText);
