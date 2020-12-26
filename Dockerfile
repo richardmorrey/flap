@@ -29,9 +29,12 @@ RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -
 
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /app/server /app/server
+RUN chmod +x /app/server
 COPY webapp/app ./app
 COPY website ./website
+copy webapp/config.yaml /config.yaml
 COPY doc ./doc
 
 # Run the web service on container startup.
-CMD ["/app/server"]
+ENV APIMODE=admin
+CMD /app/server ${APIMODE}

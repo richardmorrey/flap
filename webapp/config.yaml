@@ -1,0 +1,103 @@
+# FLAP Parameters
+flapparams:
+  # Maximum length of a Trip, in days
+  triplength: 90
+  # Maximum number of flights in a Trip
+  flightsintrip: 50
+  # Maximum gap between flights in a single Journey, in days
+  flightinterval: 1
+  # Promises configuration
+  promises:
+    # Promises algo to use. 0 = promises not enabled, 1 = simple linear, 2 = polynomial
+    algo: 1
+    # Number of data points to maintain for promisesalgo
+    maxpoints: 90
+    # Number of data points to smooth over
+    smoothwindow: 10
+    # Maximum days ahead to allow a promise trip to end
+    maxdays: 90
+    # Maximum number of promises that can be stacked
+    maxstacksize: 3
+    # Degree to use for polynomial predictions
+    degree: 1
+    # Moving average window used for smoothing the pormise correction, if set
+    correctionsmoothwindow: 100
+  # Number of threads to use for backfilling. Must be power of 2. Defaults to 1.
+  threads: 4
+# Model Parameters
+modelparams:
+  # Logging level 0 - off, 1 - errors only, 2 - info,
+  # 3 - debug. Log output to <workingfolder>/flap.log
+  loglevel: 2
+  # Folder to hold working databases and all output files
+  workingfolder: ./working
+  # Folder to place input data files
+  datafolder: ./data
+  # Algortim for calculating start Daily Total from the distance
+  # travelled on each of the trial days. Can be "average" or "max"
+  dtalgo: average
+  # The number of trial days to run the model for initially. During
+  # these days flights are logged but no deductions are made from
+  # distance balances.
+  trialdays: 365
+  # Total days for which to run the model, including trial days.
+  daystorun: 2000
+  # Total number of travellers to simulate
+  totaltravellers: 1000
+  # Definition of one or more "bands" of travellers, with
+  # different travel probabilities. Each band has values as follows
+  #    flyprobability  - Probability of traveller starting a trip each day
+  #    weight          - Defines number of travellers in band, calculated as 
+  #                      totaltravllers*weight/sum(weights)
+  #    monthweights    - Weights that define how planprobability is distributed over
+  #                      the course of a calendar year. Exactly 12 values, one for
+  #                      each month. Distribution applied such that average probability
+  #                      over the course of each calendar year equals planprobability
+  botspecs:
+  - flyprobability: 0.0014
+    weight: 50
+    monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
+  - flyprobability: 0.0041
+    monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
+    weight: 25
+  - flyprobability: 0.0068
+    monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
+    weight: 12
+  - flyprobability: 0.0096
+    monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
+    weight: 6
+  - flyprobability: 0.014
+    monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
+    weight: 5
+  - flyprobability: 0.018
+    monthweights: [200,190,220,200,220,230,240,230,210,220,190,190]
+    weight: 2
+
+  # Database specification
+  dbspec:
+    connectionstring: "flap-258906"
+    dbtype: 1
+  # List of possible lengths for trips in days. For each trip an entry
+  # is chosen at random from the list. To make a length more frequent
+  # add it multiple times.
+  triplengths: [2,3,5,7,7,7,7,14,14,14,14,28]
+  # The date of the first day in the run. Must be start of a day,in  RFC3339 format
+  startday: "2021-01-01T00:00:00Z"
+  # Factor to multiply the Daily Total by each day. Does not apply
+  # during trial days.
+  dailytotalfactor: 0.9995
+  # Delta to add to the Daily Total each day. Does not apply during trial days
+  # Expressed as a percentage of the Daily Total on Day One.
+  dailytotaldelta: 0
+  # Delta to report for. A row is written to summary.csv and bands.csv
+  # every reportdaydelta days. A KML file including all flights taken
+  # is written out every reportdaydelta days.
+  reportdaydelta: 100
+  # Delta for verbose reporting - promise distributions and regressions.
+  # No verbose reporting if value is missing or 0.
+  verbosereportdaydelta: 1000
+  # Width of generated charts, in cm
+  chartwidth: 12.94
+  largechartwidth: 17.19
+  # Number of threads to use for planning. Defaults to 1.
+  threads: 4 

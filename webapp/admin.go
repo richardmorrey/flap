@@ -3,8 +3,10 @@ package main
 import (
 	"net/http"
 	"github.com/gorilla/mux"
-	"github.com/richardmorrey/flap/pkg/model"
+	"github.com/richardmorrey/flap/pkg/model"	
+	"github.com/richardmorrey/flap/pkg/flap"
 	"fmt"
+	"time"
 )
 
 type restAPI interface {
@@ -29,7 +31,7 @@ func (self *adminRestAPI) init(r *mux.Router,configfile string) error {
 
 	api.HandleFunc("/destroy",
 		func (w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/text")
+			w.Header().Set("Content-Type", "text/html")
 			err := self.engine.Reset(true)
 			if err != nil {
 				logError(err)
@@ -38,8 +40,53 @@ func (self *adminRestAPI) init(r *mux.Router,configfile string) error {
 			w.Write([]byte("Done"))
 		})
 
+	api.HandleFunc("/reset",
+		func (w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/html")
+			err := self.engine.Reset(false)
+			if err != nil {
+				logError(err)
+				http.Error(w, fmt.Sprintf("\nFailed to reset model with error '%s'\n",err), http.StatusInternalServerError)
+			}
+			w.Write([]byte("Done"))
+		})
+
+	api.HandleFunc("/build",
+		func (w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/html")
+			err := self.engine.Build()
+			if err != nil {
+				logError(err)
+				http.Error(w, fmt.Sprintf("\nFailed to build model with error '%s'\n",err), http.StatusInternalServerError)
+			}
+			w.Write([]byte("Done"))
+		})
+
+	api.HandleFunc("/warm",
+		func (w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/html")
+			err := self.engine.Run(true)
+			if err != nil {
+				logError(err)
+				http.Error(w, fmt.Sprintf("\nFailed to warm model with error '%s'\n",err), http.StatusInternalServerError)
+			}
+			w.Write([]byte("Done"))
+		})
+	
+	api.HandleFunc("/runoneday",
+		func (w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/html")
+			dayToRun := flap.EpochTime(time.Now().Unix())
+			dayToRun -= dayToRun % flap.SecondsInDay
+			err := self.engine.RunOneDay(dayToRun)
+			if err != nil {
+				logError(err)
+				http.Error(w, fmt.Sprintf("\nFailed to run model for %s  with error '%s'\n",dayToRun.ToTime(),err), http.StatusInternalServerError)
+			}
+			w.Write([]byte("Done"))
+		})
 	return err
-}	
+}
 
 // release releases all state associated with admin rest api
 func (self *adminRestAPI) release() error {
@@ -47,47 +94,3 @@ func (self *adminRestAPI) release() error {
 	return nil
 }
 
-
-/*
-
-	case "destroy":
-			engine,err := model.NewEngine(*configfile)
-			if err != nil {
-				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
-			} else {
-				defer engine.Release()
-	 			err := engine.Reset(true)
-	 			if err != nil {
-		 			fmt.Printf("\nFailed to build model with error '%s'\n",err)
-				}
-			}
-		case "reset":
-			engine,err := model.NewEngine(*configfile)
-			if err != nil {
-				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
-			} else {
-				defer engine.Release()
-	 			err := engine.Reset(false)
-	 			if err != nil {
-		 			fmt.Printf("\nFailed to build model with error '%s'\n",err)
-				}
-			}
-		case "build":
-			engine,err := model.NewEngine(*configfile)
-			if err != nil {
-				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
-			} else {
-				defer engine.Release()
-	 			err := engine.Build()
-	 			if err != nil {
-		 			fmt.Printf("\nFailed to build model with error '%s'\n",err)
-				}
-			}
-		case "warm":
-			engine,err := model.NewEngine(*configfile)
-			if err != nil {
-				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
-			} else {
-				defer engine.Release()
-
-*/

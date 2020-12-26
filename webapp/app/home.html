@@ -21,7 +21,6 @@
   }
 
   function initClient() {
-
     // Initialize the gapi.client object, which app uses to make API requests.
     // Get API key and client ID from API Console.
     // 'scope' field specifies space-delimited list of access scopes.
@@ -31,6 +30,7 @@
 	'ux_mode': 'redirect',
 	'redirect_uri': 'http://localhost:8080/app/home.html' 
     }).then(function () {
+
       GoogleAuth = gapi.auth2.getAuthInstance();
 
       // Listen for sign-in state changes.
