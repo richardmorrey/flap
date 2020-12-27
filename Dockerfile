@@ -28,13 +28,15 @@ RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -
     rm -rf /var/lib/apt/lists/*
 
 # Copy the binary to the production image from the builder stage.
+# Dont forget that working directory for the running applicatin is /
 COPY --from=builder /app/server /app/server
 RUN chmod +x /app/server
 COPY webapp/app ./app
 COPY website ./website
 copy webapp/config.yaml /config.yaml
 COPY doc ./doc
+COPY webapp/data /data
 
 # Run the web service on container startup.
-ENV APIMODE=admin
+ENV APIMODE=user
 CMD /app/server ${APIMODE}

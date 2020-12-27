@@ -124,18 +124,25 @@ func main() {
 				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
 			} else {
 				defer engine.Release()
-				err := engine.Run(false)
+				err := engine.Run(false,0)
 				if err != nil {
 					fmt.Printf("\nFailed to run model with error '%s'\n",err)
 				}
 			}
 		case "warm":
+			var startDay flap.EpochTime
+			if  flag.Arg(1) != "" {
+				startDayTime,err := time.Parse("2006-01-02",flag.Arg(1))
+				if err == nil {
+					startDay = flap.EpochTime(startDayTime.Unix())
+				}
+			}
 			engine,err := model.NewEngine(*configfile)
 			if err != nil {
 				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
 			} else {
 				defer engine.Release()
-				err := engine.Run(true)
+				err := engine.Run(true,startDay)
 				if err != nil {
 					fmt.Printf("\nFailed to warm model with error '%s'\n",err)
 				}

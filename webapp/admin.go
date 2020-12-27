@@ -31,57 +31,76 @@ func (self *adminRestAPI) init(r *mux.Router,configfile string) error {
 
 	api.HandleFunc("/destroy",
 		func (w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/html")
+			w.Header().Set("Content-Type", "text/plain")
 			err := self.engine.Reset(true)
 			if err != nil {
 				logError(err)
 				http.Error(w, fmt.Sprintf("\nFailed to destroy model with error '%s'\n",err), http.StatusInternalServerError)
+				return
 			}
 			w.Write([]byte("Done"))
 		})
 
 	api.HandleFunc("/reset",
 		func (w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/html")
+			w.Header().Set("Content-Type", "text/plain")
 			err := self.engine.Reset(false)
 			if err != nil {
 				logError(err)
 				http.Error(w, fmt.Sprintf("\nFailed to reset model with error '%s'\n",err), http.StatusInternalServerError)
+				return
 			}
 			w.Write([]byte("Done"))
 		})
 
 	api.HandleFunc("/build",
 		func (w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/html")
+			w.Header().Set("Content-Type", "text/plain")
 			err := self.engine.Build()
 			if err != nil {
 				logError(err)
 				http.Error(w, fmt.Sprintf("\nFailed to build model with error '%s'\n",err), http.StatusInternalServerError)
+				return
 			}
 			w.Write([]byte("Done"))
 		})
 
-	api.HandleFunc("/warm",
+	api.HandleFunc("/warm/startday/{date}",
 		func (w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/html")
-			err := self.engine.Run(true)
+
+			w.Header().Set("Content-Type", "text/plain")
+			pathParams := mux.Vars(r)
+			raw, ok := pathParams["date"]
+			if !ok {
+				http.Error(w,"Missing argument: startday", http.StatusForbidden)
+				return
+			}
+
+		        startDayTime,err := time.Parse("2006-01-02",raw)
+			if err != nil {
+				http.Error(w,"Invalid argument: startdata", http.StatusInternalServerError)
+				return
+			}
+			
+			err = self.engine.Run(true,flap.EpochTime(startDayTime.Unix()))
 			if err != nil {
 				logError(err)
 				http.Error(w, fmt.Sprintf("\nFailed to warm model with error '%s'\n",err), http.StatusInternalServerError)
+				return
 			}
 			w.Write([]byte("Done"))
 		})
 	
 	api.HandleFunc("/runoneday",
 		func (w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/html")
+			w.Header().Set("Content-Type", "text/plain")
 			dayToRun := flap.EpochTime(time.Now().Unix())
 			dayToRun -= dayToRun % flap.SecondsInDay
 			err := self.engine.RunOneDay(dayToRun)
 			if err != nil {
 				logError(err)
 				http.Error(w, fmt.Sprintf("\nFailed to run model for %s  with error '%s'\n",dayToRun.ToTime(),err), http.StatusInternalServerError)
+				return
 			}
 			w.Write([]byte("Done"))
 		})

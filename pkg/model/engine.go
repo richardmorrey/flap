@@ -218,11 +218,17 @@ type Engine struct {
 type modelState struct {
 	totalDayOne float64
 	travellersTotal float64
+	startDate  flap.EpochTime
 }
 
 // From implements db/Serialize
 func (self *modelState) From(buff *bytes.Buffer) error {
 	err := binary.Read(buff,binary.LittleEndian,&self.totalDayOne)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Read(buff,binary.LittleEndian,&self.startDate)
 	if err != nil {
 		return logError(err)
 	}
@@ -235,6 +241,11 @@ func (self *modelState) From(buff *bytes.Buffer) error {
 func (self *modelState) To(buff *bytes.Buffer) error {
 
 	err := binary.Write(buff,binary.LittleEndian,&self.totalDayOne)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Write(buff,binary.LittleEndian,&self.startDate)
 	if err != nil {
 		return logError(err)
 	}
@@ -455,7 +466,7 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 	}
 
 	// Calculate day of model
-	i := 1 + (flap.Days(currentDay/flap.SecondsInDay) - flap.Days(flap.EpochTime(self.ModelParams.StartDay.Unix())/flap.SecondsInDay))
+	i := 1 + (flap.Days(currentDay/flap.SecondsInDay) - flap.Days(ms.startDate/flap.SecondsInDay))
 
 	// For each travller: Update triphistory and backfill those with distance accounts in
 	// deficit.
@@ -562,7 +573,7 @@ func (self *Engine) Reset(destroy bool) error {
 
 // Runs the model with configuration as specified in ModelParams, writing results out
 // to multiple CSV files in the specified working folder.
-func (self *Engine) Run(warmOnly bool) error {
+func (self *Engine) Run(warmOnly bool, startDay flap.EpochTime) error {
 
 	// Reset journey planner
 	err := self.Reset(false)
@@ -587,8 +598,14 @@ func (self *Engine) Run(warmOnly bool) error {
 		planDays += self.FlapParams.Promises.MaxDays
 	} 
 
+	// Override start day if necessary
+	var finalStartDay = flap.EpochTime(self.ModelParams.StartDay.Unix())
+	if startDay != 0 {
+		finalStartDay = startDay
+	}
+
 	// Initialize model state and stats
-	var ms modelState
+	ms := modelState{startDate:finalStartDay}
 	err = ms.save(self.table)
 	if err != nil {
 		return logError(err)
@@ -608,7 +625,7 @@ func (self *Engine) Run(warmOnly bool) error {
 
 	// Model for each of the plan days and the days for the model
 	// proper
-	currentDay := flap.EpochTime(self.ModelParams.StartDay.Unix()) - flap.EpochTime(uint64(planDays*flap.SecondsInDay))
+	currentDay := finalStartDay - flap.EpochTime(uint64(planDays*flap.SecondsInDay))
 	flightPaths := newFlightPaths(currentDay)
 	logInfo("Running ", planDays, " day prewarm and ", daysToRun," day model")
 	for i:=flap.Days(-planDays); i < daysToRun; i++ {
