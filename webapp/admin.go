@@ -7,6 +7,7 @@ import (
 	"github.com/richardmorrey/flap/pkg/flap"
 	"fmt"
 	"time"
+	"io"
 )
 
 type restAPI interface {
@@ -31,44 +32,39 @@ func (self *adminRestAPI) init(r *mux.Router,configfile string) error {
 
 	api.HandleFunc("/destroy",
 		func (w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/plain")
 			err := self.engine.Reset(true)
 			if err != nil {
 				logError(err)
 				http.Error(w, fmt.Sprintf("\nFailed to destroy model with error '%s'\n",err), http.StatusInternalServerError)
 				return
 			}
-			w.Write([]byte("Done"))
+			io.WriteString(w, "Done\n")
 		})
 
 	api.HandleFunc("/reset",
 		func (w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/plain")
 			err := self.engine.Reset(false)
 			if err != nil {
 				logError(err)
 				http.Error(w, fmt.Sprintf("\nFailed to reset model with error '%s'\n",err), http.StatusInternalServerError)
 				return
 			}
-			w.Write([]byte("Done"))
+			io.WriteString(w, "Done\n")
 		})
 
 	api.HandleFunc("/build",
 		func (w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/plain")
 			err := self.engine.Build()
 			if err != nil {
 				logError(err)
 				http.Error(w, fmt.Sprintf("\nFailed to build model with error '%s'\n",err), http.StatusInternalServerError)
 				return
 			}
-			w.Write([]byte("Done"))
+			io.WriteString(w, "Done\n")
 		})
 
 	api.HandleFunc("/warm/startday/{date}",
 		func (w http.ResponseWriter, r *http.Request) {
-
-			w.Header().Set("Content-Type", "text/plain")
 			pathParams := mux.Vars(r)
 			raw, ok := pathParams["date"]
 			if !ok {
@@ -88,12 +84,11 @@ func (self *adminRestAPI) init(r *mux.Router,configfile string) error {
 				http.Error(w, fmt.Sprintf("\nFailed to warm model with error '%s'\n",err), http.StatusInternalServerError)
 				return
 			}
-			w.Write([]byte("Done"))
+			io.WriteString(w, "Done\n")
 		})
 	
 	api.HandleFunc("/runoneday",
 		func (w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/plain")
 			dayToRun := flap.EpochTime(time.Now().Unix())
 			dayToRun -= dayToRun % flap.SecondsInDay
 			err := self.engine.RunOneDay(dayToRun)
@@ -102,7 +97,7 @@ func (self *adminRestAPI) init(r *mux.Router,configfile string) error {
 				http.Error(w, fmt.Sprintf("\nFailed to run model for %s  with error '%s'\n",dayToRun.ToTime(),err), http.StatusInternalServerError)
 				return
 			}
-			w.Write([]byte("Done"))
+			io.WriteString(w, "Done\n")
 		})
 	return err
 }
