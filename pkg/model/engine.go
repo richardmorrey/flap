@@ -168,8 +168,13 @@ func (self *summaryStats)  save(t db.Table) error {
 	return t.Put(summaryStatsRecordKey,self)
 }
 
-// compile gathers points covering the whole modelling period for outputing graphs as well
-// csv file with the raw stats
+// returns summary stats as a JSON string 
+func (self * summaryStats) asJSON() string {
+	jsonData, _ := json.MarshalIndent(self.Rows, "", "    ")
+	return string(jsonData)
+}
+
+// compile prepares summary stats for reporting
 func (self* summaryStats) compile(path string,rdd flap.Days) (plotter.XYs, plotter.XYs) {
 
 	travelledPts := make(plotter.XYs, 0)
@@ -668,9 +673,19 @@ func (self *Engine) Report() error {
 	return nil
 }
 
+// SummaryStats returns current summary stats as a JSON array (containing one object for each day)
+func (self  *Engine) SummaryStats() (string,error) {
+	var ss summaryStats
+	err := ss.load(self.table)
+	if err != nil {
+		return "",err
+	}
+	return ss.asJSON(),nil
+}
+
 // RunOneDay runs the model for the one specified day
 func (self *Engine) RunOneDay(startOfDay flap.EpochTime) error {
-	
+
 	cars,tb,fe,jp,err := self.prepare()
 	if err != nil {
 		return logError(err)

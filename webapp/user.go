@@ -4,11 +4,13 @@ import (
 	"log"
 	"net/http"
 	"encoding/json"
-	//"fmt"
+	"fmt"
+	"io"
 	oidc "github.com/coreos/go-oidc"
 	"golang.org/x/net/context"
 	"github.com/gorilla/mux"
-	"github.com/richardmorrey/flap/pkg/flap"
+	//"github.com/richardmorrey/flap/pkg/flap"
+	"github.com/richardmorrey/flap/pkg/model"
 	"os"
 )
 
@@ -18,25 +20,36 @@ var (
 )
 
 type userRestAPI struct {
-	engine *flap.Engine
+	engine *model.Engine
 }
 
 // init configures handlers for all user rest api methods
 func (self *userRestAPI) init(r *mux.Router,configfile string) error {
+	var err error
+
+	self.engine,err = model.NewEngine(configfile)
+	if err != nil {
+		return logError(err)
+	}
+
 	api := r.PathPrefix("/user/v1").Subrouter()
+
 	api.HandleFunc("/flighthistory/id/{token}", self.flightHistory).Methods(http.MethodGet)
+	api.HandleFunc("/dailystats/id/{token}", self.dailyStats)
 	api.Use(middlewareIdToken)
+	
 	return nil
 }
 
 // release releases all resources associated with user rest api
 func (self  *userRestAPI) release() error {
+	self.engine.Release()
 	return nil
 }
 			
 // MiddlewareIdToken function validates openid id token
 func middlewareIdToken(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		 	pathParams := mux.Vars(r)
 			if raw, ok := pathParams["token"]; !ok {
 				http.Error(w,"Missing argument: id", http.StatusForbidden)
@@ -49,7 +62,7 @@ func middlewareIdToken(next http.Handler) http.Handler {
 					http.Error(w, "Forbidden", http.StatusForbidden)
 				}
 			}
-		})
+	})
 }
 
 // validateIDToken validates and parses a raw openid id token
@@ -90,4 +103,16 @@ func validateIDToken(rawIDToken string) (string,error) {
 func (self* userRestAPI) flightHistory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("flight history will go here"))
+}
+
+// stats returns daily statistics about the current model
+func (self* userRestAPI) dailyStats(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json,err := self.engine.SummaryStats()
+	if err != nil {
+		logError(err)
+		http.Error(w, fmt.Sprintf("\nFailed to retrieve daily stats with error '%s'\n",err), http.StatusInternalServerError)
+		return
+	}
+	io.WriteString(w,json)
 }
