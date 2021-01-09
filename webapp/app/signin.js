@@ -56,7 +56,6 @@
   }
 
   function setSigninStatus(isSignedIn) {
-	  alert("updating signin status")
     var user = GoogleAuth.currentUser.get();
     var isAuthorized = user.hasGrantedScopes(SCOPE);
     if (isAuthorized) {
