@@ -36,7 +36,7 @@
         revokeAccess();
       });
       $('#nav-statistics').click(function() {
-        showStatistics();
+        showCharts();
       });
     });
   }
@@ -73,15 +73,10 @@
     setSigninStatus();
   }
 
-  function showStatistics() {
-	  var user = GoogleAuth.currentUser.get();
-	  var id_token = user.getAuthResponse().id_token;
-	  var xhr = new XMLHttpRequest();
-	  xhr.open('GET', '/user/v1/dailystats/id/'+id_token);
-	  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-	  xhr.onload = function() {
-				   alert(xhr.responseText);
-			 };
-	  xhr.send();
+  function navbarActive(opt) {
+	var opts=['signin','signout','statistics','help']
+	for (i in opts) {
+		style = opt == opts[i] ? '' : 'white'
+		$('#nav-'+opts[i]).css('fill',style);
+	}
   }
-
