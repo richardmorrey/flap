@@ -37,7 +37,17 @@
       });
       $('#nav-statistics').click(function() {
         showCharts();
+      });  
+      $('#nav-planning').click(function() {
+        navbarActive('planning');
       });
+      $('#nav-history').click(function() {
+        navbarActive('history');
+      });
+      $('#nav-account').click(function() {
+        navbarActive('account')
+      });
+
     });
   }
 
@@ -55,17 +65,25 @@
     GoogleAuth.disconnect();
   }
 
+var gPages=['signin','signout','statistics','planning','history','account']
+
+
   function setSigninStatus(isSignedIn) {
     var user = GoogleAuth.currentUser.get();
     var isAuthorized = user.hasGrantedScopes(SCOPE);
+    for (i in gPages) {
+	if ((isAuthorized && (gPages[i]!='signin')) || (!isAuthorized && gPages[i]=='signin'))
+	{
+      		$('#nav-'+gPages[i]).removeClass("d-none")
+	} else {
+      		$('#nav-'+gPages[i]).addClass("d-none")
+    	}
+    }
     if (isAuthorized) {
-      $('#nav-signin').addClass("d-none")
-      $('#nav-signout').removeClass("d-none");
-      $('#nav-statistics').removeClass('d-none');
-    } else {
-      $('#nav-signin').removeClass('d-none');
-      $('#nav-signout').addClass('d-none');
-      $('#nav-statistics').addClass('d-none');
+	showCharts()
+	   }
+    else {
+	navbarActive("signout")
     }
   }
 
@@ -74,9 +92,13 @@
   }
 
   function navbarActive(opt) {
-	var opts=['signin','signout','statistics','help']
-	for (i in opts) {
-		style = opt == opts[i] ? '' : 'white'
-		$('#nav-'+opts[i]).css('fill',style);
+	for (i in gPages) {
+		if (opt == gPages[i]) {
+			$('#nav-'+gPages[i]).css('fill','')
+			$('#pg_'+gPages[i]).removeClass("d-none")
+		} else {
+			$('#nav-'+gPages[i]).css('fill','white')
+			$('#pg_'+gPages[i]).addClass("d-none")
+		}
 	}
   }
