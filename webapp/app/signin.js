@@ -42,7 +42,8 @@
         navbarActive('planning');
       });
       $('#nav-history').click(function() {
-        navbarActive('history');
+	navbarActive('history')
+        showHistory();
       });
       $('#nav-account').click(function() {
         navbarActive('account')
