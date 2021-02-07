@@ -12,6 +12,7 @@ import (
 	//"github.com/richardmorrey/flap/pkg/flap"
 	"github.com/richardmorrey/flap/pkg/model"
 	"os"
+	"strconv"
 )
 
 var (
@@ -34,7 +35,7 @@ func (self *userRestAPI) init(r *mux.Router,configfile string) error {
 
 	api := r.PathPrefix("/user/v1").Subrouter()
 
-	api.HandleFunc("/flighthistory/id/{token}", self.flightHistory).Methods(http.MethodGet)
+	api.HandleFunc("/flighthistory/id/{token}/b/{band}/n/{number}", self.flightHistory).Methods(http.MethodGet)
 	api.HandleFunc("/dailystats/id/{token}", self.dailyStats)
 	api.Use(middlewareIdToken)
 	
@@ -101,8 +102,44 @@ func validateIDToken(rawIDToken string) (string,error) {
 
 // flightHistory returns flight history for specified user 
 func (self* userRestAPI) flightHistory(w http.ResponseWriter, r *http.Request) {
+
+	// Read arguments
+	var band,number uint64
+	var err error
+	pathParams := mux.Vars(r)
+	if raw, ok := pathParams["band"]; !ok {
+		http.Error(w,"Missing argument: b", http.StatusForbidden)
+		return
+	} else {
+		band, err = strconv.ParseUint(raw,10,64)
+		if err != nil {
+			logError(err)
+			http.Error(w, fmt.Sprintf("\nFailed to parse arg b '%s'\n",err), http.StatusInternalServerError)
+			return
+		}
+	}
+	if raw ,ok := pathParams["number"]; !ok {
+		http.Error(w,"Missing argument: n", http.StatusForbidden)
+		return
+	}  else {
+		number, err = strconv.ParseUint(raw,10,64)
+		if err != nil {
+			logError(err)
+			http.Error(w, fmt.Sprintf("\nFailed to pars arg n '%s'\n",err), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Retrieve history for specified traveller
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte("flight history will go here"))
+	_,history,_,_,err := self.engine.ShowTraveller(band,number)
+	if err != nil {
+		logError(err)
+		http.Error(w, fmt.Sprintf("\nFailed to retrieve flight history with error '%s'\n",err), http.StatusInternalServerError)
+		return
+	}
+	io.WriteString(w,history)
+
 }
 
 // stats returns daily statistics about the current model

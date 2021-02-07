@@ -13,13 +13,19 @@ function showHistory() {
 	  xhr.send();
        }
   }
+
 function renderHistory(text) {
 	$('#world-map').vectorMap({map: 'world_mill',zoomButtons : false, backgroundColor:'white',regionStyle: { initial: { fill: '#dc3545' }, hover: { fill: 'black' } }});
 	$('#world-map').vectorMap('get', 'mapObject').updateSize();
 	populateBoard(text)
+        $('#flightList a').on('click', function (e) {
+	   e.preventDefault()
+           showFlightPath(parseInt($(this).attr("href"),10))
+	})
 	historyInit=true
 }
 
+var flights=[]
 function populateBoard(text) {
 	var raw = JSON.parse(text)
 	var active=" active "
@@ -29,13 +35,14 @@ function populateBoard(text) {
 		for (j in raw[i].Journeys) {
 			for (f in raw[i].Journeys[j].Flights) {
 				if (tf%5==0) {
-					rows+="<div class='list-group carousel-item w-100" + active + "h5'>"
+					rows+="<div id='flightList' class='list-group carousel-item w-100" + active + "h5'>"
 					active=" "
 				}
 				cf = raw[i].Journeys[j].Flights[f]
+				flights.push(cf)
 				start = moment.utc(cf.Start)
 				end  = moment.utc(cf.End)
-				rows += "<a class='list-group-item list-group-item-action text-white bg-dark' href='#'>" + start.format('YYYY-MM-DD') +  " " + start.format("hh:mm") + " " + cf.From + " " + end.format("hh:mm") + " " + cf.To + "</a>"
+				rows += "<a class='list-group-item list-group-item-action text-white bg-dark' href='" + (flights.length-1).toString() + "'>&nbsp;&nbsp;" + start.format('YYYY-MM-DD') +  "&nbsp;&nbsp;" + start.format("hh:mm") + " " + gAirports[cf.From].Iata + "&nbsp;&nbsp;" + end.format("hh:mm") + " " + gAirports[cf.To].Iata + "</a>"
 				tf++
 				if (tf==5) {
 					rows+="</div>"
@@ -52,4 +59,13 @@ function populateBoard(text) {
 	}
 
 	$('#cstub').append(rows)
+}
+
+function showFlightPath(i) {
+	cf = flights[i]
+	var markers = [{latLng:[gAirports[cf.From].Lat,gAirports[cf.From].Lng],name:gAirports[cf.From].Nm },
+			{latLng:[gAirports[cf.To].Lat,gAirports[cf.To].Lng],name:gAirports[cf.To].Nm }]
+	var map = $('#world-map').vectorMap('get', 'mapObject')
+	map.removeAllMarkers()
+	map.addMarkers(markers)
 }
