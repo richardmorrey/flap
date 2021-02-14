@@ -4,3 +4,16 @@
 	color: black;
 }
 
+@keyframes flapfadein {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+.flapfadinelement {
+	animation-name: flapfadein;
+        animation-duration: 2s;
+}
+
+body.inheritCursors * {
+    cursor: inherit !important;
+}

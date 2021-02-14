@@ -11,14 +11,18 @@ function showHistory() {
 				   renderHistory(xhr.responseText);
 			 };
 	  xhr.send();
+       } else {
+       		navbarActive('history');
        }
   }
 
 function renderHistory(text) {
+	populateBoard(text)
+	navbarActive('history');
 	$('#world-map').vectorMap({map: 'world_mill',zoomButtons : false, backgroundColor:'white',regionStyle: { initial: { fill: '#dc3545' }, hover: { fill: 'black' }} , 
 					markerStyle:{initial: {fill: 'black',stroke: 'white',"fill-opacity": 1,"stroke-width": 1,"stroke-opacity": 1,r: 5}}});
 	$('#world-map').vectorMap('get', 'mapObject').updateSize();
-	populateBoard(text)
+
         $('#flightList a').on('click', function (e) {
 	   e.preventDefault()
            showFlightPath(parseInt($(this).attr("href"),10))

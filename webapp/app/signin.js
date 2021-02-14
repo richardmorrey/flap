@@ -36,14 +36,15 @@
         revokeAccess();
       });
       $('#nav-statistics').click(function() {
+        waitCursorOn();
         showCharts();
       });  
       $('#nav-planning').click(function() {
         navbarActive('planning');
       });
       $('#nav-history').click(function() {
-	navbarActive('history')
-        showHistory();
+       waitCursorOn();
+       showHistory();
       });
       $('#nav-account').click(function() {
         navbarActive('account')
@@ -96,10 +97,22 @@ var gPages=['signin','signout','statistics','planning','history','account']
 	for (i in gPages) {
 		if (opt == gPages[i]) {
 			$('#nav-'+gPages[i]).css('fill','')
+			$('#pg_'+gPages[i]).addClass("flapfadinelement")
 			$('#pg_'+gPages[i]).removeClass("d-none")
 		} else {
 			$('#nav-'+gPages[i]).css('fill','white')
 			$('#pg_'+gPages[i]).addClass("d-none")
 		}
 	}
+	waitCursorOff()
+  }
+
+  function waitCursorOn() {
+	document.body.classList.add('inheritCursors');
+	document.body.style.cursor = 'progress';
+  }
+
+  function waitCursorOff() {
+	document.body.classList.remove('inheritCursors');
+        document.body.style.cursor = 'unset';
   }
