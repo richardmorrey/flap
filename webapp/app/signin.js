@@ -40,7 +40,8 @@
         showCharts();
       });  
       $('#nav-planning').click(function() {
-        navbarActive('planning');
+	waitCursorOn();
+	showPlanning();
       });
       $('#nav-history').click(function() {
        waitCursorOn();
@@ -68,7 +69,7 @@
   }
 
 var gPages=['signin','signout','statistics','planning','history','account']
-
+var gPageTitles=['Welcome','Welcome','Statistics','Trip Planning','Trip History','Distance Account']
 
   function setSigninStatus(isSignedIn) {
     var user = GoogleAuth.currentUser.get();
@@ -83,9 +84,11 @@ var gPages=['signin','signout','statistics','planning','history','account']
     }
     if (isAuthorized) {
 	showCharts()
-	   }
-    else {
-	navbarActive("signout")
+	$("#useremail").text(user.getBasicProfile().getEmail())
+	
+    } else {
+	$("#useremail").text("")    
+	navbarActive("signin")
     }
   }
 
@@ -99,6 +102,7 @@ var gPages=['signin','signout','statistics','planning','history','account']
 			$('#nav-'+gPages[i]).css('fill','')
 			$('#pg_'+gPages[i]).addClass("flapfadinelement")
 			$('#pg_'+gPages[i]).removeClass("d-none")
+			$("#pagetitle").text(gPageTitles[i])    
 		} else {
 			$('#nav-'+gPages[i]).css('fill','white')
 			$('#pg_'+gPages[i]).addClass("d-none")

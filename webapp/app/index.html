@@ -84,11 +84,14 @@
       </ul>
     </div>
   </nav>
-
+  <div class="row small bg-dark text-white ml-auto mr-auto">
+	  <div class="col text-left font-weight-bold" id="pagetitle"></div>
+	  <div class="col text-right font-italic" id="useremail"></div>
+  </div>
       <div class="row d-none" id="pg_signout">
 	    <div class="col">
 	     
-	      		<div class="card mt-3">
+	      		<div class="card mt-2">
 		      <div class="card-body lead">
 			      <span class="align-top">Welcome to &nbsp;</span>
 			      <div class="d-inline-block">
@@ -114,7 +117,7 @@
     <div class="row d-none" id="pg_statistics">
 	    <div class="col-lg">
 	     
-	      <div class="card mt-3">
+	      <div class="card mt-2">
 		      <div class="card-body">
 		       <h5 class="card-title">Total Distance</h5>
 		       <canvas id="distancechart" style="max-width: 100%;"></canvas>
@@ -122,7 +125,7 @@
 	     </div>
       	     </div>
       <div class="col-lg">
-  	     <div class="card mt-3">
+  	     <div class="card mt-2">
 		      <div class="card-body">
 		       <h5 class="card-title">Distance per User</h5>
 		       <canvas id="userdistancechart" style="max-width: 100%;"></canvas>
@@ -134,10 +137,9 @@
 
       <div class="row d-none" id="pg_planning">
   		<div class="col">
-	      		<div class="card mt-3">
-		      <div class="card-body lead">
-   			<img style="height:10rem"  src="./kb.svg"></img>
-			<div>Part-time developers at work. Please return in a month or two to see a functioning page here.</div>
+	      		<div class="card mt-2">
+		      <div class="card-body w-100">
+			      <div class="w-100" id="calendar"></div>
 		      </div>
 			</div>
 		</div>
@@ -145,7 +147,7 @@
 
       <div class="row d-none" id="pg_account">
   		<div class="col">
-	      		<div class="card mt-3">
+	      		<div class="card mt-2">
 		      <div class="card-body lead">
 	   			<img style="height:10rem"  src="./kb.svg"></img>
 			<div>Part-time developers at work. Please return in a month or two to see a functioning page here.</div>	      </div>
@@ -156,7 +158,7 @@
       <div class="row d-none" id="pg_history" style="font-family:monospace;">
   		    <div class="col-lg">
 	     
-	      <div class="card mt-3">
+	      <div class="card mt-2">
 		      <div class="card-body">
 
 		       <div id="carouselExampleIndicators" class="carousel slide bg-dark" data-ride="carousel" data-interval=false style="height:20rem;">
@@ -177,7 +179,7 @@
 	     </div>
       	     </div>
       		<div class="col-lg">
-  	     <div class="card mt-3">
+  	     <div class="card mt-2">
 		      <div class="card-body">
 		       <div id="world-map" style="height:20rem"></div>
 		      </div>
@@ -343,6 +345,7 @@ often they fly.
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
 <script src="jquery-jvectormap-2.0.5.min.js"></script>
 <script src="jquery-jvectormap-world-mill.js"></script>
+<script src="https://unpkg.com/js-year-calendar@latest/dist/js-year-calendar.min.js"></script>
 <script async defer src="https://apis.google.com/js/api.js"
         onload="this.onload=function(){};handleClientLoad()"
         onreadystatechange="if (this.readyState === 'complete') this.onload()">
@@ -352,6 +355,7 @@ often they fly.
 <script src="./flap.js"></script>
 <script src="./charts.js"></script>
 <script src="./history.js"></script>
+<script src="./planning.js"></script>
 <script>
 	$(document).ready(function() {
 		$('[data-toggle="tooltip"]').tooltip({ trigger : 'hover'})
