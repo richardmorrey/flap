@@ -182,26 +182,11 @@ func main() {
 				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
 			} else {
 				defer engine.Release()
-				_,json,_,_,err := engine.ShowTraveller(spec,index)
+				_,json,err := engine.TripHistoryAsJSON(spec,index)
 				if err != nil {
 					fmt.Printf("\nFailed to find traveller with error '%s'\n",err)
 				} else {
 					fmt.Printf("\n%s\n",json)
-				}
-			}
-		case "kml":
-			spec,_ := strconv.ParseUint(flag.Arg(1), 10, 64)
-			index,_ := strconv.ParseUint(flag.Arg(2), 10, 64)
-		 	engine,err := model.NewEngine(*configfile)
-			if err != nil {
-				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
-			} else {
-				defer engine.Release()
-				_,_,kml,_,err := engine.ShowTraveller(spec,index)
-				if err != nil {
-					fmt.Printf("\nFailed to find traveller with error '%s'\n",err)
-				} else {
-					fmt.Printf("\n%s\n",kml)
 				}
 			}
 
@@ -213,7 +198,7 @@ func main() {
 				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
 			} else {
 				defer engine.Release()
-				_,_,_,json,err := engine.ShowTraveller(spec,index)
+				json,err := engine.PromisesAsJSON(spec,index)
 				if err != nil {
 					fmt.Printf("\nFailed to find traveller with error '%s'\n",err)
 				} else {

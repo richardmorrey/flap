@@ -88,7 +88,7 @@ var gPageTitles=['Welcome','Welcome','Statistics','Trip Planning','Trip History'
 	
     } else {
 	$("#useremail").text("")    
-	navbarActive("signin")
+	navbarActive("signout")
     }
   }
 

@@ -13,7 +13,10 @@ import (
 	"github.com/richardmorrey/flap/pkg/model"
 	"os"
 	"strconv"
+	"errors"
 )
+
+var EMISSINGARGUMENT= errors.New("Missing Argument")
 
 var (
 	clientID     = os.Getenv("GOOGLE_OAUTH2_CLIENT_ID")
@@ -36,9 +39,10 @@ func (self *userRestAPI) init(r *mux.Router,configfile string) error {
 	api := r.PathPrefix("/user/v1").Subrouter()
 
 	api.HandleFunc("/flighthistory/id/{token}/b/{band}/n/{number}", self.flightHistory).Methods(http.MethodGet)
-	api.HandleFunc("/dailystats/id/{token}", self.dailyStats)
+	api.HandleFunc("/promises/id/{token}/b/{band}/n/{number}", self.promises).Methods(http.MethodGet)
+	api.HandleFunc("/promises/id/{token}", self.dailyStats)
 	api.Use(middlewareIdToken)
-	
+
 	return nil
 }
 
@@ -104,41 +108,69 @@ func validateIDToken(rawIDToken string) (string,error) {
 func (self* userRestAPI) flightHistory(w http.ResponseWriter, r *http.Request) {
 
 	// Read arguments
-	var band,number uint64
-	var err error
-	pathParams := mux.Vars(r)
-	if raw, ok := pathParams["band"]; !ok {
-		http.Error(w,"Missing argument: b", http.StatusForbidden)
+	band,number,err := self.extractBandAndNumber(r)
+	if err != nil {
+		logError(err)
+		http.Error(w, fmt.Sprintf("\nFailed to parse arguments '%s'\n",err), http.StatusInternalServerError)
 		return
-	} else {
-		band, err = strconv.ParseUint(raw,10,64)
-		if err != nil {
-			logError(err)
-			http.Error(w, fmt.Sprintf("\nFailed to parse arg b '%s'\n",err), http.StatusInternalServerError)
-			return
-		}
-	}
-	if raw ,ok := pathParams["number"]; !ok {
-		http.Error(w,"Missing argument: n", http.StatusForbidden)
-		return
-	}  else {
-		number, err = strconv.ParseUint(raw,10,64)
-		if err != nil {
-			logError(err)
-			http.Error(w, fmt.Sprintf("\nFailed to pars arg n '%s'\n",err), http.StatusInternalServerError)
-			return
-		}
 	}
 
 	// Retrieve history for specified traveller
 	w.Header().Set("Content-Type", "application/json")
-	_,history,_,_,err := self.engine.ShowTraveller(band,number)
+	_,history,err := self.engine.TripHistoryAsJSON(band,number)
 	if err != nil {
 		logError(err)
 		http.Error(w, fmt.Sprintf("\nFailed to retrieve flight history with error '%s'\n",err), http.StatusInternalServerError)
 		return
 	}
 	io.WriteString(w,history)
+
+}
+
+// Read band and band number from arguments
+func (self* userRestAPI) extractBandAndNumber(r *http.Request) (uint64, uint64, error) {
+	var band,number uint64
+	var err error
+	pathParams := mux.Vars(r)
+	if raw, ok := pathParams["band"]; !ok {
+		return 0,0,EMISSINGARGUMENT
+	} else {
+		band, err = strconv.ParseUint(raw,10,64)
+		if err != nil {
+			return 0,0,err
+		}
+	}
+	if raw ,ok := pathParams["number"]; !ok {
+		return 0,0,EMISSINGARGUMENT
+	}  else {
+		number, err = strconv.ParseUint(raw,10,64)
+		if err != nil {
+			return 0,0,err
+		}
+	}
+	return band, number, nil
+}
+
+// flightHistory returns flight history for specified user 
+func (self* userRestAPI) promises(w http.ResponseWriter, r *http.Request) {
+
+	// Read arguments
+	band,number,err := self.extractBandAndNumber(r)
+	if err != nil {
+		logError(err)
+		http.Error(w, fmt.Sprintf("\nFailed to parse arguments '%s'\n",err), http.StatusInternalServerError)
+		return
+	}
+
+	// Retrieve history for specified traveller
+	w.Header().Set("Content-Type", "application/json")
+	_,promises,err := self.engine.PromisesAsJSON(band,number)
+	if err != nil {
+		logError(err)
+		http.Error(w, fmt.Sprintf("\nFailed to retrieve flight history with error '%s'\n",err), http.StatusInternalServerError)
+		return
+	}
+	io.WriteString(w,promises)
 
 }
 

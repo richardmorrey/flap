@@ -696,51 +696,63 @@ func (self *Engine) RunOneDay(startOfDay flap.EpochTime) error {
 	return err
 }
 
-// ShowTraveller reports the trip history for the specificied traveller both in JSON and KML format
-func (self *Engine) ShowTraveller(band uint64,bot uint64) (flap.Passport,string,string,string,error){
+func (self *Engine) bandToPassport(band uint64,bot uint64) (flap.Passport,error) {
 
 	// Load country weights (need to establish issuing country of passport)
 	var p flap.Passport
 	cw := newCountryWeights()
 	err := cw.load(self.table)
 	if err != nil {
-		return p,"","","",logError(err)
+		return p,logError(err)
 	}
 
 	// Create travellerbots struct
 	travellerBots := NewTravellerBots(cw)
 	if travellerBots == nil {
-		return p,"","","",logError(EFAILEDTOCREATETRAVELLERBOTS)
+		return p,logError(EFAILEDTOCREATETRAVELLERBOTS)
 	}
 	err = travellerBots.Build(self.ModelParams,self.FlapParams,self.table)
 	if (err != nil) {
-		return p,"","","",logError(err)
+		return p,logError(err)
 	}
 
 	// Valid args
 	if band >= uint64(len(travellerBots.bots)) {
-		return p,"","","",logError(ENOSUCHTRAVELLER)
+		return p,logError(ENOSUCHTRAVELLER)
 	}
 	if bot >= uint64(travellerBots.bots[band].numInstances) {
-		return p,"","","",logError(ENOSUCHTRAVELLER)
+		return p,logError(ENOSUCHTRAVELLER)
+	}
+
+	// Resolve given spec to a passport and look up in the travellers db
+	p,err = travellerBots.getPassport(botId{bandIndex(band),botIndex(bot)})
+	if err != nil {
+		return  p,logError(err)
+	}
+	return p,nil
+}
+
+// ShowTraveller reports the trip history for the specificied traveller both in JSON and KML format
+func (self *Engine) TripHistoryAsJSON(band uint64,bot uint64) (flap.Passport,string,error){
+
+	// Get traveller's passport
+	p,err := self.bandToPassport(band,bot)
+	if (err != nil) {
+		return p,"",err
 	}
 
 	//  Initialize flap
 	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
 	defer fe.Release()
 	
-	// Resolve given spec to a passport and look up in the travellers db
-	p,err = travellerBots.getPassport(botId{bandIndex(band),botIndex(bot)})
-	if err != nil {
-		return  p,"","","",logError(err)
-	}
+	// Resolve passport to traveller
 	t,err := fe.Travellers.GetTraveller(p)
 	if err != nil {
-		return p,"", "","",logError(err)
+		return p,"",logError(err)
 	}
 
 	// Return the traveller as JSON
-	return p,t.AsJSON(),t.AsKML(fe.Airports),self.promisesAsJSON(&t),nil
+	return p,t.AsJSON(),nil
 }
 
 type jsonPromise struct {
@@ -753,7 +765,25 @@ type jsonPromise struct {
 }
 
 // Write out promises for the given traveller as JSON string
-func (self *Engine) promisesAsJSON(t *flap.Traveller) string {
+func (self *Engine) PromisesAsJSON(band uint64,bot uint64) (string,error) {
+
+	// Get traveller's passport
+	p,err := self.bandToPassport(band,bot)
+	if (err != nil) {
+		return "",err
+	}
+
+	//  Initialize flap
+	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
+	defer fe.Release()
+	
+	// Resolve passport to traveller
+	t,err := fe.Travellers.GetTraveller(p)
+	if err != nil {
+		return "",logError(err)
+	}
+
+	// Render promises as JSON
 	promises := make([]jsonPromise,0)
 	it := t.Promises.NewIterator()
 	for it.Next() {
@@ -761,7 +791,7 @@ func (self *Engine) promisesAsJSON(t *flap.Traveller) string {
 		promises = append(promises,jsonPromise{TripStart:p.TripStart.ToTime(),TripEnd:p.TripEnd.ToTime(),Clearance:p.Clearance.ToTime(),Distance:p.Distance,Stacked:p.StackIndex,CarriedOver:p.CarriedOver})
 	}
 	jsonData, _ := json.MarshalIndent(promises, "", "    ")
-	return string(jsonData)
+	return string(jsonData),nil
 }
 
 // updateVerboseStats updates the data for verbose stats to reflect current day and outputs if it is time to do so
