@@ -7,7 +7,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/pquerna/cachecontrol v0.0.0-20200819021114-67c6ae64274f // indirect
-	github.com/richardmorrey/flap v1.2.1-0.20210102165654-649b374beb05
+	github.com/richardmorrey/flap v1.2.1-0.20210221193535-85b8e18c2fc8
 	github.com/syndtr/goleveldb v1.0.1-0.20200815110645-5c35d600f0ca // indirect
 	github.com/twpayne/go-kml v1.5.1 // indirect
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73

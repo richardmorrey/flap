@@ -19,7 +19,6 @@ function showPlanning() {
 var events=[]
 function renderPlanning(text) {
 	var promises = JSON.parse(text)
-alert(text)	
 	var stacksize=0
 	for (i in promises) {
 		if (promises[i].Stacked == 0) {

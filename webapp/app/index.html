@@ -34,15 +34,11 @@
 
 	  
 <div class="container">
-  <nav class="navbar navbar-expand-md navbar-dark bg-danger">
+  <nav class="navbar navbar-expand navbar-dark bg-danger">
 	  
 	  <a href="#" class="navbar-brand d-inline-block align-top">
-		  <img src="./logo.svg" height="28" alt="CoolBrand">&nbsp;<span class="flapchar">FL</span>YING IS <span class="flapchar">A P</span>RIVILEGE
+		  <img src="./logo.svg" height="28" alt="CoolBrand">&nbsp;<span class="d-none d-md-inline-block"><span class="flapchar">FL</span>YING IS <span class="flapchar">A P</span>RIVILEGE</span>
         </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarCollapse">
       <ul class="navbar-nav ml-auto">
 	<li class="nav-item">
 	<a class="nav-link d-none" href="#" data-toggle="tooltip" data-html="true" data-placement="bottom" title="Trip Planning" id="nav-planning">
@@ -83,7 +79,6 @@
 	</li>
 
       </ul>
-    </div>
   </nav>
   <div class="row small bg-dark text-white ml-auto mr-auto">
 	  <div class="col text-left font-weight-bold" id="pagetitle"></div>
@@ -115,10 +110,10 @@
 	     </div>
       </div>
 
-    <div class="row d-none" id="pg_statistics">
+    <div class="row d-none no-gutters" id="pg_statistics">
 	    <div class="col-lg">
 	     
-	      <div class="card mt-2">
+	      <div class="card mx-1 my-1">
 		      <div class="card-body">
 		       <h6 class="card-title">Total Distance</h6>
 		       <canvas id="distancechart" style="max-width: 100%;"></canvas>
@@ -126,7 +121,7 @@
 	     </div>
       	     </div>
       <div class="col-lg">
-  	     <div class="card mt-2">
+  	     <div class="card mx-1 my-1">
 		      <div class="card-body">
 		       <h6 class="card-title">Distance Per User</h6>
 		       <canvas id="userdistancechart" style="max-width: 100%;"></canvas>
@@ -138,7 +133,7 @@
 
       <div class="row d-none" id="pg_planning">
   		<div class="col">
-			<div class="card mt-2">
+			<div class="card my-1 mx1">
 			<div class="card-body">
 				<div class="card-title h6">Click a date or press <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm7 14h-5v5h-4v-5h-5v-4h5v-5h4v5h5v4z"/></svg> to add a new trip</div>
 	      			<div id="calendar"></div>
@@ -157,13 +152,13 @@
 		</div>
       </div>
 
-      <div class="row d-none" id="pg_history" style="font-family:monospace;">
+      <div class="row d-none no-gutters" id="pg_history">
   		    <div class="col-lg">
 	     
-	      <div class="card mt-2">
+	      <div class="card my-1 mx-1">
 		      <div class="card-body">
 			 <h6 class="card-title">Departures</h6>
-		       <div id="carouselExampleIndicators" class="carousel slide bg-dark" data-ride="carousel" data-interval=false style="height:20rem;">
+		       <div id="carouselExampleIndicators" class="carousel slide bg-dark mx-auto" data-ride="carousel" data-interval=false style="height:20rem;font-family:monospace;">
 			         <ul class="list-group">
 					 <li class='list-group-item h5 text-white bg-dark font-weight-bold'>&nbsp;&nbsp;DATE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DEPART&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ARRIVE</li>
 				</ul>
@@ -181,7 +176,7 @@
 	     </div>
       	     </div>
       		<div class="col-lg">
-  	     <div class="card mt-2">
+  	     <div class="card my-1 mx-1">
 		      <div class="card-body">
 			<h6 class="card-title">Flight Path</h6>
 		       <div id="world-map" style="height:20rem"></div>

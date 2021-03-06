@@ -40,7 +40,7 @@ func (self *userRestAPI) init(r *mux.Router,configfile string) error {
 
 	api.HandleFunc("/flighthistory/id/{token}/b/{band}/n/{number}", self.flightHistory).Methods(http.MethodGet)
 	api.HandleFunc("/promises/id/{token}/b/{band}/n/{number}", self.promises).Methods(http.MethodGet)
-	api.HandleFunc("/promises/id/{token}", self.dailyStats)
+	api.HandleFunc("/dailystats/id/{token}", self.dailyStats)
 	api.Use(middlewareIdToken)
 
 	return nil
@@ -164,7 +164,7 @@ func (self* userRestAPI) promises(w http.ResponseWriter, r *http.Request) {
 
 	// Retrieve history for specified traveller
 	w.Header().Set("Content-Type", "application/json")
-	_,promises,err := self.engine.PromisesAsJSON(band,number)
+	promises,err := self.engine.PromisesAsJSON(band,number)
 	if err != nil {
 		logError(err)
 		http.Error(w, fmt.Sprintf("\nFailed to retrieve flight history with error '%s'\n",err), http.StatusInternalServerError)

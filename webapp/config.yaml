@@ -43,7 +43,7 @@ modelparams:
   # Total days for which to run the model, including trial days.
   daystorun: 2000
   # Total number of travellers to simulate
-  totaltravellers: 1000
+  totaltravellers: 10000
   # Definition of one or more "bands" of travellers, with
   # different travel probabilities. Each band has values as follows
   #    flyprobability  - Probability of traveller starting a trip each day
@@ -92,7 +92,7 @@ modelparams:
   # Delta to report for. A row is written to summary.csv and bands.csv
   # every reportdaydelta days. A KML file including all flights taken
   # is written out every reportdaydelta days.
-  reportdaydelta: 100
+  reportdaydelta: 1
   # Delta for verbose reporting - promise distributions and regressions.
   # No verbose reporting if value is missing or 0.
   verbosereportdaydelta: 1000
