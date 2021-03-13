@@ -5,7 +5,7 @@ function showPlanning() {
 	  var user = GoogleAuth.currentUser.get();
 	  var id_token = user.getAuthResponse().id_token;
 	  var xhr = new XMLHttpRequest();
-	  xhr.open('GET', '/user/v1/promises/id/'+id_token+"/b/5/n/1");
+	  xhr.open('GET', '/user/v1/promises/id/'+id_token+"/b/"+ gBotBand + "/n/" + gBotNumber);
 	  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 	  xhr.onload = function() {
 				   renderPlanning(xhr.responseText);
@@ -16,7 +16,8 @@ function showPlanning() {
        }
   }
 
-var events=[]
+var events
+var gCal
 function renderPlanning(text) {
 	var promises = JSON.parse(text)
 	var stacksize=0
@@ -29,15 +30,18 @@ function renderPlanning(text) {
 		}
 	}
 
+	events=[]
 	for (i in promises)  {
 		events.push({level:promises[i].level,startDate: new Date(promises[i].TripStart.substr(0,10)), endDate: new Date(promises[i].TripEnd.substr(0,10))})
 	}
 
-	var cal = new Calendar('#calendar',{
-		dataSource: events,
+	if (gCal == null) {
+		gCal = new Calendar('#calendar',{
 		customDataSourceRenderer: dsRender,
 		style: "custom"
 		})
+	}
+	gCal.setDataSource(events)
 	navbarActive('planning');
 	planningInit=true
 }

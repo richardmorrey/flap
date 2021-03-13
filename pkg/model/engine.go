@@ -732,7 +732,7 @@ func (self *Engine) bandToPassport(band uint64,bot uint64) (flap.Passport,error)
 	return p,nil
 }
 
-// ShowTraveller reports the trip history for the specificied traveller both in JSON and KML format
+// TripHistoryAsJSON reports the trip history for the specificied traveller both in JSON and KML format
 func (self *Engine) TripHistoryAsJSON(band uint64,bot uint64) (flap.Passport,string,error){
 
 	// Get traveller's passport

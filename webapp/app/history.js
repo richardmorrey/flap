@@ -5,7 +5,7 @@ function showHistory() {
 	  var user = GoogleAuth.currentUser.get();
 	  var id_token = user.getAuthResponse().id_token;
 	  var xhr = new XMLHttpRequest();
-	  xhr.open('GET', '/user/v1/flighthistory/id/'+id_token+"/b/5/n/1");
+	  xhr.open('GET', '/user/v1/flighthistory/id/'+id_token+"/b/"+gBotBand + "/n/" + gBotNumber);
 	  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 	  xhr.onload = function() {
 				   renderHistory(xhr.responseText);
@@ -14,40 +14,48 @@ function showHistory() {
        } else {
        		navbarActive('history');
        }
-  }
+}
 
+var gmapcreated=false
 function renderHistory(text) {
 	populateBoard(text)
 	navbarActive('history');
-	$('#world-map').vectorMap({map: 'world_mill',zoomButtons : false, backgroundColor:'white',regionStyle: { initial: { fill: '#dc3545' }, hover: { fill: 'black' }} , 
+	if (!gmapcreated) {
+		$('#world-map').vectorMap({map: 'world_mill',zoomButtons : false, backgroundColor:'white',regionStyle: { initial: { fill: '#dc3545' }, hover: { fill: 'black' }} , 
 					markerStyle:{initial: {fill: 'black',stroke: 'white',"fill-opacity": 1,"stroke-width": 1,"stroke-opacity": 1,r: 5}}});
-	$('#world-map').vectorMap('get', 'mapObject').updateSize();
-
+		$('#world-map').vectorMap('get', 'mapObject').updateSize();
+         	gmapcreated=true
+	} else {
+		var map = $('#world-map').vectorMap('get', 'mapObject')
+		map.removeAllMarkers()
+	}
         $('#flightList a').on('click', function (e) {
-	   e.preventDefault()
-           showFlightPath(parseInt($(this).attr("href"),10))
+	   	e.preventDefault()
+           	showFlightPath(parseInt($(this).attr("href"),10))
 	})
+
 	historyInit=true
 }
 
 var flights=[]
 function populateBoard(text) {
 	var raw = JSON.parse(text)
+	$('#flightList').remove();
 	var active=" active "
 	var tf=0
-	var rows=""
+	var rows="<div id='flightList'>"
 	for (i in raw)  {
 		for (j in raw[i].Journeys) {
 			for (f in raw[i].Journeys[j].Flights) {
 				if (tf%5==0) {
-					rows+="<div id='flightList' class='list-group carousel-item w-100" + active + "h5'>"
+					rows+="<div class='list-group carousel-item w-100" + active + "h6'>"
 					active=" "
 				}
 				cf = raw[i].Journeys[j].Flights[f]
 				flights.push(cf)
 				start = moment.utc(cf.Start)
 				end  = moment.utc(cf.End)
-				rows += "<a class='list-group-item list-group-item-action text-white bg-dark' href='" + (flights.length-1).toString() + "'>&nbsp;&nbsp;" + start.format('YYYY-MM-DD') +  "&nbsp;&nbsp;" + start.format("hh:mm") + " " + gAirports[cf.From].Iata + "&nbsp;&nbsp;" + end.format("hh:mm") + " " + gAirports[cf.To].Iata + "</a>"
+				rows += "<a class='list-group-item list-group-item-action border-white text-white bg-dark' href='" + (flights.length-1).toString() + "'>&nbsp;&nbsp;" + start.format('YYYY-MM-DD') +  "&nbsp;&nbsp;" + start.format("hh:mm") + " " + gAirports[cf.From].Iata + "&nbsp;&nbsp;" + end.format("hh:mm") + " " + gAirports[cf.To].Iata + "</a>"
 				tf++
 				if (tf==5) {
 					rows+="</div>"
@@ -58,11 +66,11 @@ function populateBoard(text) {
 	}
 	if (tf != 5) {
 		for (;tf < 5; tf ++) {
-			rows += "<a class='list-group-item text-white bg-dark' href='#'>&nbsp;</a>"
+			rows += "<a class='list-group-item border-white text-dark bg-dark' href='#'>&nbsp;</a>"
 		}
 		rows+="</div>"
 	}
-
+	rows += "</div>"
 	$('#cstub').append(rows)
 }
 

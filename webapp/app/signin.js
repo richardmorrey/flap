@@ -69,7 +69,7 @@
   }
 
 var gPages=['signin','signout','statistics','planning','history','account']
-var gPageTitles=['Welcome','Welcome','Statistics','Trip Planning','Trip History','Distance Account']
+var gPageTitles=['Welcome','Welcome','Statistics','Trip Planning','Flight History','Distance Account']
 
   function setSigninStatus(isSignedIn) {
     var user = GoogleAuth.currentUser.get();
@@ -96,6 +96,7 @@ var gPageTitles=['Welcome','Welcome','Statistics','Trip Planning','Trip History'
     setSigninStatus();
   }
 
+  var gPage
   function navbarActive(opt) {
 	for (i in gPages) {
 		if (opt == gPages[i]) {
@@ -108,6 +109,7 @@ var gPageTitles=['Welcome','Welcome','Statistics','Trip Planning','Trip History'
 			$('#pg_'+gPages[i]).addClass("d-none")
 		}
 	}
+	gPage=opt
 	waitCursorOff()
   }
 
@@ -120,3 +122,16 @@ var gPageTitles=['Welcome','Welcome','Statistics','Trip Planning','Trip History'
 	document.body.classList.remove('inheritCursors');
         document.body.style.cursor = 'unset';
   }
+
+
+  var gBotBand=5
+  var gBotNumber=1
+  $('#changeModal').on('hidden.bs.modal', function (e) {
+
+	  gBotNumber = $('#tNum').val()
+	  gBotBand = $("#tBand").prop('selectedIndex')
+	  historyInit=false
+	  planningInit=false
+	  $('#nav-'+gPage).trigger("click");
+  })
+

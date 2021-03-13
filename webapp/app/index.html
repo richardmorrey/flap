@@ -51,7 +51,7 @@
 	</a>
 	</li>
         <li class="nav-item">
-	<a class="nav-link d-none" href="#" data-toggle="tooltip" data-html="true" data-placement="bottom" title="Trip History" id="nav-history">
+	<a class="nav-link d-none" href="#" data-toggle="tooltip" data-html="true" data-placement="bottom" title="Flight History" id="nav-history">
 		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23 0l-4.5 16.5-6.097-5.43 5.852-6.175-7.844 5.421-5.411-1.316 18-9zm-11 12.501v5.499l2.193-3.323-2.193-2.176zm-2.789 3.857l.94.934c-.875.885-1.773 1.933-2.125 3.375l-1.286-.314c.434-1.774 1.491-3.004 2.471-3.995zm-1.565 7.642c-.715 0-1.353-.279-1.887-.83-1.458.515-2.844-.044-3.576-1.084-.575-.817-.703-1.853-.353-2.845-.552-.534-.83-1.166-.83-1.884 0-1.562 1.16-2.803 3.24-2.586l.195 1.117c-.664.062-1.277.097-1.674.494-.668.668-.467 2.063.787 2.433-.832.836-.751 2.037-.127 2.696.654.69 1.903.799 2.765-.059.385 1.305 1.798 1.422 2.433.787.392-.392.431-.995.492-1.649l1.125.229c.2 1.979-1.009 3.181-2.59 3.181zm-3.318-7.032l.314 1.287c1.755-.43 2.953-1.45 3.989-2.471l-.938-.931c-.876.866-1.927 1.764-3.365 2.115z"/></svg>
 	</a>
         </li>
@@ -82,7 +82,8 @@
   </nav>
   <div class="row small bg-dark text-white ml-auto mr-auto">
 	  <div class="col text-left font-weight-bold" id="pagetitle"></div>
-	  <div class="col text-right font-italic" id="useremail"></div>
+	  <div class="col text-right"><span id="useremail"></span>
+	  <a class="font-italic" data-toggle="modal" href="#changeModal">[change]</a></div>
   </div>
       <div class="row d-none" id="pg_signout">
 	    <div class="col">
@@ -153,16 +154,17 @@
       </div>
 
       <div class="row d-none no-gutters" id="pg_history">
-  		    <div class="col-lg">
+  		    <div class="col">
 	     
 	      <div class="card my-1 mx-1">
 		      <div class="card-body">
 			 <h6 class="card-title">Departures</h6>
-		       <div id="carouselExampleIndicators" class="carousel slide bg-dark mx-auto" data-ride="carousel" data-interval=false style="height:20rem;font-family:monospace;">
-			         <ul class="list-group">
-					 <li class='list-group-item h5 text-white bg-dark font-weight-bold'>&nbsp;&nbsp;DATE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DEPART&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ARRIVE</li>
+		       <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel" data-interval=false style="height:20rem;font-family:monospace;">
+			       <div class="mx-auto" style="width:25rem"><ul class="list-group">
+					 <li class='list-group-item h6 text-white bg-dark font-weight-bold'>&nbsp;&nbsp;DATE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DEPART&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ARRIVE</li>
 				</ul>
  		 		<div class="carousel-inner"><span id="cstub"></span></div>
+			       </div>
   			<a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
     				<span class="carousel-control-prev-icon" aria-hidden="true"></span>
     				<span class="sr-only">Previous</span>
@@ -175,7 +177,7 @@
              </div>
 	     </div>
       	     </div>
-      		<div class="col-lg">
+      		<div class="col">
   	     <div class="card my-1 mx-1">
 		      <div class="card-body">
 			<h6 class="card-title">Flight Path</h6>
@@ -185,7 +187,37 @@
            </div>
       </div>
 
-   
+   <div class="modal fade" tabindex="-1" aria-labelledby="changeModalLabel" aria-hidden="true" id="changeModal">
+  	<div class="modal-dialog modal-dialog-scrollable">
+		<div class="modal-content">
+      			<div class="modal-header">
+        			<h5 class="modal-title" id="changeModalLabel">Change Traveller Bot</h5>
+      			</div>
+			<div class="modal-body">
+				 <div class="form-group">
+    					<label for="tBand">Choose travel frequency:</label>
+    					<select class="form-control" id="tBand">
+      							<option>Very infrequent</option>
+      							<option>Infrequent</option>
+      							<option>Average</option>
+      							<option>Frequent</option>
+      							<option>Very Frequent</option>
+							<option selected="selected">Extemely Frequent</option>
+    					</select>
+					<label class="form-label" for="tNum">Select bot number between 0 and 100:</label>
+					<input type="range" min="0" max="100" value=0 id="tNum" class="form-control" oninput="this.nextElementSibling.value = this.value">
+					<output>0</output>
+  				</div>
+			</div>
+			<div class="modal-footer">
+        			<button class="btn btn-danger btn-secondary" data-dismiss="modal">Close</button>
+			</div>
+      		</div>
+
+		</div>
+	</div>
+  </div>
+  
   <div class="modal fade" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true" id="helpModal">
   	<div class="modal-dialog modal-dialog-scrollable">
 		<div class="modal-content">
