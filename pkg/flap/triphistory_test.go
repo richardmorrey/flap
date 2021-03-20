@@ -514,12 +514,15 @@ func TestUpdateTripEmpty(t *testing.T) {
 func TestUpdateEmpty(t *testing.T) {
 	var th TripHistory
 	var params FlapParams
-	d,err := th.Update(&params,0)
+	d,f,err := th.Update(&params,0)
 	if err == nil {
 		t.Error("No error on empty history")
 	}
 	if d != 0 {
 		t.Error("Returned distance for empty history")
+	}
+	if f != 0 {
+		t.Error("Returned flight count for empty history")
 	}
 }
 
@@ -527,7 +530,7 @@ func TestUpdateNowNotWholeDays(t *testing.T) {
 	var th TripHistory
 	populateFlights(&th,1,1)
 	var params FlapParams
-	_,err := th.Update(&params,SecondsInDay-1)
+	_,_,err := th.Update(&params,SecondsInDay-1)
 	if err == nil {
 		t.Error("No error on now not whole days")
 	}
@@ -537,7 +540,7 @@ func TestUpdateOneFlight(t *testing.T) {
 	var th TripHistory
 	params := FlapParams{TripLength:50,FlightsInTrip:50,FlightInterval:1}
 	populateFlights(&th,1,1)
-	d,err := th.Update(&params,SecondsInDay)
+	d,f,err := th.Update(&params,SecondsInDay)
 	if err != nil {
 		t.Error("Update failed")
 	}
@@ -548,7 +551,10 @@ func TestUpdateOneFlight(t *testing.T) {
 	if d != th.entries[0].Distance {
 		t.Error("Returned wrong distance for one flight today",d)
 	}
-	d,err = th.Update(&params,SecondsInDay*2)
+	if f != 1 {
+		t.Error("Returned incorrect flight count",f)
+	}
+	d,f,err = th.Update(&params,SecondsInDay*2)
 	if err != nil {
 		t.Error("Update failed")
 	}
@@ -559,6 +565,10 @@ func TestUpdateOneFlight(t *testing.T) {
 	if d != 0 {
 		t.Error("Returned distance for no flights today",d)
 	}
+	if f != 0 {
+		t.Error("Returned non-zero fiight count for no flights today",f)
+	}
+
 }
 
 func TestUpdateOneTrip(t *testing.T) {
@@ -569,14 +579,14 @@ func TestUpdateOneTrip(t *testing.T) {
 	th2 := th
 	th2.entries[1].et = etJourneyEnd
 	th2.entries[0].et = etTripEnd
-	_,err := th.Update(&params,SecondsInDay*4)
+	_,_,err := th.Update(&params,SecondsInDay*4)
 	if (err != nil) {
 		t.Error("Update failed", err)
 	}
 	if !compareFlights(&th,&th2) {
 		t.Error("Update failed to end trip",th)
 	}
-	_,err = th.Update(&params,SecondsInDay*5)
+	_,_,err = th.Update(&params,SecondsInDay*5)
 	if (err != ENOCHANGEREQUIRED) {
 		t.Error("Update didnt realise no update required", err)
 	}
@@ -598,7 +608,7 @@ func TestUpdateTwoTrips(t *testing.T) {
 	th2.entries[2].et = etTripEnd
 	th2.entries[1].et = etJourneyEnd
 	th2.entries[0].et = etTripEnd
-	_,err := th.Update(&params,SecondsInDay*6)
+	_,_,err := th.Update(&params,SecondsInDay*6)
 	if (err != nil) {
 		t.Error("Update failed", err)
 	}
@@ -619,7 +629,7 @@ func TestUpdateReopedTrip(t *testing.T) {
 	th2.entries[2].et = etJourneyEnd
 	th2.entries[1].et = etJourneyEnd
 	th2.entries[0].et = etJourneyEnd
-	_,err := th.Update(&params,SecondsInDay*6)
+	_,_,err := th.Update(&params,SecondsInDay*6)
 	if (err != nil) {
 		t.Error("Update failed", err)
 	}
@@ -638,7 +648,7 @@ func TestUpdateMultiFlightJourneys(t *testing.T) {
 	th2:=th
 	th2.entries[0].et = etTripEnd
 	th2.entries[2].et = etJourneyEnd
-	_,err := th.Update(&params,SecondsInDay*4)
+	_,_,err := th.Update(&params,SecondsInDay*4)
 	if (err != nil) {
 		t.Error("Update failed", err)
 	}
@@ -656,7 +666,7 @@ func TestUpdateTripLength(t *testing.T) {
 	th.AddFlight(createFlight(4,SecondsInDay*4+6,SecondsInDay*4+7))
 	th2 := th
 	th2.entries[1].et = etTripEnd
-	_,err := th.Update(&params,SecondsInDay*5)
+	_,_,err := th.Update(&params,SecondsInDay*5)
 	if (err != nil) {
 		t.Error("Update failed", err)
 	}
@@ -671,14 +681,14 @@ func TestUpdateTripLengthLeftReopened(t *testing.T) {
 	th.AddFlight(createFlight(1,SecondsInDay,SecondsInDay+1))
 	th.AddFlight(createFlight(2,SecondsInDay*2,SecondsInDay*2+1))
 	th.entries[0].et = etTripReopen
-	_,err := th.Update(&params,SecondsInDay*11)
+	_,_,err := th.Update(&params,SecondsInDay*11)
 	if (err != nil) {
 		t.Error("Update failed", err)
 	}
 	if th.entries[0].et != etTripReopen {
 		t.Error("Update closeed trip left reopened too early",th)
 	}
-	_,err = th.Update(&params,SecondsInDay*12)
+	_,_,err = th.Update(&params,SecondsInDay*12)
 	if (err != nil) {
 		t.Error("Update failed", err)
 	}
@@ -697,7 +707,7 @@ func TestUpdateTravellerTripEnd(t *testing.T) {
 	th.entries[2].et = etTravellerTripEnd
 	th2:=th
 	th2.entries[0].et = etJourneyEnd
-	_,err := th.Update(&params,SecondsInDay*4)
+	_,_,err := th.Update(&params,SecondsInDay*4)
 	if (err != nil) {
 		t.Error("Update failed", err)
 	}
@@ -712,7 +722,7 @@ func TestUpdateFlightsInTrip(t *testing.T) {
 	populateFlights(&th,10,1)
 	th2 := th
 	th2.entries[0].et=etTripEnd
-	_,err := th.Update(&params,SecondsInDay*4)
+	_,_,err := th.Update(&params,SecondsInDay*4)
 	if (err != nil) {
 		t.Error("Update failed", err)
 	}
@@ -730,7 +740,7 @@ func TestUpdateFlightsFullHistory(t *testing.T) {
 	th2 := th
 	th2.entries[50].et=etTripEnd
 	th2.entries[0].et=etTripEnd
-	_,err := th.Update(&params,SecondsInDay)
+	_,_,err := th.Update(&params,SecondsInDay)
 	if (err != nil) {
 		t.Error("Update failed", err)
 	}

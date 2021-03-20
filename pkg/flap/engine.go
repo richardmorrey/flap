@@ -57,18 +57,6 @@ func (self* FlapParams) From(b *bytes.Buffer) error {
 	return dec.Decode(self)
 }
 
-/*
-// To implements db/Serialize
-func (self *FlapParams) To(buff *bytes.Buffer) error {
-	return binary.Write(buff, binary.LittleEndian,self)
-}
-
-// From implemments db/Serialize
-func (self *FlapParams) From(buff *bytes.Buffer) error {
-	return binary.Read(buff,binary.LittleEndian,self)
-}
-*/
-
 type backfillState struct {
 	totalGrounded uint64
 }
@@ -168,7 +156,7 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 		self.Administrator.pc.change(bac,pd) 
 		if (self.Administrator.params.Promises.Algo & pamCorrectBalances == pamCorrectBalances) &&
 				   (bac < 0) {
-			t.balance -= bac
+			t.Balance -= bac
 		}
 	}
 
@@ -241,6 +229,7 @@ func (self *Engine) UpdateTripsAndBackfill(now EpochTime) (UpdateBackfillStats,e
 		ut.Grounded += elem.Grounded
 		ut.Travellers += elem.Travellers
 		ut.Distance += elem.Distance
+		ut.Flights += elem.Flights
 		ut.ClearedDistanceDeltas = append(ut.ClearedDistanceDeltas,elem.ClearedDistanceDeltas...)
 		ut.ClearedDaysDeltas = append(ut.ClearedDaysDeltas,elem.ClearedDaysDeltas...)
 		if (elem.Err != nil) {
@@ -257,6 +246,7 @@ type UpdateBackfillStats struct {
 	Grounded 		uint64
 	Travellers 		uint64
 	Distance  		Kilometres
+	Flights			uint64
 	Share			Kilometres
 	ClearedDistanceDeltas	[]Kilometres
 	ClearedDaysDeltas	[]Days
@@ -304,30 +294,31 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 			traveller := it.Value()
 
 			// Update trip history
-			distanceYesterday,err := traveller.tripHistory.Update(&self.Administrator.params,now) 
+			distanceYesterday,flightsYesterday,err := traveller.tripHistory.Update(&self.Administrator.params,now) 
 			if err == nil {
 				if distanceYesterday > 0 {
 					us.Distance += distanceYesterday
 					us.Travellers ++
+					us.Flights += flightsYesterday
 				}
 				changed = true
 			}
 			
 			// Report any clearance deltas if appropriate
-			if (traveller.kept.Clearance > 0 && traveller.kept.StackIndex==0) {
+			if (traveller.Kept.Clearance > 0 && traveller.Kept.StackIndex==0) {
 				nowDays := Days(now.toEpochDays(false))
-				clearDays := Days(traveller.kept.Clearance.toEpochDays(false))
+				clearDays := Days(traveller.Kept.Clearance.toEpochDays(false))
 				if (nowDays == clearDays) {
-					us.ClearedDistanceDeltas = append(us.ClearedDistanceDeltas,traveller.balance)
+					us.ClearedDistanceDeltas = append(us.ClearedDistanceDeltas,traveller.Balance)
 				}
-				if (traveller.balance + share >= 0) {
+				if (traveller.Balance + share >= 0) {
 					us.ClearedDaysDeltas = append(us.ClearedDaysDeltas,nowDays-clearDays)
 				}
 			}
 
 			// Backfill if not travelling and balance is negative
-			if !traveller.MidTrip() && traveller.balance < 0 {
-				traveller.balance += share
+			if !traveller.MidTrip() && traveller.Balance < 0 {
+				traveller.Balance += share
 				us.Grounded++
 				changed = true
 			}

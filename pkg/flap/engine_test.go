@@ -116,8 +116,8 @@ func TestEngineSubmitFlightsTaxiOverhead(t *testing.T) {
 	if err != nil {
 		t.Error("SubmitFlights failed to create traveller")
 	}
-	if traveller.balance != -110 {
-		t.Error("SubmitFlights didnt result in correct balance for traveller",traveller.balance)
+	if traveller.Balance != -110 {
+		t.Error("SubmitFlights didnt result in correct balance for traveller",traveller.Balance)
 	}
 }
 
@@ -244,11 +244,15 @@ func TestUpdateTripsAndBackfillEmpty(t  *testing.T) {
 		t.Error("Update failed with empty Travellers table",err)
 	}
 	if us.Travellers != 0 {
-		t.Error("Update returned some travellers for an empty table",err)
+		t.Error("Update returned some travellers for an empty table",us.Travellers)
 	}
 	if us.Distance != 0 {
-		t.Error("Update returned some distance for an empty table",err)
+		t.Error("Update returned some distance for an empty table",us.Distance)
 	}
+	if us.Flights != 0 {
+		t.Error("Update returned some flights for an empty table",us.Flights)
+	}
+
 	if us.Grounded != 0 {
 		t.Error("Update returned some grounded travllers  for an empty table",err)
 	}
@@ -274,8 +278,8 @@ func TestUpdateTripsAndBackfillOne(t  *testing.T) {
 		t.Error("UpdateTripsAndBackfill failed to end trip of one traveller",traveller.tripHistory.AsJSON())
 	}
 	expectedBalance := 100 - (flights[0].Distance+flights[1].Distance)
-	if traveller.balance !=  expectedBalance {
-		t.Error("UpdateTripsAndBackfill didnt backfill correctly", traveller.balance)
+	if traveller.Balance !=  expectedBalance {
+		t.Error("UpdateTripsAndBackfill didnt backfill correctly", traveller.Balance)
 	}
 	if engine.Administrator.bs.totalGrounded != 1 {
 		t.Error("UpdateTripsAndBackfill set wrong value for totalGrounded", engine.Administrator.bs.totalGrounded)
@@ -286,6 +290,10 @@ func TestUpdateTripsAndBackfillOne(t  *testing.T) {
 	if us.Distance !=0 {
 		t.Error("Update returned some distance when no one travelled yesterday",err)
 	}
+	if us.Flights !=0 {
+		t.Error("Update returned some flights when no one travelled yesterday",err)
+	}
+
 	if us.Grounded != engine.Administrator.bs.totalGrounded {
 		t.Error("Update returned wroung grounded value",us.Grounded)
 	}
@@ -338,23 +346,23 @@ func testUpdateTripsThreaded(t *testing.T,threads int, db db.Database) {
 		t.Error("UpdateTripsAndBackfill failed to end trip of traveller 1",traveller.tripHistory.AsJSON())
 	}
 	expectedBalance := 100 - (flights13[0].Distance+flights13[1].Distance)
-	if traveller.balance !=  expectedBalance {
-		t.Error("UpdateTripsAndBackfill didnt backfill traveller 1correctly", expectedBalance,traveller.balance)
+	if traveller.Balance !=  expectedBalance {
+		t.Error("UpdateTripsAndBackfill didnt backfill traveller 1correctly", expectedBalance,traveller.Balance)
 	}
 	traveller,_ = engine.Travellers.GetTraveller(passport3) 
 	if traveller.tripHistory.entries[0].et != etTripEnd {
 		t.Error("UpdateTripsAndBackfill failed to end trip of traveller 3",traveller.tripHistory.AsJSON())
 	}
-	if traveller.balance !=  expectedBalance {
-		t.Error("UpdateTripsAndBackfill didnt backfill traveller 3 correctly", traveller.balance)
+	if traveller.Balance !=  expectedBalance {
+		t.Error("UpdateTripsAndBackfill didnt backfill traveller 3 correctly", traveller.Balance)
 	}
 	traveller,_ = engine.Travellers.GetTraveller(passport2) 
 	if traveller.tripHistory.entries[0].et != etFlight {
 		t.Error("UpdateTripsAndBackfill ended trip of traveller 2",traveller.tripHistory.AsJSON())
 	}
 	expectedBalance = -(flights2[0].Distance+flights2[1].Distance)
-	if traveller.balance !=  expectedBalance {
-		t.Error("UpdateTripsAndBackfill backfilled traveller 2", traveller.balance)
+	if traveller.Balance !=  expectedBalance {
+		t.Error("UpdateTripsAndBackfill backfilled traveller 2", traveller.Balance)
 	}
 	if engine.Administrator.bs.totalGrounded != 2 {
 		t.Error("UpdateTripsAndBackfill set wrong value for totalGrounded", engine.Administrator.bs.totalGrounded)
@@ -363,7 +371,10 @@ func testUpdateTripsThreaded(t *testing.T,threads int, db db.Database) {
 		t.Error("Update returned no travellers when someone travelled yesterday",us.Travellers,flights2[1].Start)
 	}
 	if us.Distance != flights2[1].Distance {
-		t.Error("Update returned no distance when someone travelled yesterday",us.Distance)
+		t.Error("Update returned incorrect distance travelled yesterday",us.Distance)
+	}
+	if us.Flights !=  1 {
+		t.Error("Update returned Incorrect flight count",us.Flights)
 	}
 	if us.Grounded != 2 {
 		t.Error("Update returned wrong value for grounded",us.Grounded)
@@ -445,12 +456,12 @@ func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
 	if err != nil {
 		t.Error("Failed to get traveller when testing keep")
 	}
-	if traveller.kept.Clearance != SecondsInDay*4 {
-		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.kept.Clearance)
+	if traveller.Kept.Clearance != SecondsInDay*4 {
+		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.Kept.Clearance)
 	}
 
 	// Check traveller is backfilled even though they are cleared to fly
-	startbalance := traveller.balance
+	startbalance := traveller.Balance
 	_,err = engine.UpdateTripsAndBackfill(SecondsInDay*4)
 	if err != nil {
 		t.Error("Update failed when trying to test keep",err)
@@ -459,11 +470,11 @@ func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
 	if err != nil {
 		t.Error("Failed to get traveller when testing keep")
 	}
-	if traveller.balance != startbalance+20 {
-		t.Error("Failed to backfill cleared traveller with negative balance",startbalance,traveller.balance)
+	if traveller.Balance != startbalance+20 {
+		t.Error("Failed to backfill cleared traveller with negative balance",startbalance,traveller.Balance)
 	}
-	if traveller.kept.Clearance != SecondsInDay*4 {
-		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.kept.Clearance)
+	if traveller.Kept.Clearance != SecondsInDay*4 {
+		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.Kept.Clearance)
 	}
 
 }
@@ -502,8 +513,8 @@ func TestUpdateTripsAndBackfillGap(t  *testing.T) {
 
 	// Confirm traveller now has a clearance date
 	traveller,err := engine.Travellers.GetTraveller(passport)
-	if traveller.kept.Clearance != SecondsInDay*4 {
-		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.kept.Clearance)
+	if traveller.Kept.Clearance != SecondsInDay*4 {
+		t.Error("UpdateTripsAndBackfill failed to set expected clearance date",traveller.Kept.Clearance)
 	}
 }
 

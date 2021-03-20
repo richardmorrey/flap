@@ -395,6 +395,14 @@ func (self *tripState) updateJourney(f* Flight, now EpochTime, params *FlapParam
 	}
 }
 
+func (self *tripState) updateStats(f* Flight, now EpochTime,dy* Kilometres, fy* uint64) {
+	d := f.yesterday(now)
+	if d > 0 {
+		*dy += d
+		*fy += 1
+	}
+}
+
 func (self* tripState) nextEntry(th *TripHistory,i tripHistoryIndex) *Flight {
 	self.flights++
 	entry:=&(th.entries[i])
@@ -416,18 +424,19 @@ func (self *Flight) yesterday(now EpochTime) Kilometres {
 // It automatically sets a flight to TripEnd at the point where two JourneyEnds have been added since the start of a Trip.
 // It is written to be optimised for the common case where no flights have been added since the last  update.
 // It ensures history is correct from start of trip before current/last onwards, to cope with removed flights.
-func (self *TripHistory) Update(params *FlapParams,now EpochTime) (Kilometres,error) {
+func (self *TripHistory) Update(params *FlapParams,now EpochTime) (Kilometres,uint64,error) {
 	
 	var distanceYesterday  Kilometres
+	var flightsYesterday uint64
 
 	// Check for empty trip history
 	if (self.empty()) {
-		return 0,EEMPTYTRIPHISTORY
+		return 0,0,EEMPTYTRIPHISTORY
 	}
 
 	// Check now is start of day
 	if now % SecondsInDay !=  0 {
-		return 0,EEPOCHNOTSTARTOFDAY
+		return 0,0,EEPOCHNOTSTARTOFDAY
 	}
 
 	// Choose where in trip history to start from.
@@ -437,12 +446,12 @@ func (self *TripHistory) Update(params *FlapParams,now EpochTime) (Kilometres,er
 	// ... if there are no changes since last update
 	// and we are at trip end there is nothing to do... 
 	if self.oldestChange ==0 && (self.entries[0].et== etTripEnd || self.entries[0].et== etTravellerTripEnd) {
-		return 0, ENOCHANGEREQUIRED
+		return 0,0,ENOCHANGEREQUIRED
 	}
 	// ... always do entireity of latest trip otherwise ...
 	j,err := self.startOfTrip(self.oldestChange)
 	if err != nil {
-		return 0,err
+		return 0,0,err
 	}
 	// ... but if we have to do older flights go back to start of trip before.
 	if self.oldestChange>0 {
@@ -469,20 +478,18 @@ func (self *TripHistory) Update(params *FlapParams,now EpochTime) (Kilometres,er
 		// Update journey and then trip
 		state.updateJourney(entry,nowthen,params,false)
 		state.updateTrip(entry,nowthen,params)
-
-		// Add up distance travelled yesterday for statistics and reporting
-		distanceYesterday+=entry.yesterday(now)
+		state.updateStats(entry,now,&distanceYesterday,&flightsYesterday)
 	}
 	
 	// Update latest flight using passed current day
 	entry := state.nextEntry(self,0)
 	state.updateJourney(entry,now,params,true)
 	state.updateTrip(entry,now,params)
-	distanceYesterday+=entry.yesterday(now)
+	state.updateStats(entry,now,&distanceYesterday,&flightsYesterday)
 
 	// Reset oldest added
 	self.oldestChange = 0
-	return distanceYesterday,nil
+	return distanceYesterday,flightsYesterday,nil
 }
 
 // EndTrip changes the type of the latest flight to traveller to a traveller trip end..

@@ -7,9 +7,7 @@ function showPlanning() {
 	  var xhr = new XMLHttpRequest();
 	  xhr.open('GET', '/user/v1/promises/id/'+id_token+"/b/"+ gBotBand + "/n/" + gBotNumber);
 	  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-	  xhr.onload = function() {
-				   renderPlanning(xhr.responseText);
-			 };
+	  xhr.onload = function() {renderPlanning((xhr.status == 200) ? xhr.responseText : "[]");};
 	  xhr.send();
        } else {
        		navbarActive('planning')

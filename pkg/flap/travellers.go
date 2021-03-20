@@ -44,37 +44,37 @@ type Traveller struct {
 	passport    Passport
 	tripHistory TripHistory
 	Promises    Promises
-	kept	    Promise
-	balance	    Kilometres
+	Kept	    Promise
+	Balance	    Kilometres
 }
 
-type clearanceReason		uint8
+type ClearanceReason		uint8
 const (
-	crGrounded	clearanceReason = 0x00
-	crMidTrip 	clearanceReason = 0x01  
-	crKeptPromise	clearanceReason = 0x02
-	crInCredit	clearanceReason = 0x03
+	CRGrounded	ClearanceReason = 0x00
+	CRMidTrip 	ClearanceReason = 0x01  
+	CRKeptPromise	ClearanceReason = 0x02
+	CRInCredit	ClearanceReason = 0x03
 )
 
 // Cleared returns true if the traveller is cleared
 // to travel at the specified date/time
 // Also indicates reason for clearance
-func (self *Traveller) Cleared(now EpochTime) clearanceReason {
+func (self *Traveller) Cleared(now EpochTime) ClearanceReason {
 
-	// If we have a.kept then update its Clearance date, which might
+	// If we have a.Kept then update its Clearance date, which might
 	// have changed due to "stacking"
-	if self.kept.Clearance != 0 {
-		self.kept.Clearance,_ = self.Promises.match(self.kept)
+	if self.Kept.Clearance != 0 {
+		self.Kept.Clearance,_ = self.Promises.match(self.Kept)
 	}
 
 	// Cleared to travel if in a trip, past the clearance date or with a distance account in credit
-	cr := crGrounded
+	cr := CRGrounded
 	if (self.tripHistory.MidTrip()) {
-		cr = crMidTrip
-	} else if (self.kept.Clearance > 0 && self.kept.Clearance <= now) {
-		cr = crKeptPromise 
-	} else if self.balance >=0 {
-		cr = crInCredit
+		cr = CRMidTrip
+	} else if (self.Kept.Clearance > 0 && self.Kept.Clearance <= now) {
+		cr = CRKeptPromise 
+	} else if self.Balance >=0 {
+		cr = CRInCredit
 	}
 	return cr
 }
@@ -89,7 +89,7 @@ func (self *Traveller) keep() bool {
 			err = self.EndTrip()
 			if err == nil {
 				logDebug("Kept promise for", self.passport.ToString(), ". Clearance set to",p.Clearance.ToTime())
-				self.kept=p
+				self.Kept=p
 				kept = true
 			} else  {
 				logError(err)
@@ -132,8 +132,8 @@ func (self *Traveller) submitFlight(flight *Flight,now EpochTime, taxiOH Kilomet
 
 	//  Make sure we are cleared to travel
 	cr := self.Cleared(now) 
-	if cr == crGrounded {
-		logDebug("balance:",self.balance,"cleared:",self.kept.Clearance.ToTime())
+	if cr == CRGrounded {
+		logDebug("balance:",self.Balance,"cleared:",self.Kept.Clearance.ToTime())
 		return 0,0,EGROUNDED
 	}
 
@@ -144,15 +144,15 @@ func (self *Traveller) submitFlight(flight *Flight,now EpochTime, taxiOH Kilomet
 	}
 
 	// Debit flight distance and any taxi overhead from balance
-	bac := self.balance
-	pd := self.kept.Distance
+	bac := self.Balance
+	pd := self.Kept.Distance
 	if debit {
-		self.balance -= (flight.Distance + taxiOH)
+		self.Balance -= (flight.Distance + taxiOH)
 	}
 
 	// Reset any kept promise
-	if cr == crKeptPromise {
-		self.kept = Promise{}
+	if cr == CRKeptPromise {
+		self.Kept = Promise{}
 		return bac,pd,nil
 	}
 	return 0,0,nil
@@ -253,11 +253,11 @@ func (self *Traveller) To(buff *bytes.Buffer) error {
 	if err != nil {
 		return logError(err)
 	}
-	err = self.kept.To(buff)
+	err = self.Kept.To(buff)
 	if err != nil {
 		return logError(err)
 	}
-	return binary.Write(buff,binary.LittleEndian,&(self.balance))
+	return binary.Write(buff,binary.LittleEndian,&(self.Balance))
 }
 
 func (self *Traveller) From(buff *bytes.Buffer) error {	
@@ -273,11 +273,11 @@ func (self *Traveller) From(buff *bytes.Buffer) error {
 	if err != nil {
 		return logError(err)
 	}
-	err = self.kept.From(buff)
+	err = self.Kept.From(buff)
 	if err != nil {
 		return logError(err)
 	}
-	return binary.Read(buff,binary.LittleEndian,&(self.balance))
+	return binary.Read(buff,binary.LittleEndian,&(self.Balance))
 }
 
 type TravellersIterator struct {

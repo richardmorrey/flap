@@ -7,9 +7,7 @@ function showHistory() {
 	  var xhr = new XMLHttpRequest();
 	  xhr.open('GET', '/user/v1/flighthistory/id/'+id_token+"/b/"+gBotBand + "/n/" + gBotNumber);
 	  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-	  xhr.onload = function() {
-				   renderHistory(xhr.responseText);
-			 };
+	  xhr.onload = function() {renderHistory((xhr.status == 200) ? xhr.responseText : "[]");};
 	  xhr.send();
        } else {
        		navbarActive('history');

@@ -105,6 +105,7 @@ func (self *verboseStats) reset() {
 type summaryStatsRow 	struct {
 	DailyTotal		float64	
 	Travelled		float64
+	Flights			float64
 	Travellers		float64
 	Grounded		float64
 	Share			float64
@@ -131,6 +132,7 @@ func (self *summaryStats) update(increment summaryStatsRow, rdd flap.Days, t db.
 	}
 	self.Rows[i].DailyTotal +=increment.DailyTotal
 	self.Rows[i].Travelled += increment.Travelled
+	self.Rows[i].Flights += increment.Flights
 	self.Rows[i].Travellers += increment.Travellers
 	self.Rows[i].Grounded += increment.Grounded
 	self.Rows[i].Share += increment.Share
@@ -541,6 +543,7 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 			DailyTotal:float64(flapParams.DailyTotal)/float64(self.ModelParams.ReportDayDelta),
 			Travellers:float64(us.Travellers)/float64(self.ModelParams.ReportDayDelta),
 			Travelled:float64(us.Distance)/float64(self.ModelParams.ReportDayDelta),
+			Flights:float64(us.Flights)/float64(self.ModelParams.ReportDayDelta),
 			Grounded:float64(us.Grounded)/float64(self.ModelParams.ReportDayDelta), 
 			Share: float64(us.Share)/float64(self.ModelParams.ReportDayDelta),
 			Date: currentDay},
@@ -791,6 +794,40 @@ func (self *Engine) PromisesAsJSON(band uint64,bot uint64) (string,error) {
 		promises = append(promises,jsonPromise{TripStart:p.TripStart.ToTime(),TripEnd:p.TripEnd.ToTime(),Clearance:p.Clearance.ToTime(),Distance:p.Distance,Stacked:p.StackIndex,CarriedOver:p.CarriedOver})
 	}
 	jsonData, _ := json.MarshalIndent(promises, "", "    ")
+	return string(jsonData),nil
+}
+
+type jsonAccount struct {
+	Balance  flap.Kilometres
+	Cleared  flap.ClearanceReason
+	ClearanceDate time.Time 
+}
+
+// Write out promises for the given traveller as JSON string
+func (self *Engine) AccountAsJSON(band uint64,bot uint64, now flap.EpochTime) (string,error) {
+
+	// Get traveller's passport
+	p,err := self.bandToPassport(band,bot)
+	if (err != nil) {
+		return "",err
+	}
+
+	//  Initialize flap
+	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
+	defer fe.Release()
+	
+	// Resolve passport to traveller
+	t,err := fe.Travellers.GetTraveller(p)
+	if err != nil {
+		return "",logError(err)
+	}
+
+	// Render account state as JSON
+	var account jsonAccount
+	account.Balance = t.Balance
+	account.Cleared = t.Cleared(now)
+	account.ClearanceDate =  t.Kept.Clearance.ToTime()
+	jsonData, _ := json.MarshalIndent(account, "", "    ")
 	return string(jsonData),nil
 }
 
