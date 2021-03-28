@@ -137,22 +137,66 @@
 			<div class="card my-1 mx1">
 			<div class="card-body">
 				<h6 class="card-title">Calendar</h6>
-				<div>Click a date or press <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill:#dc3545"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm7 14h-5v5h-4v-5h-5v-4h5v-5h4v5h5v4z"/></svg> to add a new trip</div>
+				<div class="small text-muted">Click a date or press <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill:#dc3545"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm7 14h-5v5h-4v-5h-5v-4h5v-5h4v5h5v4z"/></svg> to add a new trip.</div>
 	      			<div id="calendar"></div>
 			</div>
 			</div>
 		</div>
       </div>
 
-      <div class="row d-none" id="pg_account">
-  		<div class="col">
-	      		<div class="card mt-2">
-		      <div class="card-body lead">
-	   			<img style="height:10rem"  src="./kb.svg"></img>
-			<div>Part-time developers at work. Please return in a month or two to see a functioning page here.</div>	      </div>
+
+      <div class="d-none"  id="pg_account">
+      <div class="row no-gutters">
+  		
+	      	<div class="col">
+		<div class="card my-1 mx-1">
+		      <div class="card-body">
+			<h6 class="card-title">Overview</h6>
+				<table style="height:100%;width:100%;margin: 0 auto;text-align:center;">
+				<tr class="small text-muted">
+				<td>status</td>
+				<td>balance</td>
+				<td>allowed to fly</td>
+				</tr>
+				<tr class="h2">
+					<td><span class="badge badge-pill" id="grounded">GROUNDED</span></td>
+					<td><span class="badge badge-pill" id="balance"></span></td>
+					<td><span class="badge badge-pill badge-secondary" id="clearancedate"></span></td>
+				</tr>
+				</table>
 			</div>
+	    	</div>	
+		</div>
+
+		<div class="col">
+		<div class="card my-1 mx-1">
+		      <div class="card-body">
+			<h6 class="card-title">Transaction History</h6>
+		      </div>
+	    	</div>
 		</div>
       </div>
+    
+      <div class="row no-gutters">
+	   
+	        <div class="col">
+  		<div class="card my-1 mx-1">
+		      <div class="card-body">
+			<h6 class="card-title">Distance Travelled</h6>
+		      </div>
+	    	</div>
+		</div>
+		
+		<div class="col">
+		<div class="card my-1 mx-1">
+		      <div class="card-body">
+			<h6 class="card-title">Carbon Footprint</h6>
+		      </div>
+	    	</div>
+		</div>
+      </div>
+      </div>
+
 
       <div class="row d-none no-gutters" id="pg_history">
   		    <div class="col">
@@ -387,6 +431,7 @@ often they fly.
 <script src="./charts.js"></script>
 <script src="./history.js"></script>
 <script src="./planning.js"></script>
+<script src="./account.js"></script>
 <script>
 	$(document).ready(function() {
 		$('[data-toggle="tooltip"]').tooltip({ trigger : 'hover'})

@@ -48,7 +48,8 @@
        showHistory();
       });
       $('#nav-account').click(function() {
-        navbarActive('account')
+       waitCursorOn();
+       showAccount();
       });
 
     });
@@ -125,13 +126,14 @@ var gPageTitles=['Welcome','Welcome','Statistics','Trip Planning','Flight Histor
 
 
   var gBotBand=5
-  var gBotNumber=1
+  var gBotNumber=0
   $('#changeModal').on('hidden.bs.modal', function (e) {
 
 	  gBotNumber = $('#tNum').val()
 	  gBotBand = $("#tBand").prop('selectedIndex')
 	  historyInit=false
 	  planningInit=false
+	  accountInit=false
 	  $('#nav-'+gPage).trigger("click");
   })
 
