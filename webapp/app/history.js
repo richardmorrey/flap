@@ -2,21 +2,15 @@ var historyInit=false
 function showHistory() {
 	if (!historyInit)
 	{
-	  var user = GoogleAuth.currentUser.get();
-	  var id_token = user.getAuthResponse().id_token;
-	  var xhr = new XMLHttpRequest();
-	  xhr.open('GET', '/user/v1/flighthistory/id/'+id_token+"/b/"+gBotBand + "/n/" + gBotNumber);
-	  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-	  xhr.onload = function() {renderHistory((xhr.status == 200) ? xhr.responseText : "[]");};
-	  xhr.send();
+		renderHistory()
        } else {
        		navbarActive('history');
        }
 }
 
 var gmapcreated=false
-function renderHistory(text) {
-	populateBoard(text)
+function renderHistory() {
+	populateBoard()
 	navbarActive('history');
 	if (!gmapcreated) {
 		$('#world-map').vectorMap({map: 'world_mill',zoomButtons : false, backgroundColor:'white',regionStyle: { initial: { fill: '#dc3545' }, hover: { fill: 'black' }} , 
@@ -36,20 +30,19 @@ function renderHistory(text) {
 }
 
 var flights=[]
-function populateBoard(text) {
-	var raw = JSON.parse(text)
+function populateBoard() {
 	$('#flightList').remove();
 	var active=" active "
 	var tf=0
 	var rows="<div id='flightList'>"
-	for (i in raw)  {
-		for (j in raw[i].Journeys) {
-			for (f in raw[i].Journeys[j].Flights) {
+	for (i in gTripHistory)  {
+		for (j in gTripHistory[i].Journeys) {
+			for (f in gTripHistory[i].Journeys[j].Flights) {
 				if (tf%5==0) {
 					rows+="<div class='list-group carousel-item w-100" + active + "h6'>"
 					active=" "
 				}
-				cf = raw[i].Journeys[j].Flights[f]
+				cf = gTripHistory[i].Journeys[j].Flights[f]
 				flights.push(cf)
 				start = moment.utc(cf.Start)
 				end  = moment.utc(cf.End)

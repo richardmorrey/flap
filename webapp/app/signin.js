@@ -84,7 +84,8 @@ var gPageTitles=['Welcome','Welcome','Statistics','Trip Planning','Flight Histor
     	}
     }
     if (isAuthorized) {
-	showCharts()
+	waitCursorOn()
+	showAccount()
 	$("#useremail").text(user.getBasicProfile().getEmail())
 	
     } else {
