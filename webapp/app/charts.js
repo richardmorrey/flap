@@ -45,8 +45,8 @@ function renderCharts(text) {
 	  data: {
 		labels: dateLabels,		
 		datasets: [
-				{label: 'Daily Allowance',data: da,borderColor: "rgba(1,1,1)",backgroundColor: "rgba(1,1,1)",borderDash: [10,10],fill:false,pointRadius:0},
-			        {label: 'Distance Travelled',data: travelled,borderColor: "rgba(170,53,69)",backgroundColor: "rgba(170,53,69)",fill:false,pointRadius:0}
+				{pointStyle:"line",label: 'Daily Allowance',data: da,borderColor: "rgba(1,1,1)",backgroundColor: "rgba(1,1,1)",borderDash: [10,10],fill:false,pointRadius:0},
+			        {pointStyle:"line",label: 'Distance Travelled',data: movingAvg(travelled,30),borderColor: "rgba(170,53,69)",backgroundColor: "rgba(170,53,69)",fill:false,pointRadius:0}
 		 	]
 		},
 	  options: {
@@ -63,8 +63,8 @@ function renderCharts(text) {
 	  data: {
 		labels: dateLabels,		
 		datasets: [
-				{label: 'Daily Share',data: share,borderColor: "rgba(1,1,1)",backgroundColor: "rgba(1,1,1)",borderDash: [10,10],fill:false,pointRadius:0},
-			        {label: 'Distance Travelled',data: usertravelled,borderColor: "rgba(170,53,69)",backgroundColor: "rgba(170,53,69)",fill:false,pointRadius:0}
+				{pointStyle:"line",label: 'Daily Share',data: share,borderColor: "rgba(1,1,1)",backgroundColor: "rgba(1,1,1)",borderDash: [10,10],fill:false,pointRadius:0},
+			        {pointStyle:"line",label: 'Distance Travelled',data: movingAvg(usertravelled,30),borderColor: "rgba(170,53,69)",backgroundColor: "rgba(170,53,69)",fill:false,pointRadius:0}
 		 	]
 		},
 	  options: {

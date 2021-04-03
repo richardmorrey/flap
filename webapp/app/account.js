@@ -38,19 +38,26 @@ function renderAccountCharts(text) {
 
 	var dateLabels=[]
 	var travelled=[]
+	var footprint=[]
+	var globalaverage=[]
+	var ukaverage=[]
 	var i=gFlights.length-1
 	var currentDay = moment.utc(gFlights[i].Start)
 	var now = moment()
 	while (currentDay.isBefore(now)) {
 		
 		var dt = 0
+		var fp = 0
 		while (i >=0 && currentDay.isSame(moment.utc(gFlights[i].Start),'month')) {
 			dt += gFlights[i].Distance
+			fp += (moment.utc(gFlights[i].End).diff(moment.utc(gFlights[i].Start),"seconds")/3600)*.25
 			i--
 		}
 		dateLabels.push(currentDay.toDate())
 		travelled.push(dt)
-		// add day
+		footprint.push(fp)
+		ukaverage.push(13.4/12)
+		globalaverage.push(5/12)
 		currentDay = currentDay.add(1,"month")
 	}
 
@@ -60,14 +67,34 @@ function renderAccountCharts(text) {
 	  data: {
 		labels: dateLabels,		
 		datasets: [
-			        {data: movingAvg(travelled,3),borderColor: "rgba(170,53,69)",backgroundColor: "rgba(170,53,69)",fill:true,pointRadius:0}
+			        {data: movingAvg(travelled,3),borderColor: "black",backgroundColor: "#dc3545",fill:true,pointRadius:0}
 		 	],
+		},
+	  options: {
+		legend: { display:false},
+		scales: {
+			xAxes: [{type: "time", time: {unit: 'day', unitStepSize: 100,round: 'day',displayFormats: {day: 'YYYY-MM-DD'}}}],
+			yAxes: [{scaleLabel: {display: true,labelString: "Distance Per Month (km)",fontColor: "black"}}]
+			}
+	           }
+          });
+
+	var ctx = document.getElementById('myfootprintchart').getContext('2d');
+	var tdchart2 = new Chart(ctx, {
+	  type: 'line',
+	  data: {
+		labels: dateLabels,		
+		datasets: [
+			        {pointStyle:"line",label:"You (flights only)", data: movingAvg(footprint,3),borderColor: "#dc3545",fill:false,pointRadius:0},
+				{pointStyle:"line", label:"UK Avg (total)", data: ukaverage,borderColor: "black",fill:false,pointRadius:0,borderDash:[5,5]},
+				{pointStyle:"line",label:"Global Avg (total)",data: globalaverage,borderColor:"black",fill:false,pointRadius:0,borderDash:[2,2]}
+		],
 		},
 	  options: {
 		legend: { labels: {usePointStyle:true}},
 		scales: {
 			xAxes: [{type: "time", time: {unit: 'day', unitStepSize: 100,round: 'day',displayFormats: {day: 'YYYY-MM-DD'}}}],
-			yAxes: [{scaleLabel: {display: true,labelString: "Distance Per Month (km)",fontColor: "black"}}]
+			yAxes: [{scaleLabel: {display: true,labelString: "CO2 per month (Tonnes)",fontColor: "black"}}]
 			}
 	           }
           });
