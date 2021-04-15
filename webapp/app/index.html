@@ -200,18 +200,18 @@
       </div>
       </div>
 
-
-      <div class="row d-none no-gutters" id="pg_history">
+      <div class="d-none" id="pg_history">
+      <div class="row no-gutters">
   		    <div class="col">
 	     
 	      <div class="card my-1 mx-1">
 		      <div class="card-body">
 			 <h6 class="card-title">Departures</h6>
 		       <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel" data-interval=false style="height:20rem;font-family:monospace;">
-			       <div class="mx-auto" style="width:25rem"><ul class="list-group">
-					 <li class='list-group-item h6 text-white bg-dark font-weight-bold'>&nbsp;&nbsp;DATE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DEPART&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ARRIVE</li>
+			       <div class="mx-auto" style="xxwidth:27rem"><ul class="list-group">
+					 <li class='list-group-item h6 text-white bg-dark font-weight-bold' align="center">DATE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DEPART&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ARRIVE&nbsp;&nbsp;&nbsp;</li>
 				</ul>
- 		 		<div class="carousel-inner"><span id="cstub"></span></div>
+ 		 		<div class="carousel-inner" align="center"><span id="cstub"></span></div>
 			       </div>
   			<a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
     				<span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -234,28 +234,61 @@
 	    </div>
            </div>
       </div>
+      <div class="row no-gutters">
+	  <div class="col">
+          <div class="card my-1 mx-1">
+		 <div class="card-body">
+			 <center class="lead font-weight-bold">
+				 <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" style="fill:#dc3545" clip-rule="evenodd"><path d="M20 18v2h-20v-2h20zm-19.989-6.426l2.624-1.5 4.765 1.815s9.197-5.519 11.773-7.038c2.226-1.312 4.268-.853 4.647-.216.448.753.131 2.366-2.576 4.09-2.166 1.38-9.233 5.855-9.233 5.855-4.969 2.708-7.565.657-7.565.657l-4.435-3.663zm5.587-6.621l-2.598 1.5 6.252 3.173 5.388-3.227-9.042-1.446z"/></svg> 
+				 &nbsp;&nbsp;&nbsp;<span id="cityfrom"></span>
+				 &nbsp;&nbsp;&nbsp;<svg width="24" height="24" style="fill:#dc3545" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M3.691 10h6.309l-3-7h2l7 7h5c1.322-.007 3 1.002 3 2s-1.69 1.993-3 2h-5l-7 7h-2l3-7h-6.309l-2.292 2h-1.399l1.491-4-1.491-4h1.399l2.292 2"/></svg>
+				 &nbsp;&nbsp;&nbsp;<span id="flightdist"></span>km
+				 &nbsp;&nbsp;&nbsp;<svg width="24" height="24" style="fill:#dc3545"  xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M3.691 10h6.309l-3-7h2l7 7h5c1.322-.007 3 1.002 3 2s-1.69 1.993-3 2h-5l-7 7h-2l3-7h-6.309l-2.292 2h-1.399l1.491-4-1.491-4h1.399l2.292 2"/></svg>
+				 &nbsp;&nbsp;&nbsp;<span id="cityto"></span> 
+			 &nbsp;&nbsp;&nbsp;<svg width="24" height="24" style="fill:#dc3545" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M24.012 20h-20v-2h20v2zm-24.012-16l2.731.408 2.578 4.509s10.478 2.096 13.41 2.664c2.537.491 3.783 2.152 3.652 2.881-.154.862-1.713 1.878-4.626 1.402-2.546-.417-10.717-1.893-10.717-1.893-5.527-1.21-6.145-4.461-6.145-4.461l-.883-5.51zm10.007.702l-3.504-.702 2.361 4.608 6.293 1.244-5.15-5.15z"/></svg>
+			 </center>
+		 </div>
+	  </div>
+          </div>
+      </div>
+
+   </div>
 
    <div class="modal fade" tabindex="-1" aria-labelledby="changeModalLabel" aria-hidden="true" id="changeModal">
   	<div class="modal-dialog modal-dialog-scrollable">
 		<div class="modal-content">
       			<div class="modal-header">
-        			<h5 class="modal-title" id="changeModalLabel">Change Traveller Bot</h5>
+        			<h5 class="modal-title" id="changeModalLabel">Change Traveller</h5>
       			</div>
 			<div class="modal-body">
-				 <div class="form-group">
-    					<label for="tBand">Choose travel frequency:</label>
-    					<select class="form-control" id="tBand">
+				<input type="radio" name="type" id="realuser" disabled>
+				<label for = "realuser">Logged on user</label><br><br>
+				<input type="radio" name="type" id="bot" checked>
+				<label for "bot">Bot</label><br><br>
+					<div class="form-group card p-1">
+						<div class="input-group mb-3">
+  							<div class="input-group-prepend">
+    								<span class="input-group-text">Travel Frequency</span>
+  							</div>
+    							<select class="form-control" id="tBand">
       							<option>Very infrequent</option>
       							<option>Infrequent</option>
       							<option>Average</option>
       							<option>Frequent</option>
       							<option>Very Frequent</option>
 							<option selected="selected">Extemely Frequent</option>
-    					</select>
-					<label class="form-label" for="tNum">Select bot number between 0 and 100:</label>
-					<input type="range" min="0" max="100" value=0 id="tNum" class="form-control" oninput="this.nextElementSibling.value = this.value">
-					<output>0</output>
-  				</div>
+    							</select>
+						</div>
+						<div class="input-group mb-3">
+  							<div class="input-group-prepend">
+    								<span class="input-group-text">Bot Number</span>
+  							</div>
+							<input type="range" min="0" max="100" value=0 id="tNum" class="form-control" oninput="updateSlider(this.value)">
+							<div class="input-group-append">
+    								<span class="input-group-text" id="botslidervalue">0</span>
+  							</div>
+						</div>
+					</div>
 			</div>
 			<div class="modal-footer">
         			<button class="btn btn-danger btn-secondary" data-dismiss="modal">Close</button>

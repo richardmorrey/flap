@@ -21,42 +21,45 @@ function renderHistory() {
 		var map = $('#world-map').vectorMap('get', 'mapObject')
 		map.removeAllMarkers()
 	}
-        $('#flightList a').on('click', function (e) {
+        $('#flightList button').on('click', function (e) {
 	   	e.preventDefault()
            	showFlightPath(parseInt($(this).attr("href"),10))
 	})
-
+        showFlightPath(0)
 	historyInit=true
 }
 
 var flights=[]
 function populateBoard() {
+	var rpt=6
+	flights = []
 	$('#flightList').remove();
 	var active=" active "
 	var tf=0
-	var rows="<div id='flightList'>"
+	var rows="<div id='flightList' class='mx-auto'>"
 	for (i in gTripHistory)  {
 		for (j in gTripHistory[i].Journeys) {
 			for (f in gTripHistory[i].Journeys[j].Flights) {
-				if (tf%5==0) {
-					rows+="<div class='list-group carousel-item w-100" + active + "h6'>"
-					active=" "
+				if (tf%rpt==0) {
+					rows+="<div class='list-group carousel-item justify-content-center" + active + "h6'>"
 				}
 				cf = gTripHistory[i].Journeys[j].Flights[f]
 				flights.push(cf)
 				start = moment.utc(cf.Start)
 				end  = moment.utc(cf.End)
-				rows += "<a class='list-group-item list-group-item-action border-white text-white bg-dark' href='" + (flights.length-1).toString() + "'>&nbsp;&nbsp;" + start.format('YYYY-MM-DD') +  "&nbsp;&nbsp;" + start.format("hh:mm") + " " + gAirports[cf.From].Iata + "&nbsp;&nbsp;" + end.format("hh:mm") + " " + gAirports[cf.To].Iata + "</a>"
+				rows += "<button class='list-group-item list-group-item-action border-white text-white bg-dark" + active + "' href='" + (flights.length-1).toString() + "'>" + start.format('YYYY-MM-DD') +  "&nbsp;&nbsp;" + start.format("hh:mm") + " " + gAirports[cf.From].Iata + "&nbsp;&nbsp;" + end.format("hh:mm") + " " + gAirports[cf.To].Iata + "</button>"
 				tf++
-				if (tf==5) {
+				active=" "
+				if (tf==rpt) {
 					rows+="</div>"
 					tf=0
 				}
 			}
 		}
 	}
-	if (tf != 5) {
-		for (;tf < 5; tf ++) {
+
+	if (tf >0 && tf < rpt) {
+		for (;tf < rpt; tf ++) {
 			rows += "<a class='list-group-item border-white text-dark bg-dark' href='#'>&nbsp;</a>"
 		}
 		rows+="</div>"
@@ -84,4 +87,9 @@ function showFlightPath(i) {
 	map.removeAllMarkers()
 	map.addMarkers(markers)
 	map.setFocus({scale:20000/cf.Distance, lat:from[0]+(to[0]-from[0])/2, lng:from[1]+(to[1]-from[1])/2, animate:true})
+
+	$("#cityfrom").text(gAirports[cf.From].Cy);
+	$("#cityto").text(gAirports[cf.To].Cy);
+	$("#flightdist").text(Math.round(cf.Distance).toString()+" ");
+
 }

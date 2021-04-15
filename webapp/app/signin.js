@@ -86,8 +86,7 @@ var gPageTitles=['Welcome','Welcome','Statistics','Trip Planning','Flight Histor
     if (isAuthorized) {
 	waitCursorOn()
 	showAccount()
-	$("#useremail").text(user.getBasicProfile().getEmail())
-	
+	updateEmail()
     } else {
 	$("#useremail").text("")    
 	navbarActive("signout")
@@ -135,6 +134,15 @@ var gPageTitles=['Welcome','Welcome','Statistics','Trip Planning','Flight Histor
 	  historyInit=false
 	  planningInit=false
 	  accountInit=false
-	  $('#nav-'+gPage).trigger("click");
+	  updateEmail()
+	  $('#nav-account').trigger("click");
   })
 
+  function updateSlider(val) {
+     document.getElementById("botslidervalue").innerHTML = val;
+  }
+   
+  function updateEmail() {
+	//	$("#useremail").text(user.getBasicProfile().getEmail())
+	$("#useremail").text("Bot " + $( "#tBand option:selected" ).text() + " " +  gBotNumber.toString() )
+  }
