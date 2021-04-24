@@ -40,9 +40,13 @@ func (self *Passport) FromString(s string) error {
 	return nil
 }
 
+
 type Traveller struct {
+	version     uint8
+	Created	    EpochTime
 	passport    Passport
 	tripHistory TripHistory
+	Transactions Transactions
 	Promises    Promises
 	Kept	    Promise
 	Balance	    Kilometres
@@ -147,7 +151,10 @@ func (self *Traveller) submitFlight(flight *Flight,now EpochTime, taxiOH Kilomet
 	bac := self.Balance
 	pd := self.Kept.Distance
 	if debit {
-		self.Balance -= (flight.Distance + taxiOH)
+		self.transact(-flight.Distance,now,TTFlight)
+		if (taxiOH != 0) {
+			self.transact(-taxiOH,now,TTTaxiOverhead)
+		}
 	}
 
 	// Reset any kept promise
@@ -241,7 +248,15 @@ func (self* Traveller) put(writer db.Writer) error {
 }
 
 func (self *Traveller) To(buff *bytes.Buffer) error {
-	err := binary.Write(buff,binary.LittleEndian,&(self.passport))
+	err := binary.Write(buff,binary.LittleEndian,&(self.version))
+	if err != nil {
+		return logError(err)
+	}
+	err = binary.Write(buff,binary.LittleEndian,&(self.Created))
+	if err != nil {
+		return logError(err)
+	}
+	err = binary.Write(buff,binary.LittleEndian,&(self.passport))
 	if err != nil {
 		return logError(err)
 	}
@@ -252,7 +267,12 @@ func (self *Traveller) To(buff *bytes.Buffer) error {
 	err = self.Promises.To(buff)
 	if err != nil {
 		return logError(err)
+	}	
+	err = self.Transactions.To(buff)
+	if err != nil {
+		return logError(err)
 	}
+
 	err = self.Kept.To(buff)
 	if err != nil {
 		return logError(err)
@@ -261,7 +281,15 @@ func (self *Traveller) To(buff *bytes.Buffer) error {
 }
 
 func (self *Traveller) From(buff *bytes.Buffer) error {	
-	err := binary.Read(buff,binary.LittleEndian,&(self.passport))
+	err := binary.Read(buff,binary.LittleEndian,&(self.version))
+	if err != nil {
+		return logError(err)
+	}
+	err = binary.Read(buff,binary.LittleEndian,&(self.Created))
+	if err != nil {
+		return logError(err)
+	}
+	err = binary.Read(buff,binary.LittleEndian,&(self.passport))
 	if err != nil {
 		return logError(err)
 	}
@@ -273,11 +301,21 @@ func (self *Traveller) From(buff *bytes.Buffer) error {
 	if err != nil {
 		return logError(err)
 	}
+	err = self.Transactions.From(buff)
+	if err != nil {
+		return logError(err)
+	}
 	err = self.Kept.From(buff)
 	if err != nil {
 		return logError(err)
 	}
 	return binary.Read(buff,binary.LittleEndian,&(self.Balance))
+}
+
+// transact carries out a balance adjustment, recording the transaction for posterity
+func (self *Traveller) transact(amount Kilometres,now EpochTime, tt TransactionType) {
+	self.Transactions.add(Transaction{now,amount, tt})
+	self.Balance += amount
 }
 
 type TravellersIterator struct {

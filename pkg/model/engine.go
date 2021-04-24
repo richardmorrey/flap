@@ -797,6 +797,43 @@ func (self *Engine) PromisesAsJSON(band uint64,bot uint64) (string,error) {
 	return string(jsonData),nil
 }
 
+type jsonTransaction struct {
+	Date 	time.Time
+	Distance  flap.Kilometres
+	Type 	flap.TransactionType
+}
+
+// Write out promises for the given traveller as JSON string
+func (self *Engine) TransactionsAsJSON(band uint64,bot uint64) (string,error) {
+
+	// Get traveller's passport
+	p,err := self.bandToPassport(band,bot)
+	if (err != nil) {
+		return "",err
+	}
+
+	//  Initialize flap
+	fe := flap.NewEngine(self.db,flap.LogLevel(self.ModelParams.LogLevel),self.ModelParams.WorkingFolder)
+	defer fe.Release()
+	
+	// Resolve passport to traveller
+	t,err := fe.Travellers.GetTraveller(p)
+	if err != nil {
+		return "",logError(err)
+	}
+
+	// Render transactions as JSON
+	transactions := make([]jsonTransaction,0)
+	it := t.Transactions.NewIterator()
+	for it.Next() {
+		t := it.Value()
+		transactions = append(transactions,jsonTransaction{Date:t.Date.ToTime(),Distance: t.Distance, Type:t.TT})
+	}
+	jsonData, _ := json.MarshalIndent(transactions, "", "    ")
+	return string(jsonData),nil
+}
+
+
 type jsonAccount struct {
 	Balance  flap.Kilometres
 	Cleared  flap.ClearanceReason

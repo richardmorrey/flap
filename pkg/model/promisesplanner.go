@@ -196,7 +196,7 @@ func (self *promisesPlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now 
 	}
 
 	// Make promise
-	err = fe.Make(pp,proposal)
+	err = fe.Make(pp,proposal,now)
 	if err == nil {
 		logline := fmt.Sprintf("Made promise for %s for trip from %s to %s leaving %s returning %s", pp.ToString(),fromAirport.Code.ToString(), toAirport.Code.ToString(), sds.ToTime(), ede.ToTime())
 		logDebug(logline)

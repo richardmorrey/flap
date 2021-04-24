@@ -116,10 +116,11 @@ func Reset(database db.Database, destroy bool) error {
 // getCreateTraveller returns existing traveller record associated 
 // with provided passport details if it exists, and otherwise a new
 // traveller record with passport details filled in
-func (self *Engine) getCreateTraveller(passport Passport)  *Traveller {
+func (self *Engine) getCreateTraveller(passport Passport, now EpochTime)  *Traveller {
 	traveller,err := self.Travellers.GetTraveller(passport)
 	if err != nil {
 		traveller.passport=passport
+		traveller.Created=now
 	}
 	return &traveller
 }
@@ -141,7 +142,8 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 	}
 
 	// Retrieve traveller record
-	t := self.getCreateTraveller(passport)
+	t := self.getCreateTraveller(passport,now)
+
 	
 	// Add flights to traveller's flight history
 	for _,flight := range flights {
@@ -156,7 +158,7 @@ func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now Epoch
 		self.Administrator.pc.change(bac,pd) 
 		if (self.Administrator.params.Promises.Algo & pamCorrectBalances == pamCorrectBalances) &&
 				   (bac < 0) {
-			t.Balance -= bac
+			t.transact(-bac,now,TTBalanceAdjustment)
 		}
 	}
 
@@ -318,7 +320,7 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 
 			// Backfill if not travelling and balance is negative
 			if !traveller.MidTrip() && traveller.Balance < 0 {
-				traveller.Balance += share
+				traveller.transact(share,now,TTDailyShare)
 				us.Grounded++
 				changed = true
 			}
@@ -391,12 +393,12 @@ func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTi
 	}
 
 	// Ask for proposal and return the result
-	return self.getCreateTraveller(passport).Promises.propose(ts,te,distance,travelled,now,self.Administrator.predictor,
+	return self.getCreateTraveller(passport,now).Promises.propose(ts,te,distance,travelled,now,self.Administrator.predictor,
 								  self.Administrator.params.Promises.MaxStackSize)
 }
 
 // Make attempts to apply a proposal for changes to a traveller's set of clearance promises.
-func (self *Engine) Make(passport Passport, proposal *Proposal) error {
+func (self *Engine) Make(passport Passport, proposal *Proposal, now EpochTime) error {
 
 	// Validate arguments
 	if proposal == nil {
@@ -409,7 +411,7 @@ func (self *Engine) Make(passport Passport, proposal *Proposal) error {
 	}
 
 	// Make promise
-	t := self.getCreateTraveller(passport)
+	t := self.getCreateTraveller(passport,now)
 	err := t.Promises.make(proposal,self.Administrator.predictor)
 	if (err == nil) {
 		self.Travellers.PutTraveller(*t)

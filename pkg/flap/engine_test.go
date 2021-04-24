@@ -437,7 +437,7 @@ func TestUpdateTripsAndBackfillKeepPromises(t  *testing.T) {
 	if err != nil {
 		t.Error("Couldnt propose promise for testing keep",err)
 	}
-	err = engine.Make(passport,p)
+	err = engine.Make(passport,p,SecondsInDay)
 	if err != nil {
 		t.Error("Couldnt make promise for testing keep",err)
 	}
@@ -497,7 +497,7 @@ func TestUpdateTripsAndBackfillGap(t  *testing.T) {
 	if err != nil {
 		t.Error("Couldnt propose promise for testing keep",err)
 	}
-	err = engine.Make(passport,p)
+	err = engine.Make(passport,p,SecondsInDay)
 	if err != nil {
 		t.Error("Couldnt make promise for testing keep",err)
 	}
@@ -675,13 +675,13 @@ func TestMakePromisesInactive(t *testing.T) {
 	engine.Administrator.SetParams(paramsIn)
 	passport := NewPassport("987654321","uk")
 
-	err := engine.Make(passport,nil)
+	err := engine.Make(passport,nil,SecondsInDay)
 	if err != EINVALIDARGUMENT {
 		t.Error("Make doesnt report expected error when nil proposal provided",err)
 	}
 
 	var p Proposal
-	err = engine.Make(passport,&p)
+	err = engine.Make(passport,&p,SecondsInDay)
 	if err != EPROMISESNOTENABLED {
 		t.Error("Make doesnt report expected error when promises aren't enabled",err)
 	}
@@ -699,7 +699,7 @@ func TestMake(t *testing.T) {
 
 	var p Proposal
 	fillpromises(&(p.Promises))
-	err := engine.Make(passport,&p)
+	err := engine.Make(passport,&p,SecondsInDay)
 	if err != nil {
 		t.Error("Make returns error when promises are enabled",err)
 	}
@@ -707,6 +707,10 @@ func TestMake(t *testing.T) {
 	traveller,err := engine.Travellers.GetTraveller(passport) 
 	if err != nil {
 		t.Error("Make failed to create traveller")
+	}
+
+	if traveller.Created != SecondsInDay {
+		t.Error("Make failed to set traveller creation date/time")
 	}
 
 	if !reflect.DeepEqual(p.Promises.entries,traveller.Promises.entries) {
@@ -727,7 +731,7 @@ func TestMakeOldProposal(t *testing.T) {
 	var p Proposal
 	engine.Administrator.predictor.add(1,50)
 	engine.Administrator.predictor.add(2,15)
-	err := engine.Make(passport,&p)
+	err := engine.Make(passport,&p,SecondsInDay)
 	if err != EPROPOSALEXPIRED {
 		t.Error("Make returns error when promises are enabled",err)
 	}
