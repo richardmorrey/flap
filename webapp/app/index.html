@@ -107,11 +107,13 @@
 			      to find out how to use this free not-for-profit web app to
 			      reduce the amount you fly and shrink your carbon 
 <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" style="fill:#dc3545"><path d="M11.954 11c3.33 0 7.057 6.123 7.632 8.716.575 2.594-.996 4.729-3.484 4.112-1.092-.271-3.252-1.307-4.102-1.291-.925.016-2.379.836-3.587 1.252-2.657.916-4.717-1.283-4.01-4.073.774-3.051 4.48-8.716 7.551-8.716zm10.793-4.39c1.188.539 1.629 2.82.894 5.27-.704 2.341-2.33 3.806-4.556 2.796-1.931-.877-2.158-3.178-.894-5.27 1.274-2.107 3.367-3.336 4.556-2.796zm-21.968.706c-1.044.729-1.06 2.996.082 5.215 1.092 2.12 2.913 3.236 4.868 1.87 1.696-1.185 1.504-3.433-.082-5.215-1.596-1.793-3.824-2.599-4.868-1.87zm15.643-7.292c1.323.251 2.321 2.428 2.182 5.062-.134 2.517-1.405 4.382-3.882 3.912-2.149-.407-2.938-2.657-2.181-5.061.761-2.421 2.559-4.164 3.881-3.913zm-10.295.058c-1.268.451-1.92 2.756-1.377 5.337.519 2.467 2.062 4.114 4.437 3.269 2.06-.732 2.494-3.077 1.377-5.336-1.125-2.276-3.169-3.721-4.437-3.27z"/></svg>.
+			<br><br>
+			<b class="text-danger">Note this is an ALPHA VERSION with missing features. It is only possible to view accounts of "bot" travellers. Beta due in the Summer of 2021. Please post any feedback to <a href="https://groups.google.com/forum/#!forum/flying-is-a-privilege">FLAP Google Groups Forum</a>.</b>
 		      </div></div>
 	     </div>
       </div>
-
-    <div class="row d-none no-gutters" id="pg_statistics">
+    <div class="d-none"  id="pg_statistics">
+    	<div class="row no-gutters">
 	    <div class="col-lg">
 	     
 	      <div class="card mx-1 my-1">
@@ -120,25 +122,48 @@
 		       <canvas id="distancechart" style="max-width: 100%;"></canvas>
 		      </div>
 	     </div>
-      	     </div>
-      <div class="col-lg">
+      	    </div>
+           <div class="col-lg">
   	     <div class="card mx-1 my-1">
 		      <div class="card-body">
 		       <h6 class="card-title">Distance Per User</h6>
 		       <canvas id="userdistancechart" style="max-width: 100%;"></canvas>
 		      </div>
 	    </div>
-      </div>
-  </div>	
+      	   </div>
+        </div>	
 
+	<div class="row no-gutters">
+	    <div class="col-lg">
+	     
+	      <div class="card mx-1 my-1">
+		      <div class="card-body">
+		       <h6 class="card-title">Total Flights</h6>
+		       <canvas id="flightschart" style="max-width: 100%;"></canvas>
+		      </div>
+	     </div>
+      	    </div>
+           <div class="col-lg">
+  	     <div class="card mx-1 my-1">
+		      <div class="card-body">
+		       <h6 class="card-title">Flights Per User</h6>
+		       <canvas id="userflightschart" style="max-width: 100%;"></canvas>
+		      </div>
+	    </div>
+      	   </div>
+        </div>	
+
+    </div>
 
       <div class="row d-none" id="pg_planning">
   		<div class="col">
 			<div class="card my-1 mx1">
 			<div class="card-body">
 				<h6 class="card-title">Calendar</h6>
-				<div class="small text-muted">Click a date or press <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill:#dc3545"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm7 14h-5v5h-4v-5h-5v-4h5v-5h4v5h5v4z"/></svg> to add a new trip.</div>
-	      			<div id="calendar"></div>
+				<div class="small text-muted">Click a date or press <a data-toggle="modal" href="#planModal">
+						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill:#dc3545"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm7 14h-5v5h-4v-5h-5v-4h5v-5h4v5h5v4z"/></a></svg> to add a new trip.</div>
+	      		        <br>
+				<div id="calendar"></div>
 			</div>
 			</div>
 		</div>
@@ -252,6 +277,19 @@
           </div>
       </div>
 
+   </div>
+  
+   <div class="modal fade" tabindex="-1" aria-labelledby="planModalLabel" aria-hidden="true" id="planModal">
+  	<div class="modal-dialog modal-dialog-scrollable">
+		<div class="modal-content">
+      			<div class="modal-header">
+        			<h5 class="modal-title" id="changeModalLabel">Alpha Version</h5>
+      			</div>
+			<div class="modal-body">
+				This is an alpha version of FLAP and not fully-featured. Trip planning will be added in the beta version due in the Summer of 2021.
+			</div>
+		</div>
+	</div>
    </div>
 
    <div class="modal fade" tabindex="-1" aria-labelledby="changeModalLabel" aria-hidden="true" id="changeModal">

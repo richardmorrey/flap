@@ -29,13 +29,17 @@ function renderCharts(text) {
 	var dateLabels=[]
 	var travelled=[]
 	var usertravelled=[]
+	var flights=[]
+	var userflights=[]
 	var da=[]
 	var share=[]
 	for (i in raw) {
 		dateLabels.push(moment(1000*raw[i].Date).toDate())
 		travelled.push(raw[i].Travelled)
+		flights.push(raw[i].Flights)
 		da.push(raw[i].DailyTotal)
 		usertravelled.push(raw[i].Travelled/10000)
+		userflights.push(raw[i].Flights/10000)
 		share.push(raw[i].share)
 	}
 
@@ -74,6 +78,24 @@ function renderCharts(text) {
 			yAxes: [{scaleLabel: {display: true,labelString: "Distance Per Day (km)",fontColor: "black"}}]
 			}
 	           }
+          });	
+	var ctx3 = document.getElementById('flightschart').getContext('2d');
+	var dchart = new Chart(ctx3, {
+	  type: 'line',
+	  data: {
+		labels: dateLabels,		
+		datasets: [
+			        {pointStyle:"line",label: 'Flights',data: movingAvg(flights,30),borderColor: "#dc3545",fill:false,pointRadius:0}
+		 	]
+		},
+	  options: {
+		legend: { labels: {usePointStyle:true}},
+		scales: {
+			xAxes: [{type: "time", time: {unit: 'day', unitStepSize: 100,round: 'day',displayFormats: {day: 'YYYY-MM-DD'}}}],
+			yAxes: [{scaleLabel: {display: true,labelString: "Flights",fontColor: "black"}}]
+			}
+	           }
           });
+
 }
 

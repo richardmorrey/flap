@@ -9,11 +9,12 @@ import (
 	oidc "github.com/coreos/go-oidc"
 	"golang.org/x/net/context"
 	"github.com/gorilla/mux"
-	//"github.com/richardmorrey/flap/pkg/flap"
+	"github.com/richardmorrey/flap/pkg/flap"
 	"github.com/richardmorrey/flap/pkg/model"
 	"os"
 	"strconv"
 	"errors"
+	"time"
 )
 
 var EMISSINGARGUMENT= errors.New("Missing Argument")
@@ -39,7 +40,9 @@ func (self *userRestAPI) init(r *mux.Router,configfile string) error {
 	api := r.PathPrefix("/user/v1").Subrouter()
 
 	api.HandleFunc("/flighthistory/id/{token}/b/{band}/n/{number}", self.flightHistory).Methods(http.MethodGet)
+	api.HandleFunc("/transactions/id/{token}/b/{band}/n/{number}", self.transactions).Methods(http.MethodGet)
 	api.HandleFunc("/promises/id/{token}/b/{band}/n/{number}", self.promises).Methods(http.MethodGet)
+	api.HandleFunc("/account/id/{token}/b/{band}/n/{number}", self.account).Methods(http.MethodGet)
 	api.HandleFunc("/dailystats/id/{token}", self.dailyStats)
 	api.Use(middlewareIdToken)
 
@@ -127,6 +130,29 @@ func (self* userRestAPI) flightHistory(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// transactions returns transcation history for specified user 
+func (self* userRestAPI) transactions(w http.ResponseWriter, r *http.Request) {
+
+	// Read arguments
+	band,number,err := self.extractBandAndNumber(r)
+	if err != nil {
+		logError(err)
+		http.Error(w, fmt.Sprintf("\nFailed to parse arguments '%s'\n",err), http.StatusInternalServerError)
+		return
+	}
+
+	// Retrieve transactions for specified traveller
+	w.Header().Set("Content-Type", "application/json")
+	history,err := self.engine.TransactionsAsJSON(band,number)
+	if err != nil {
+		logError(err)
+		http.Error(w, fmt.Sprintf("\nFailed to retrieve transaction history with error '%s'\n",err), http.StatusInternalServerError)
+		return
+	}
+	io.WriteString(w,history)
+
+}
+
 // Read band and band number from arguments
 func (self* userRestAPI) extractBandAndNumber(r *http.Request) (uint64, uint64, error) {
 	var band,number uint64
@@ -151,7 +177,7 @@ func (self* userRestAPI) extractBandAndNumber(r *http.Request) (uint64, uint64, 
 	return band, number, nil
 }
 
-// flightHistory returns flight history for specified user 
+// promises returns promises for specified user 
 func (self* userRestAPI) promises(w http.ResponseWriter, r *http.Request) {
 
 	// Read arguments
@@ -167,7 +193,30 @@ func (self* userRestAPI) promises(w http.ResponseWriter, r *http.Request) {
 	promises,err := self.engine.PromisesAsJSON(band,number)
 	if err != nil {
 		logError(err)
-		http.Error(w, fmt.Sprintf("\nFailed to retrieve flight history with error '%s'\n",err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("\nFailed to retrieve promises with error '%s'\n",err), http.StatusInternalServerError)
+		return
+	}
+	io.WriteString(w,promises)
+
+}
+
+// account returns account balance details for specified user 
+func (self* userRestAPI) account(w http.ResponseWriter, r *http.Request) {
+
+	// Read arguments
+	band,number,err := self.extractBandAndNumber(r)
+	if err != nil {
+		logError(err)
+		http.Error(w, fmt.Sprintf("\nFailed to parse arguments '%s'\n",err), http.StatusInternalServerError)
+		return
+	}
+
+	// Retrieve history for specified traveller
+	w.Header().Set("Content-Type", "application/json")
+	promises,err := self.engine.AccountAsJSON(band,number,flap.EpochTime(time.Now().Unix()))
+	if err != nil {
+		logError(err)
+		http.Error(w, fmt.Sprintf("\nFailed to retrieve account with error '%s'\n",err), http.StatusInternalServerError)
 		return
 	}
 	io.WriteString(w,promises)

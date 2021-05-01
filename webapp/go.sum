@@ -171,6 +171,10 @@ github.com/richardmorrey/flap v1.2.1-0.20210102165654-649b374beb05 h1:TnKtWOapy6
 github.com/richardmorrey/flap v1.2.1-0.20210102165654-649b374beb05/go.mod h1:nZXeTT6ohFOSHXYhagbOIbacvqFJCi7QtUp8WYssr18=
 github.com/richardmorrey/flap v1.2.1-0.20210221193535-85b8e18c2fc8 h1:ErVWJPI7XZzSuPXWxDifPSIXsEZNEUU9MmSZrS9WXqM=
 github.com/richardmorrey/flap v1.2.1-0.20210221193535-85b8e18c2fc8/go.mod h1:nZXeTT6ohFOSHXYhagbOIbacvqFJCi7QtUp8WYssr18=
+github.com/richardmorrey/flap v1.2.1-0.20210320131744-6960bcfa4d29 h1:sCTMxTpF7i9ue/rOdM7XxJuoGTHBV3mLCiydmYMNTWQ=
+github.com/richardmorrey/flap v1.2.1-0.20210320131744-6960bcfa4d29/go.mod h1:nZXeTT6ohFOSHXYhagbOIbacvqFJCi7QtUp8WYssr18=
+github.com/richardmorrey/flap v1.2.1-0.20210424161356-9086afc742ca h1:83KhCHQQ9lS/WAONRbX8SYVLaP/TKYse//fqOTIbxbU=
+github.com/richardmorrey/flap v1.2.1-0.20210424161356-9086afc742ca/go.mod h1:nZXeTT6ohFOSHXYhagbOIbacvqFJCi7QtUp8WYssr18=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/ruudk/golang-pdf417 v0.0.0-20181029194003-1af4ab5afa58/go.mod h1:6lfFZQK844Gfx8o5WFuvpxWRwnSoipWe/p622j1v06w=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

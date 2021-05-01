@@ -18,6 +18,14 @@ function showAccount() {
 	  xhr2.onload = function() {renderAccountCharts((xhr2.status == 200) ? xhr2.responseText : "[]");};
 	  xhr2.send();
 
+	  var user = GoogleAuth.currentUser.get();
+	  var id_token = user.getAuthResponse().id_token;
+	  var xhr3 = new XMLHttpRequest();
+	  xhr3.open('GET', '/user/v1/transactions/id/'+id_token+"/b/"+gBotBand + "/n/" + gBotNumber);
+	  xhr3.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+	  xhr3.onload = function() {renderAccountTransactions((xhr2.status == 200) ? xhr3.responseText : "[]");};
+	  xhr3.send();
+
        } else {
        		navbarActive('account')
        }
@@ -148,6 +156,10 @@ function renderAccount(text) {
 	accountInit=true
 }
 
+function renderAccountTransactions(text)
+{
+	alert(text)
+}
     /**
     * returns an array with moving average of the input array
     * @param array - the input array
