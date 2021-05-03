@@ -93,7 +93,7 @@ function renderAccountCharts(text) {
 	  data: {
 		labels: dateLabels,		
 		datasets: [
-			        {pointStyle:"line",label:"You (flights only)", data: movingAvg(footprint,3),borderColor: "#dc3545",fill:false,pointRadius:0},
+			        {pointStyle:"line",label:"You (flights only)", data: movingAvg(footprint,3),borderColor:"black",backgroundColor:"#dc3545",fill:true,pointRadius:0},
 				{pointStyle:"line", label:"UK Avg (total)", data: ukaverage,borderColor: "black",fill:false,pointRadius:0,borderDash:[5,5]},
 				{pointStyle:"line",label:"Global Avg (total)",data: globalaverage,borderColor:"black",fill:false,pointRadius:0,borderDash:[2,2]}
 		],
@@ -158,7 +158,7 @@ function renderAccount(text) {
 
 function renderAccountTransactions(text)
 {
-	alert(text)
+	//alert(text)
 }
     /**
     * returns an array with moving average of the input array
