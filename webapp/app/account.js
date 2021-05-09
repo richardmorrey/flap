@@ -10,21 +10,11 @@ function showAccount() {
 	  xhr.onload = function() {renderAccount((xhr.status == 200) ? xhr.responseText : "[]");};
 	  xhr.send();
 
-	  var user = GoogleAuth.currentUser.get();
-	  var id_token = user.getAuthResponse().id_token;
 	  var xhr2 = new XMLHttpRequest();
 	  xhr2.open('GET', '/user/v1/flighthistory/id/'+id_token+"/b/"+gBotBand + "/n/" + gBotNumber);
 	  xhr2.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 	  xhr2.onload = function() {renderAccountCharts((xhr2.status == 200) ? xhr2.responseText : "[]");};
 	  xhr2.send();
-
-	  var user = GoogleAuth.currentUser.get();
-	  var id_token = user.getAuthResponse().id_token;
-	  var xhr3 = new XMLHttpRequest();
-	  xhr3.open('GET', '/user/v1/transactions/id/'+id_token+"/b/"+gBotBand + "/n/" + gBotNumber);
-	  xhr3.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-	  xhr3.onload = function() {renderAccountTransactions((xhr2.status == 200) ? xhr3.responseText : "[]");};
-	  xhr3.send();
 
        } else {
        		navbarActive('account')
@@ -75,7 +65,7 @@ function renderAccountCharts(text) {
 	  data: {
 		labels: dateLabels,		
 		datasets: [
-			        {data: movingAvg(travelled,3),borderColor: "black",backgroundColor: "#dc3545",fill:true,pointRadius:0}
+			        {data: movingAvg(travelled,3),borderColor: "#17a2b8",backgroundColor: "#17a2b8",fill:true,pointRadius:0}
 		 	],
 		},
 	  options: {
@@ -93,9 +83,9 @@ function renderAccountCharts(text) {
 	  data: {
 		labels: dateLabels,		
 		datasets: [
-			        {pointStyle:"line",label:"You (flights only)", data: movingAvg(footprint,3),borderColor:"black",backgroundColor:"#dc3545",fill:true,pointRadius:0},
 				{pointStyle:"line", label:"UK Avg (total)", data: ukaverage,borderColor: "black",fill:false,pointRadius:0,borderDash:[5,5]},
-				{pointStyle:"line",label:"Global Avg (total)",data: globalaverage,borderColor:"black",fill:false,pointRadius:0,borderDash:[2,2]}
+				{pointStyle:"line",label:"Global Avg (total)",data: globalaverage,borderColor:"black",fill:false,pointRadius:0,borderDash:[2,2]},
+			        {pointStyle:"line",label:"You (flights only)", data: movingAvg(footprint,3),borderColor:"#17a2b8",backgroundColor:"#17a2b8",fill:true,pointRadius:0}
 		],
 		},
 	  options: {
@@ -109,11 +99,12 @@ function renderAccountCharts(text) {
 
 }
 
+var gAccount
 function renderAccount(text) {
-	var account = JSON.parse(text)
+	gAccount = JSON.parse(text)
 	var d=false,su=false,e=false
 
-	switch (account['Cleared'])
+	switch (gAccount['Cleared'])
 	{
 		case 0:
 			$('#grounded').addClass("badge-danger")
@@ -137,8 +128,8 @@ function renderAccount(text) {
 		break
 	}
 
-	$("#balance").text(Math.round(account['Balance']).toString() + " km");
-	if (account['Balance'] > 0)
+	$("#balance").text(Math.round(gAccount['Balance']).toString() + " km");
+	if (gAccount['Balance'] > 0)
 	{	
 		$('#balance').addClass("badge-success")
 		$('#balance').removeClass("badge-danger")
@@ -149,16 +140,69 @@ function renderAccount(text) {
 		$('#balance').removeClass("badge-succes")
 	}
 
-	cd =  moment.utc(account['ClearanceDate'])
+	cd =  moment.utc(gAccount['ClearanceDate'])
 	$("#clearancedate").text(cd.format("YYYY-MM-DD"))
-
-	navbarActive('account');
-	accountInit=true
+	  
+	
+	var user = GoogleAuth.currentUser.get();
+	var id_token = user.getAuthResponse().id_token;
+        var xhr = new XMLHttpRequest();
+	xhr.open('GET', '/user/v1/transactions/id/'+id_token+"/b/"+gBotBand + "/n/" + gBotNumber);
+	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+	xhr.onload = function() {renderAccountTransactions((xhr.status == 200) ? xhr.responseText : "[]");};
+	xhr.send();
 }
 
 function renderAccountTransactions(text)
 {
-	//alert(text)
+	var balance= gAccount["Balance"]
+	var history = JSON.parse(text)
+	var ts=[]
+	var bgs=[]
+	var dateLabels=[]
+	if (history.length > 0) {
+		i = history.length-1
+		var currentDay = moment.utc(history[i].Date)
+		while (i >=0) {
+			if (moment.utc(history[i].Date).isSame(currentDay,"day")) {
+				ts.unshift([balance-history[i].Distance,balance])
+				balance -= history[i].Distance
+				bgs.unshift(history[i].Distance > 0 ? "black":"#dc3545")
+				i--
+			}
+			else
+			{
+				ts.unshift([balance,balance])
+				bgs.unshift("black")
+			}
+			dateLabels.unshift(currentDay.toDate())
+			currentDay = currentDay.subtract(1,"day")
+		}
+	}
+
+	var ctx = document.getElementById('mytransactionschart').getContext('2d');
+	var tdchart = new Chart(ctx, {
+	  type: 'bar',
+	  data: {
+		  labels: dateLabels,
+		  datasets: [
+    				{
+      				data: ts,
+      				backgroundColor: bgs,
+    				}
+  			]
+		 },
+	  options: {
+		  legend: { display:false},
+		  scales: {
+			xAxes: [{offset:true,type: "time", time: {unit: 'day', unitStepSize: 5,round: 'day',displayFormats: {day: 'YYYY-MM-DD'}}}],
+			yAxes: [{scaleLabel: {display: true,labelString: "Balance (km)",fontColor: "black"}}]
+			}
+	           }
+          });
+	navbarActive('account');
+	accountInit=true
+
 }
     /**
     * returns an array with moving average of the input array

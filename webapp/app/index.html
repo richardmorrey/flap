@@ -177,7 +177,7 @@
 		<div class="card my-1 mx-1">
 		      <div class="card-body">
 			<h6 class="card-title">Overview</h6>
-				<table style="height:100%;width:100%;margin: 0 auto;text-align:center;">
+				<table style="width:100%;margin: 0 auto;text-align:center;">
 				<tr class="small text-muted">
 				<td>status</td>
 				<td>balance</td>
@@ -194,10 +194,10 @@
 		</div>
 
 		<div class="col-lg">
-		<div class="card my-1 mx-1">
+			<div class="card my-1 mx-1">
 		      <div class="card-body">
 			<h6 class="card-title">Transaction History</h6>
-			<canvas id="mytransactionchart" style="max-width: 100%;"></canvas>
+			<canvas id="mytransactionschart" style="max-width: 100%;"></canvas>
 		      </div>
 	    	</div>
 		</div>
@@ -288,6 +288,10 @@
 			<div class="modal-body">
 				This is an alpha version of FLAP and not fully-featured. Trip planning will be added in the beta version due in the Summer of 2021.
 			</div>
+			<div class="modal-footer">
+        			<button class="btn btn-danger btn-secondary" data-dismiss="modal">Close</button>
+			</div>
+
 		</div>
 	</div>
    </div>
@@ -489,7 +493,7 @@ often they fly.
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
 <script src="https://momentjs.com/downloads/moment.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.0/Chart.bundle.js"></script>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
 <script src="jquery-jvectormap-2.0.5.min.js"></script>

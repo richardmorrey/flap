@@ -37,7 +37,8 @@ function renderPlanning(text) {
 		gCal = new Calendar('#calendar',{
 		customDataSourceRenderer: dsRender,
 		style: "custom"
-		})
+		}) 
+		document.querySelector('#calendar').addEventListener('clickDay', function(e) {$('#planModal').modal()});
 	}
 	gCal.setDataSource(events)
 	navbarActive('planning');
