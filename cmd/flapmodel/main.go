@@ -205,6 +205,23 @@ func main() {
 					fmt.Printf("\n%s\n",json)
 				}
 			}
+	        
+		case "transactions":
+			spec,_ := strconv.ParseUint(flag.Arg(1), 10, 64)
+			index,_ := strconv.ParseUint(flag.Arg(2), 10, 64)
+		 	engine,err := model.NewEngine(*configfile)
+			if err != nil {
+				fmt.Printf("\nFailed to initialize model engine with error '%s'\n",err)
+			} else {
+				defer engine.Release()
+				json,err := engine.TransactionsAsJSON(spec,index)
+				if err != nil {
+					fmt.Printf("\nFailed to find traveller with error '%s'\n",err)
+				} else {
+					fmt.Printf("\n%s\n",json)
+				}
+			}
+
 
 		case "help":
 		default:

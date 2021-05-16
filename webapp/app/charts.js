@@ -101,7 +101,7 @@ function renderCharts(text) {
 	  data: {
 		labels: dateLabelsm,		
 		datasets: [
-			        {data: flights,borderColor:"black",borderWidth:1,backgroundColor: "#ffc107"}
+			        {data: flights,borderWidth:0,backgroundColor: "#ffc107"}
 		 	]
 		},
 	  options: {
@@ -118,7 +118,7 @@ function renderCharts(text) {
 	  data: {
 		labels: dateLabelsm,		
 		datasets: [
-			        {data: userflights,borderColor:"black",backgroundColor:"#ffc107",borderWidth:1}
+			        {data: userflights,backgroundColor:"#ffc107",borderWidth:0}
 		 	]
 		},
 	  options: {

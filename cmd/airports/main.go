@@ -19,6 +19,7 @@ type Airport struct {
 	Tz   string
 	Nm   string
 	Cy   string
+	Co   string
 }
 
 // LoadAirports populates a map  "airports" from a csv file
@@ -47,6 +48,7 @@ func LoadAirports(filepath string) (map[string]Airport,error) {
 		var ap Airport
 		ap.Nm = line[1] 
 		ap.Cy = line[2] 
+		ap.Co = line[3]
 		ap.Iata = line[4]
 		ap.Lat,err=strconv.ParseFloat(line[6],64)
 		if err != nil {

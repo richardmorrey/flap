@@ -42,12 +42,21 @@ function renderAccountCharts(text) {
 	var i=gFlights.length-1
 	var currentDay = moment.utc(gFlights[i].Start)
 	var now = moment()
+	var byCountry={}
 	while (currentDay.isBefore(now)) {
 		
 		var dt = 0
 		var fp = 0
 		while (i >=0 && currentDay.isSame(moment.utc(gFlights[i].Start),'month')) {
 			dt += gFlights[i].Distance
+			co = [gAirports[gFlights[i].To].Co]
+			if (byCountry[co] == null) {
+				byCountry[co] = gFlights[i].Distance 
+			}
+			else
+			{
+				byCountry[co] += gFlights[i].Distance
+			}
 			fp += (moment.utc(gFlights[i].End).diff(moment.utc(gFlights[i].Start),"seconds")/3600)*.25
 			i--
 		}
@@ -58,6 +67,7 @@ function renderAccountCharts(text) {
 		globalaverage.push(5/12)
 		currentDay = currentDay.add(1,"month")
 	}
+	byCountry = removeHighest(byCountry)
 
 	var ctx = document.getElementById('mydistancechart').getContext('2d');
 	var tdchart = new Chart(ctx, {
@@ -65,7 +75,7 @@ function renderAccountCharts(text) {
 	  data: {
 		labels: dateLabels,		
 		datasets: [
-			        {data: movingAvg(travelled,3),borderColor: "#17a2b8",backgroundColor: "#17a2b8",fill:true,pointRadius:0}
+			        {data: movingAvg(travelled,3),borderColor: "black",borderWidth:1,backgroundColor: "#17a2b8",fill:true,pointRadius:0}
 		 	],
 		},
 	  options: {
@@ -77,15 +87,15 @@ function renderAccountCharts(text) {
 	           }
           });
 
-	var ctx = document.getElementById('myfootprintchart').getContext('2d');
-	var tdchart2 = new Chart(ctx, {
+	var ctx2 = document.getElementById('myfootprintchart').getContext('2d');
+	var tdchart2 = new Chart(ctx2, {
 	  type: 'line',
 	  data: {
 		labels: dateLabels,		
 		datasets: [
 				{pointStyle:"line", label:"UK Avg (total)", data: ukaverage,borderColor: "black",fill:false,pointRadius:0,borderDash:[5,5]},
 				{pointStyle:"line",label:"Global Avg (total)",data: globalaverage,borderColor:"black",fill:false,pointRadius:0,borderDash:[2,2]},
-			        {pointStyle:"line",label:"You (flights only)", data: movingAvg(footprint,3),borderColor:"#17a2b8",backgroundColor:"#17a2b8",fill:true,pointRadius:0}
+			        {pointStyle:"line",label:"You (flights only)",data: movingAvg(footprint,3),borderWidth:1,borderColor:"black",backgroundColor:"#17a2b8",fill:true,pointRadius:0}
 		],
 		},
 	  options: {
@@ -95,6 +105,30 @@ function renderAccountCharts(text) {
 			yAxes: [{scaleLabel: {display: true,labelString: "CO2 per month (Tonnes)",fontColor: "black"}}]
 			}
 	           }
+          });
+	
+	var ctx3 = document.getElementById('mycountrychart').getContext('2d');
+	var tdchart3 = new Chart(ctx3, {
+	  type: 'doughnut',
+	  data: {
+		  labels: Object.keys(byCountry),
+		  datasets: [
+			{
+				data:Object.values(byCountry),
+				backgroundColor:Object.values(gThemes),
+				borderColor:"black",
+				borderWidth:"1"
+			}
+		],
+		},
+	  options: {
+		legend: { labels: {usePointStyle:true}},
+	           },
+		 plugins: {
+      			legend: {
+        			position: 'bottom',
+      			}
+		}
           });
 
 }
@@ -109,26 +143,26 @@ function renderAccount(text) {
 		case 0:
 			$('#grounded').addClass("badge-danger")
 			$('#grounded').removeClass("badge-success")
-			$('#grounded').removeClass("badge-secondary")
-			$("#grounded").text("GROUNDED")
+			$('#grounded').removeClass("badge-warning")
+			$("#grounded").text("grounded")
 		break
 
 		case 1:
-			$('#grounded').addClass("badge-secondary")
+			$('#grounded').addClass("badge-warning")
 			$('#grounded').removeClass("badge-success")
 			$('#grounded').removeClass("badge-danger")
-			$("#grounded").text("MID-TRIP")
+			$("#grounded").text("mid-trip")
 		break
 
 		default:
 			$('#grounded').addClass("badge-success")
 			$('#grounded').removeClass("badge-danger")
-			$('#grounded').removeClass("badge-secondary")
-			$("#grounded").text("CLEARED")
+			$('#grounded').removeClass("badge-warning")
+			$("#grounded").text("cleared")
 		break
 	}
 
-	$("#balance").text(Math.round(gAccount['Balance']).toString() + " km");
+	$("#balance").text(Math.round(gAccount['Balance']).toString());
 	if (gAccount['Balance'] > 0)
 	{	
 		$('#balance').addClass("badge-success")
@@ -141,8 +175,15 @@ function renderAccount(text) {
 	}
 
 	cd =  moment.utc(gAccount['ClearanceDate'])
-	$("#clearancedate").text(cd.format("YYYY-MM-DD"))
-	  
+	if (cd.isAfter(moment())) {
+		$("#clearancedate").text(cd.format("YYYY-MM-DD"))
+		$('#clearancedate').addClass("badge-danger")
+		$('#clearancedate').removeClass("badge-success")
+	} else {
+		$("#clearancedate").text("now")
+		$('#clearancedate').removeClass("badge-danger")
+		$('#clearancedate').addClass("badge-success")
+	}
 	
 	var user = GoogleAuth.currentUser.get();
 	var id_token = user.getAuthResponse().id_token;
@@ -189,6 +230,8 @@ function renderAccountTransactions(text)
     				{
       				data: ts,
       				backgroundColor: bgs,
+				borderColor:"black",
+				borderWidth:1
     				}
   			]
 		 },
@@ -200,6 +243,7 @@ function renderAccountTransactions(text)
 			}
 	           }
           });
+
 	navbarActive('account');
 	accountInit=true
 
@@ -245,4 +289,16 @@ function renderAccountTransactions(text)
         }
 
         return result;
+    }
+
+    function removeHighest(obj) {
+	keysdesc = Object.keys(obj).sort(function(a,b){return obj[b]-obj[a]})
+	delete obj[keysdesc[0]]
+	var vOthers=0
+	for (i = 5 ; i < keysdesc.length; i++) {
+		vOthers += obj[keysdesc[i]]
+		delete obj[keysdesc[i]]
+	}
+	obj["Others"]=vOthers
+	return obj
     }
