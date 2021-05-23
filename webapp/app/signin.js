@@ -68,7 +68,7 @@
   }
 
 var gPages=['signin','signout','statistics','planning','history','account']
-var gPageTitles=['Welcome','Welcome','Statistics','Trip Planning','Flight History','Distance Account']
+var gPageTitles=['Welcome','Welcome','Statistics','Trip Planning','Flight History','Account Summary']
 
   function setSigninStatus(isSignedIn) {
     var user = GoogleAuth.currentUser.get();

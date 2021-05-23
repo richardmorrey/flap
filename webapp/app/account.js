@@ -24,7 +24,17 @@ function showAccount() {
 
 var gTripHistory
 var gFlights=[]
+var gDistChart
+var gFootprintChart
+var gCountryChart
 function renderAccountCharts(text) {
+
+	if (gDistChart) {
+		gDistChart.destroy()
+		gFootprintChart.destroy()
+		gCountryChart.destroy()
+	}
+
 	gTripHistory=JSON.parse(text)
 	for (i in gTripHistory)  {
 		for (j in gTripHistory[i].Journeys) {
@@ -34,7 +44,8 @@ function renderAccountCharts(text) {
 		}
 	}
 
-	var dateLabels=[]
+	var distLabels=[]
+	var footLabels=[]
 	var travelled=[]
 	var footprint=[]
 	var globalaverage=[]
@@ -60,7 +71,8 @@ function renderAccountCharts(text) {
 			fp += (moment.utc(gFlights[i].End).diff(moment.utc(gFlights[i].Start),"seconds")/3600)*.25
 			i--
 		}
-		dateLabels.push(currentDay.toDate())
+		distLabels.push(currentDay.toDate())
+		footLabels.push(currentDay.toDate())
 		travelled.push(dt)
 		footprint.push(fp)
 		ukaverage.push(13.4/12)
@@ -68,12 +80,12 @@ function renderAccountCharts(text) {
 		currentDay = currentDay.add(1,"month")
 	}
 	byCountry = removeHighest(byCountry)
-
+	
 	var ctx = document.getElementById('mydistancechart').getContext('2d');
-	var tdchart = new Chart(ctx, {
+	gDistChart = new Chart(ctx, {
 	  type: 'line',
 	  data: {
-		labels: dateLabels,		
+		labels: distLabels,		
 		datasets: [
 			        {data: movingAvg(travelled,3),borderColor: "black",borderWidth:1,backgroundColor: "#17a2b8",fill:true,pointRadius:0}
 		 	],
@@ -88,10 +100,10 @@ function renderAccountCharts(text) {
           });
 
 	var ctx2 = document.getElementById('myfootprintchart').getContext('2d');
-	var tdchart2 = new Chart(ctx2, {
+	gFootprintChart = new Chart(ctx2, {
 	  type: 'line',
 	  data: {
-		labels: dateLabels,		
+		labels: footLabels,		
 		datasets: [
 				{pointStyle:"line", label:"UK Avg (total)", data: ukaverage,borderColor: "black",fill:false,pointRadius:0,borderDash:[5,5]},
 				{pointStyle:"line",label:"Global Avg (total)",data: globalaverage,borderColor:"black",fill:false,pointRadius:0,borderDash:[2,2]},
@@ -108,7 +120,7 @@ function renderAccountCharts(text) {
           });
 	
 	var ctx3 = document.getElementById('mycountrychart').getContext('2d');
-	var tdchart3 = new Chart(ctx3, {
+	gCountryChart = new Chart(ctx3, {
 	  type: 'doughnut',
 	  data: {
 		  labels: Object.keys(byCountry),
@@ -194,35 +206,38 @@ function renderAccount(text) {
 	xhr.send();
 }
 
+var gTransactionChart
 function renderAccountTransactions(text)
 {
+	if (gTransactionChart) {gTransactionChart.destroy()}
 	var balance= gAccount["Balance"]
 	var history = JSON.parse(text)
 	var ts=[]
 	var bgs=[]
 	var dateLabels=[]
+	var td=0
 	if (history.length > 0) {
 		i = history.length-1
 		var currentDay = moment.utc(history[i].Date)
 		while (i >=0) {
-			if (moment.utc(history[i].Date).isSame(currentDay,"day")) {
-				ts.unshift([balance-history[i].Distance,balance])
-				balance -= history[i].Distance
-				bgs.unshift(history[i].Distance > 0 ? "black":"#dc3545")
+			var t = 0
+			while (i>=0 && moment.utc(history[i].Date).isSame(currentDay,"day")) {
+				t += history[i].Distance
 				i--
 			}
-			else
-			{
-				ts.unshift([balance,balance])
-				bgs.unshift("black")
+			if (t != 0) {
+				ts.unshift([balance-t,balance])
+				balance -= t
+				bgs.unshift(t> 0 ? "black":"#dc3545")
+				t=0
+				dateLabels.unshift(currentDay.toDate())
 			}
-			dateLabels.unshift(currentDay.toDate())
 			currentDay = currentDay.subtract(1,"day")
+			td += 1
 		}
 	}
-
 	var ctx = document.getElementById('mytransactionschart').getContext('2d');
-	var tdchart = new Chart(ctx, {
+	gTransactionChart = new Chart(ctx, {
 	  type: 'bar',
 	  data: {
 		  labels: dateLabels,
@@ -231,7 +246,7 @@ function renderAccountTransactions(text)
       				data: ts,
       				backgroundColor: bgs,
 				borderColor:"black",
-				borderWidth:1
+				borderWidth: td > 30 ? 0 : 1
     				}
   			]
 		 },
@@ -255,7 +270,7 @@ function renderAccountTransactions(text)
     * @param qualifier - an optional function that will be called on each 
     *  value to determine whether it should be used
     */
-    function movingAvg(array, count, qualifier){
+    function movingAvg(array,count, qualifier){
 
         // calculate average for subarray
         var avg = function(array, qualifier){
@@ -287,13 +302,13 @@ function renderAccountTransactions(text)
             else
                 result.push(val);
         }
-
+     
         return result;
     }
 
     function removeHighest(obj) {
 	keysdesc = Object.keys(obj).sort(function(a,b){return obj[b]-obj[a]})
-	delete obj[keysdesc[0]]
+	//delete obj[keysdesc[0]]
 	var vOthers=0
 	for (i = 5 ; i < keysdesc.length; i++) {
 		vOthers += obj[keysdesc[i]]

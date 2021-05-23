@@ -56,7 +56,7 @@ function renderCharts(text) {
 		travelled.push(raw[i].Travelled)
 		allowance.push(raw[i].DailyTotal)
 		usertravelled.push(raw[i].Travelled/10000)
-		share.push(raw[i].share)
+		share.push(raw[i].Share)
 	}
 	
 	var ctx = document.getElementById('distancechart').getContext('2d');
@@ -83,7 +83,7 @@ function renderCharts(text) {
 	  data: {
 		labels: dateLabels,		
 		datasets: [
-				{pointStyle:"line",label: 'Daily Share',data: share,borderColor: "rgba(1,1,1)",backgroundColor: "rgba(1,1,1)",borderDash: [10,10],fill:false,pointRadius:0},
+				//{pointStyle:"line",label: 'Daily Share',data: share,borderColor: "rgba(1,1,1)",backgroundColor: "rgba(1,1,1)",borderDash: [10,10],fill:false,pointRadius:0},
 			        {pointStyle:"line",label: 'Distance Travelled',data: movingAvg(usertravelled,30),borderWidth:2, borderColor:"#5bc0de",backgroundColor: "#5bc0de",fill:true,pointRadius:0}
 		 	]
 		},
