@@ -510,10 +510,6 @@ often they fly.
 <script src="jquery-jvectormap-2.0.5.min.js"></script>
 <script src="jquery-jvectormap-world-mill.js"></script>
 <script src="https://unpkg.com/js-year-calendar@latest/dist/js-year-calendar.min.js"></script>
-<script async defer src="https://apis.google.com/js/api.js"
-        onload="this.onload=function(){};handleClientLoad()"
-        onreadystatechange="if (this.readyState === 'complete') this.onload()">
-</script>
 <script src="./airports.js"></script>
 <script src="./signin.js"></script>
 <script src="./flap.js"></script>
@@ -521,6 +517,10 @@ often they fly.
 <script src="./history.js"></script>
 <script src="./planning.js"></script>
 <script src="./account.js"></script>
+<script async defer src="https://apis.google.com/js/api.js"
+        onload="this.onload=function(){};handleClientLoad()"
+        onreadystatechange="if (this.readyState === 'complete') this.onload()">
+</script>
 <script>
 	$(document).ready(function() {
 		$('[data-toggle="tooltip"]').tooltip({ trigger : 'hover'})

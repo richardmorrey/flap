@@ -23,7 +23,7 @@ function showAccount() {
 
 
 var gTripHistory
-var gFlights=[]
+var gFlights
 var gDistChart
 var gFootprintChart
 var gCountryChart
@@ -36,6 +36,7 @@ function renderAccountCharts(text) {
 	}
 
 	gTripHistory=JSON.parse(text)
+	gFlights=[]
 	for (i in gTripHistory)  {
 		for (j in gTripHistory[i].Journeys) {
 			for (f in gTripHistory[i].Journeys[j].Flights) {

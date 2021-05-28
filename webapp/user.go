@@ -62,9 +62,9 @@ func middlewareIdToken(next http.Handler) http.Handler {
 			if raw, ok := pathParams["token"]; !ok {
 				http.Error(w,"Missing argument: id", http.StatusForbidden)
 			} else {
-				parsed,err:= validateIDToken(raw)
+				_,err:= validateIDToken(raw)
 				if err == nil {
-					log.Printf("Authenticated user %s\n", parsed)
+					log.Printf("Authenticated user\n")
 					next.ServeHTTP(w, r)
 				} else {
 					http.Error(w, "Forbidden", http.StatusForbidden)
