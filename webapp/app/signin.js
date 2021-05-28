@@ -19,7 +19,7 @@
         'clientId': '502307674846-9hk8u2iaggriv00op22gk2iqoffmje9d.apps.googleusercontent.com',
 	'scope': SCOPE,
 	'ux_mode': 'redirect',
-	'redirect_uri': 'http://localhost:8080/app/index.html' 
+	'redirect_uri': 'https://flapyourarms.org/app/index.html' 
      }).then(function () {
 
       GoogleAuth = gapi.auth2.getAuthInstance();
