@@ -65,7 +65,7 @@ func TestOneSpec(t *testing.T) {
 		t.Error("Failed to Create 1 bot from 1 bot spec",err)
 	}
 	var p simplePlanner
-	err = p.build((params.BotSpecs[0]),flap.FlapParams{})
+	err = p.build((params.BotSpecs[0]),flap.FlapParams{},ModelParams{})
 	if err != nil {
 		t.Error("Failed to build planner",err)
 	}
@@ -93,7 +93,7 @@ func TestTwoSpecs(t *testing.T) {
 		t.Error("Failed to create 2 bots from 2 bot specs",ts.bots)
 	}	
 	var p simplePlanner
-	err = p.build((params.BotSpecs[0]),flap.FlapParams{})
+	err = p.build((params.BotSpecs[0]),flap.FlapParams{},ModelParams{})
 	if err != nil {
 		t.Error("Failed to build planner",err)
 	}
@@ -125,7 +125,7 @@ func TestThreeSpecs(t *testing.T) {
 		t.Error("Failed to create 2 bots from 2 bot specs",ts.bots)
 	}
 	var p simplePlanner
-	err = p.build(params.BotSpecs[0],flap.FlapParams{})
+	err = p.build(params.BotSpecs[0],flap.FlapParams{},ModelParams{})
 	if err != nil {
 		t.Error("Failed to build planner",err)
 	}
@@ -134,7 +134,7 @@ func TestThreeSpecs(t *testing.T) {
 	if !reflect.DeepEqual(ts.bots[0],expected) {
 		t.Error("traveller bot has incorrect value",ts.bots[0],expected)
 	}
-	err = p.build(params.BotSpecs[1],flap.FlapParams{})
+	err = p.build(params.BotSpecs[1],flap.FlapParams{},ModelParams{})
 	if err != nil {
 		t.Error("Faitaled to build planner",err)
 	}
@@ -144,7 +144,7 @@ func TestThreeSpecs(t *testing.T) {
 	if !reflect.DeepEqual(ts.bots[1],expected) {
 		t.Error("traveller bot has incorrect value",ts.bots[1],expected)
 	} 
-	err = p.build(params.BotSpecs[2],flap.FlapParams{})
+	err = p.build(params.BotSpecs[2],flap.FlapParams{},ModelParams{})
 	if err != nil {
 		t.Error("Failed to build planner",err)
 	}

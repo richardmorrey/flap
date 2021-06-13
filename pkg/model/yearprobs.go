@@ -4,20 +4,25 @@ import (
 	"github.com/richardmorrey/flap/pkg/flap"
 	"time"
 	"errors"
+	"math"
 )
 
 var ENOVALIDPROBABILITYINBOTSPEC = errors.New("Invalid BotSpec configuration")
 
 type yearProbs struct {
 	days [366]Probability
+	botFreqFactor float64
+	trialDays flap.Days
 }
 
 // newYearProbs creates a fly probability for every day in the calendar
 // year for given band of traveller bots
-func newYearProbs(bs *BotSpec) (*yearProbs,error) {
+func newYearProbs(bs *BotSpec,mp ModelParams) (*yearProbs,error) {
 	
 	// Create instance
 	yp := new(yearProbs)
+	yp.botFreqFactor = mp.BotFreqFactor
+	yp.trialDays = mp.TrialDays
 	
 	// Validate config
 	if bs.FlyProbability == 0.0 || bs.FlyProbability > 1 {
@@ -57,7 +62,7 @@ func (self* yearProbs) isLeap(t time.Time) bool {
 }
     
 // Returns the fly probability for calendar day of given date
-func (self* yearProbs) getDayProb(date flap.EpochTime) Probability {
+func (self* yearProbs) getDayProb(date flap.EpochTime, dayOfModel flap.Days) Probability {
 
 	// Check for a leap year
 	t := date.ToTime()
@@ -69,6 +74,10 @@ func (self* yearProbs) getDayProb(date flap.EpochTime) Probability {
 	}
 
 	// Return probability of flying on that day
-	return self.days[yd-1]
+	p :=  self.days[yd-1]
+	if (self.botFreqFactor !=0 && dayOfModel > self.trialDays) {
+		p = p*Probability(math.Pow(self.botFreqFactor,float64(dayOfModel-self.trialDays)))
+	}
+	return p
 }
 

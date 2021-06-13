@@ -73,6 +73,7 @@ type ModelParams struct {
 	LogLevel		logLevel
 	Deterministic		bool
 	Threads			uint
+	BotFreqFactor		float64
 }
 
 type plannedFlight struct {
@@ -486,7 +487,7 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 	// Plan flights for all travellers
 	logInfo("DAY ", i ," ", currentDay.ToTime())
 	fmt.Printf("\rDay %d: Planning Flights",i)
-	err = tb.planTrips(cars,jp,fe,currentDay,self.ModelParams.Deterministic,self.ModelParams.Threads)
+	err = tb.planTrips(cars,jp,fe,currentDay,self.ModelParams.Deterministic,i,self.ModelParams.Threads)
 	if err != nil {
 		return flap.UpdateBackfillStats{},0,logError(err)
 	}
@@ -522,6 +523,7 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 		// Adjust Daily Total for the next day
 		flapParams.DailyTotal = flap.Kilometres(float64(flapParams.DailyTotal)*self.ModelParams.DailyTotalFactor)
 		flapParams.DailyTotal += flap.Kilometres(self.ModelParams.DailyTotalDelta*ms.totalDayOne/100.0)
+
 	}
 
 	// Save any changes to flap params

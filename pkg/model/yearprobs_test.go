@@ -9,7 +9,7 @@ import (
 
 func TestNotEnoughMonths(t *testing.T) {
 	bs := BotSpec{FlyProbability:0.1,MonthWeights:[]weight{1,2,3,4,5,6,7,8,9,10,11}}
-	_,err := newYearProbs(&bs)
+	_,err := newYearProbs(&bs,ModelParams{})
 	if err != ENOVALIDPROBABILITYINBOTSPEC {
 		t.Error("newYearProbs succeeded with eleven months")
 	}
@@ -17,7 +17,7 @@ func TestNotEnoughMonths(t *testing.T) {
 
 func TestTooManyMonths(t *testing.T) {
 	bs := BotSpec{FlyProbability:0.1,MonthWeights:[]weight{1,2,3,4,5,6,7,8,9,10,11,12,13}}
-	_,err := newYearProbs(&bs)
+	_,err := newYearProbs(&bs,ModelParams{})
 	if err != ENOVALIDPROBABILITYINBOTSPEC {
 		t.Error("newYearProbs succeeded with thirteen months")
 	}
@@ -25,7 +25,7 @@ func TestTooManyMonths(t *testing.T) {
 
 func TestMissingProb(t *testing.T) {
 	bs := BotSpec{MonthWeights:[]weight{1,2,3,4,5,6,7,8,9,10,11,12}}
-	_,err := newYearProbs(&bs)
+	_,err := newYearProbs(&bs,ModelParams{})
 	if err != ENOVALIDPROBABILITYINBOTSPEC {
 		t.Error("newYearProbs succeeded with no probabilitys")
 	}
@@ -35,7 +35,7 @@ func TestMonthlyProbs(t *testing.T) {
 	
 	// Create year probs 
 	bs := BotSpec{FlyProbability:0.1,MonthWeights:[]weight{1,2,3,4,5,6,7,8,9,10,11,12}}
-	yp,err := newYearProbs(&bs)
+	yp,err := newYearProbs(&bs,ModelParams{})
 	if err != nil {
 		t.Error("newYearProbs faied with valid monthly probs")
 	}
@@ -60,40 +60,85 @@ func TestMonthlyProbs(t *testing.T) {
 func TestDayProb(t *testing.T) {
 	
 	bs := BotSpec{FlyProbability:0.1,MonthWeights:[]weight{1,2,3,4,5,6,7,8,9,10,11,12}}
-	yp,err := newYearProbs(&bs)
+	yp,err := newYearProbs(&bs,ModelParams{})
 	if err != nil {
 		t.Error("newYearProbs faied with valid monthly probs")
 	}
 	yearWeight := Probability(31+2*29+3*31+4*30+5*31+6*30+7*31+8*31+9*30+10*31+11*30+12*31)
 	 
-	p := yp.getDayProb(flap.EpochTime(time.Date(2020, time.January, 1, 1, 0, 0, 0, time.UTC).Unix()))
+	p := yp.getDayProb(flap.EpochTime(time.Date(2020, time.January, 1, 1, 0, 0, 0, time.UTC).Unix()),0)
 	if (p != (1/yearWeight)*0.1*366) {
 		t.Error("Unexpected prob for 2020-01-01", p)
 	}
-	p = yp.getDayProb(flap.EpochTime(time.Date(2020, time.February, 29, 1, 0, 0, 0, time.UTC).Unix()))
+	p = yp.getDayProb(flap.EpochTime(time.Date(2020, time.February, 29, 1, 0, 0, 0, time.UTC).Unix()),0)
 	if (p != (2/yearWeight)*0.1*366) {
 		t.Error("Unexpected prob for 2020-02-29", p)
 	}
-	p = yp.getDayProb(flap.EpochTime(time.Date(2020, time.March, 1, 1, 0, 0, 0, time.UTC).Unix()))
+	p = yp.getDayProb(flap.EpochTime(time.Date(2020, time.March, 1, 1, 0, 0, 0, time.UTC).Unix()),0)
 	if (p != (3/yearWeight)*0.1*366) {
 		t.Error("Unexpected prob for 2020-03-01", p)
 	}
-	p = yp.getDayProb(flap.EpochTime(time.Date(2020, time.December, 31, 1, 0, 0, 0, time.UTC).Unix()))
+	p = yp.getDayProb(flap.EpochTime(time.Date(2020, time.December, 31, 1, 0, 0, 0, time.UTC).Unix()),0)
 	if (p != (12/yearWeight)*0.1*366) {
 		t.Error("Unexpected prob for 2020-12-31", p)
 	}
 
-	p = yp.getDayProb(flap.EpochTime(time.Date(2021, time.February, 28, 1, 0, 0, 0, time.UTC).Unix()))
+	p = yp.getDayProb(flap.EpochTime(time.Date(2021, time.February, 28, 1, 0, 0, 0, time.UTC).Unix()),0)
 	if (p != (2/yearWeight)*0.1*366) {
 		t.Error("Unexpected prob for 2021-02-28", p)
 	}
-	p = yp.getDayProb(flap.EpochTime(time.Date(2021, time.March, 1, 1, 0, 0, 0, time.UTC).Unix()))
+	p = yp.getDayProb(flap.EpochTime(time.Date(2021, time.March, 1, 1, 0, 0, 0, time.UTC).Unix()),0)
 	if (p != (3/yearWeight)*0.1*366) {
 		t.Error("Unexpected prob for 2021-03-01", p)
 	}
-	p = yp.getDayProb(flap.EpochTime(time.Date(2021, time.December, 31, 1, 0, 0, 0, time.UTC).Unix()))
+	p = yp.getDayProb(flap.EpochTime(time.Date(2021, time.December, 31, 1, 0, 0, 0, time.UTC).Unix()),0)
 	if (p != (12/yearWeight)*0.1*366) {
 		t.Error("Unexpected prob for 2021-12-31", p)
+	}
+}
+
+func TestDayProbReducing(t *testing.T) {
+	factor := 0.5
+	bs := BotSpec{FlyProbability:0.1,MonthWeights:[]weight{1,2,3,4,5,6,7,8,9,10,11,12}}
+	yp,err := newYearProbs(&bs,ModelParams{BotFreqFactor:factor})
+	if err != nil {
+		t.Error("newYearProbs faied with valid monthly probs")
+	}
+	reduction := Probability(1.0)
+	yearWeight := Probability(31+2*29+3*31+4*30+5*31+6*30+7*31+8*31+9*30+10*31+11*30+12*31)
+	for dom:=flap.Days(0); dom < 366; dom+=1 {
+		if dom > 0 {
+			reduction *= Probability(factor)
+		}
+		p := yp.getDayProb(flap.EpochTime(time.Date(2020, time.January, 1, 1, 0, 0, 0, time.UTC).Unix()),dom)
+		if (p != (1/yearWeight)*0.1*366*reduction) {
+			t.Error("Unexpected prob for 2020-01-01", p)
+		}
+		p = yp.getDayProb(flap.EpochTime(time.Date(2020, time.February, 29, 1, 0, 0, 0, time.UTC).Unix()),dom)
+		if (p != (2/yearWeight)*0.1*366*reduction) {
+			t.Error("Unexpected prob for 2020-02-29", p)
+		}
+		p = yp.getDayProb(flap.EpochTime(time.Date(2020, time.March, 1, 1, 0, 0, 0, time.UTC).Unix()),dom)
+		if (p != (3/yearWeight)*0.1*366*reduction) {
+			t.Error("Unexpected prob for 2020-03-01", p)
+		}
+		p = yp.getDayProb(flap.EpochTime(time.Date(2020, time.December, 31, 1, 0, 0, 0, time.UTC).Unix()),dom)
+		if (p != (12/yearWeight)*0.1*366*reduction) {
+			t.Error("Unexpected prob for 2020-12-31", p)
+		}
+
+		p = yp.getDayProb(flap.EpochTime(time.Date(2021, time.February, 28, 1, 0, 0, 0, time.UTC).Unix()),dom)
+		if (p != (2/yearWeight)*0.1*366*reduction) {
+			t.Error("Unexpected prob for 2021-02-28", p)
+		}
+		p = yp.getDayProb(flap.EpochTime(time.Date(2021, time.March, 1, 1, 0, 0, 0, time.UTC).Unix()),dom)
+		if (p != (3/yearWeight)*0.1*366*reduction) {
+			t.Error("Unexpected prob for 2021-03-01", p)
+		}
+		p = yp.getDayProb(flap.EpochTime(time.Date(2021, time.December, 31, 1, 0, 0, 0, time.UTC).Unix()),dom)
+		if (p != (12/yearWeight)*0.1*366*reduction) {
+			t.Error("Unexpected prob for 2021-12-31", p)
+		}
 	}
 }
 

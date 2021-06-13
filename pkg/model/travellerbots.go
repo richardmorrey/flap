@@ -256,7 +256,8 @@ func (self *TravellerBots) Build(modelParams ModelParams,flapParams flap.FlapPar
 			bot.planner = new(simplePlanner)
 		}
 		bot.stats.load(t,i)
-		bot.planner.build(botspec,flapParams)
+
+		bot.planner.build(botspec,flapParams,modelParams)
 		if (err != nil) {
 			return logError(err)
 		}
@@ -272,14 +273,14 @@ func (self *TravellerBots) Build(modelParams ModelParams,flapParams flap.FlapPar
 // of travellers in the band travelling on any one day. If the dice comes up and the
 // travellerbot is not in the middle of a trip, a new trip is planned using weighted 
 // country-airports-routes model
-func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyPlanner, fe *flap.Engine,currentDay flap.EpochTime,deterministic bool, threads uint) error {
+func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyPlanner, fe *flap.Engine,currentDay flap.EpochTime,deterministic bool,dayOfModel flap.Days, threads uint) error {
 	
 	// Create configured number of threads to plan trips and wait for them to finish
 	perrs := make(chan error, threads)
 	var wg sync.WaitGroup
 	for i := uint(0); i < threads; i++ {
 		wg.Add(1)
-		t :=  func (step uint,offset uint) {perrs <- self.doPlanTrips(cars,jp,fe,currentDay,deterministic,step,offset);wg.Done()}
+		t :=  func (step uint,offset uint) {perrs <- self.doPlanTrips(cars,jp,fe,currentDay,deterministic,dayOfModel,step,offset);wg.Done()}
 		go t(threads,i)
 	}
 	wg.Wait()
@@ -294,7 +295,7 @@ func (self *TravellerBots) planTrips(cars *CountriesAirportsRoutes, jp* journeyP
 	return nil
 }
 
-func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journeyPlanner, fe *flap.Engine,currentDay flap.EpochTime,deterministic bool,threads uint, offset uint) error {
+func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journeyPlanner, fe *flap.Engine,currentDay flap.EpochTime,deterministic bool,dayOfModel flap.Days,threads uint, offset uint) error {
 
 	// Iterate through each bot in each band
 	for i:=bandIndex(0); i < bandIndex(len(self.bots)); i++ {
@@ -315,7 +316,7 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 			}
 
 			// Decide whether to plan a trip
-			if planner.areWePlanning(fe,p,currentDay,tripLength) {
+			if planner.areWePlanning(fe,p,currentDay,tripLength,dayOfModel) {
 
 				// Choose trip
 				from,to,err := cars.chooseTrip(p)
@@ -324,7 +325,7 @@ func (self *TravellerBots) doPlanTrips(cars *CountriesAirportsRoutes, jp* journe
 				}
 
 				// Decide if the trip is allowed ...
-				ts,err := planner.whenWillWeFly(fe,p,currentDay,from,to,tripLength)
+				ts,err := planner.whenWillWeFly(fe,p,currentDay,from,to,tripLength,dayOfModel)
 				switch (err) {
 					case nil: 
 						err = jp.planTrip(from,to,tripLength,p,ts,fe)

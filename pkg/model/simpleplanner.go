@@ -8,9 +8,9 @@ import (
 type botPlanner interface
 {
 	clone() botPlanner
-	build(BotSpec,flap.FlapParams) error
-	areWePlanning(*flap.Engine,flap.Passport,flap.EpochTime,flap.Days) bool
-	whenWillWeFly(*flap.Engine,flap.Passport,flap.EpochTime,flap.ICAOCode,flap.ICAOCode,flap.Days) (flap.EpochTime,error)
+	build(BotSpec,flap.FlapParams,ModelParams) error
+	areWePlanning(*flap.Engine,flap.Passport,flap.EpochTime,flap.Days,flap.Days) bool
+	whenWillWeFly(*flap.Engine,flap.Passport,flap.EpochTime,flap.ICAOCode,flap.ICAOCode,flap.Days,flap.Days) (flap.EpochTime,error)
 }
 
 type simplePlanner struct {
@@ -27,11 +27,11 @@ func (self *simplePlanner) clone() botPlanner {
 }
 
 // build initializes planner
-func (self *simplePlanner) build(bs BotSpec,fp flap.FlapParams) error {
+func (self *simplePlanner) build(bs BotSpec,fp flap.FlapParams,mp ModelParams) error {
 
 	// build year of daily probabilities
 	var err error
-	self.probs,err = newYearProbs(&bs)
+	self.probs,err = newYearProbs(&bs,mp)
 	if (err != nil) {
 		return logError(err)
 	}
@@ -40,7 +40,7 @@ func (self *simplePlanner) build(bs BotSpec,fp flap.FlapParams) error {
 
 // areWePlanning returns 0-indexed day offset from today to plan to fly or
 // -1 if we are not planning today
-func (self *simplePlanner) areWePlanning(fe *flap.Engine,pp flap.Passport, currentDay flap.EpochTime, tripLength flap.Days) bool {
+func (self *simplePlanner) areWePlanning(fe *flap.Engine,pp flap.Passport, currentDay flap.EpochTime, tripLength flap.Days, dayOfModel flap.Days) bool {
 
 	// Confirm not mid-trip
 	t,err := fe.Travellers.GetTraveller(pp)
@@ -50,10 +50,10 @@ func (self *simplePlanner) areWePlanning(fe *flap.Engine,pp flap.Passport, curre
 
 	// Decide whether to fly
 	dice:=Probability(rand.Float64())
-	return  dice <= self.probs.getDayProb(currentDay) 
+	return  dice <= self.probs.getDayProb(currentDay,dayOfModel)
 }
 
 // canWePlan confirms whether traveller can plan the proposed trip on the given day
-func (self *simplePlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now flap.EpochTime,from flap.ICAOCode,to flap.ICAOCode,tripLength flap.Days) (flap.EpochTime,error) {
+func (self *simplePlanner) whenWillWeFly(fe *flap.Engine,pp flap.Passport,now flap.EpochTime,from flap.ICAOCode,to flap.ICAOCode,tripLength flap.Days,dayOfModel flap.Days) (flap.EpochTime,error) {
 	return now,nil
 }
