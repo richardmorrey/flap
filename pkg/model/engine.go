@@ -15,7 +15,6 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"encoding/binary"
-	"encoding/gob"
 	"bytes"
 	"gonum.org/v1/gonum/stat"
 	"gonum.org/v1/gonum/floats"
@@ -61,6 +60,7 @@ type ModelParams struct {
 	DTAlgo			string
 	DaysToRun		flap.Days
 	TotalTravellers		uint64
+	TravellersDailyIncrease	uint64
 	BotSpecs		[]BotSpec
 	TripLengths		[]flap.Days
 	StartDay		time.Time
@@ -101,117 +101,6 @@ func (self *verboseStats) reset() {
 		ssReset.clearedDaysDeltas = self.clearedDaysDeltas[:0]
 	}
 	*self=ssReset
-}
-
-type summaryStatsRow 	struct {
-	DailyTotal		float64	
-	Travelled		float64
-	Flights			float64
-	Travellers		float64
-	Grounded		float64
-	Share			float64
-	Date			flap.EpochTime
-	Entries			int
-}
-
-type summaryStats struct {
-	Rows []summaryStatsRow
-}
-
-// newRow starts a new record for counting stats
-func (self *summaryStats) newRow() {
-	self.Rows = append(self.Rows,summaryStatsRow{})
-}
-
-// add adds the provide numbers to summary for the latest day
-func (self *summaryStats) update(increment summaryStatsRow, rdd flap.Days, t db.Table) {
-	self.load(t)
-	i := len(self.Rows) -1
-	if self.Rows[i].Entries == int(rdd)  {
-		i += 1 
-		self.newRow()
-	}
-	self.Rows[i].DailyTotal +=increment.DailyTotal
-	self.Rows[i].Travelled += increment.Travelled
-	self.Rows[i].Flights += increment.Flights
-	self.Rows[i].Travellers += increment.Travellers
-	self.Rows[i].Grounded += increment.Grounded
-	self.Rows[i].Share += increment.Share
-	self.Rows[i].Date = increment.Date
-	self.Rows[i].Entries += 1
-	self.save(t)
-}
-
-func (self* summaryStats) To(b *bytes.Buffer) error {
-	enc := gob.NewEncoder(b) 
-	return enc.Encode(self)
-}
-
-func (self* summaryStats) From(b *bytes.Buffer) error {
-	dec := gob.NewDecoder(b)
-	return dec.Decode(self)
-}
-
-const summaryStatsRecordKey="summarystats"
-
-// load loads engine state from given table
-func (self *summaryStats) load(t db.Table) error {
-	err :=  t.Get(summaryStatsRecordKey,self)
-	if err != nil {
-		return err
-	}
-	if len(self.Rows) == 0 {
-		self.newRow()
-	}
-	return err
-}
-
-// save saves engine state to given table
-func (self *summaryStats)  save(t db.Table) error {
-	return t.Put(summaryStatsRecordKey,self)
-}
-
-// returns summary stats as a JSON string 
-func (self * summaryStats) asJSON() string {
-	jsonData, _ := json.MarshalIndent(self.Rows, "", "    ")
-	return string(jsonData)
-}
-
-// compile prepares summary stats for reporting
-func (self* summaryStats) compile(path string,rdd flap.Days) (plotter.XYs, plotter.XYs) {
-
-	travelledPts := make(plotter.XYs, 0)
-	allowancePts := make(plotter.XYs, 0)
-	fn := filepath.Join(path,"summary.csv")
-	fh,_ := os.Create(fn)
-	if fh == nil {
-		return nil,nil
-	}
-
-	
-	// Summmary stats title
-	fh.WriteString("Date,DailyTotal,Travelled,Travellers,Grounded,Share\n")
-
-	day := rdd
-	for _,row := range self.Rows { 
-
-		// Skip incomplete rows
-		if row.Entries < int(rdd) {
-			continue
-		}
-
-		// Summary stats line
-		line := fmt.Sprintf("%d,%.2f,%.2f,%d,%d,%.2f\n",day,
-				flap.Kilometres(row.DailyTotal),flap.Kilometres(row.Travelled),
-				uint64(row.Travellers),uint64(row.Grounded),row.Share)
-		fh.WriteString(line)
-		day += rdd
-	
-		// Update points for summary graph
-		travelledPts = append(travelledPts,plotter.XY{X:float64(day),Y:row.Travelled})
-		allowancePts = append(allowancePts,plotter.XY{X:float64(day),Y:row.DailyTotal})
-	}
-	return  travelledPts,allowancePts
 }
 
 type Engine struct {
@@ -651,6 +540,15 @@ func (self *Engine) Run(warmOnly bool, startDay flap.EpochTime) error {
 		if i % self.ModelParams.VerboseReportDayDelta == 0 {
 			flightPaths= reportFlightPaths(flightPaths,currentDay,self.ModelParams.WorkingFolder) 
 		}
+
+		// Add new travellers if configured to do so
+		if self.ModelParams.TravellersDailyIncrease != 0 {
+			err := self.AdjustDailyTotal(self.ModelParams.TravellersDailyIncrease,fe)
+			if err != nil {
+				return logError(err)
+			}
+			self.ModelParams.TotalTravellers += self.ModelParams.TravellersDailyIncrease
+		}
 		
 		// Next day
 		currentDay += flap.SecondsInDay
@@ -663,6 +561,25 @@ func (self *Engine) Run(warmOnly bool, startDay flap.EpochTime) error {
 	return nil
 }
 
+// AccountForMoreTravellers adjusts daily total upwards to
+// account for new travellers joining FLAP.
+func (self *Engine) AdjustDailyTotal(newTravellers uint64, fe *flap.Engine) error {
+	
+	// Retreive amount to adjust by for each new traveller
+	var ss summaryStats
+	ss.load(self.table)
+	distPerTraveller,err := ss.calculateMeanDaily(self.ModelParams.ReportDayDelta)
+	if err != nil {
+		return err
+	}
+
+	// Adjust daily total
+	flapParams := fe.Administrator.GetParams()
+	flapParams.DailyTotal += distPerTraveller*flap.Kilometres(newTravellers)
+	err = fe.Administrator.SetParams(flapParams)
+	return err
+}
+ 
 // Report generates summary reports
 func (self *Engine) Report() error {
 	
@@ -701,6 +618,8 @@ func (self *Engine) RunOneDay(startOfDay flap.EpochTime) error {
 	return err
 }
 
+// bandToPassport maps a specfied band and bot number to a passport definition,
+// so thast the corresponding traveller record for the bot can be retreived
 func (self *Engine) bandToPassport(band uint64,bot uint64) (flap.Passport,error) {
 
 	// Load country weights (need to establish issuing country of passport)
