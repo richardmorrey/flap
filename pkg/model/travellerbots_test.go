@@ -43,7 +43,7 @@ func TestEmptySpecs(t *testing.T) {
 	ts := NewTravellerBots(buildCountryWeights(1))
 	params := ModelParams{TotalTravellers:0}
 	params.BotSpecs= make([]BotSpec,0,10)
-	err := ts.Build(params,flap.FlapParams{},table)
+	err := ts.Build(params,flap.FlapParams{},0,table)
 	if (err == nil) {
 		t.Error("Accepted zero bot specs",err)
 	}
@@ -54,10 +54,10 @@ func TestOneSpec(t *testing.T) {
 	defer teardownTB(db)
 
 	ts := NewTravellerBots(buildCountryWeights(1))
-	params := ModelParams{TotalTravellers:2}
+	params := ModelParams{}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:12345})
-	err := ts.Build(params,flap.FlapParams{},table)
+	err := ts.Build(params,flap.FlapParams{},2,table)
 	if (err != nil) {
 		t.Error("Failed build from one bot spec",err)
 	}
@@ -81,11 +81,11 @@ func TestTwoSpecs(t *testing.T) {
 	defer teardownTB(db)
 
 	ts := NewTravellerBots(buildCountryWeights(1))
-	params := ModelParams{TotalTravellers:2}
+	params := ModelParams{}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:1})
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:1})
-	err := ts.Build(params,flap.FlapParams{},table)
+	err := ts.Build(params,flap.FlapParams{},2,table)
 	if (err != nil) {
 		t.Error("Failed build from one bot spec",err)
 	}
@@ -112,12 +112,12 @@ func TestThreeSpecs(t *testing.T) {
 	defer teardownTB(db)
 
 	ts := NewTravellerBots(buildCountryWeights(3))
-	params := ModelParams{TotalTravellers:11}
+	params := ModelParams{}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:1})
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.2,Weight:2})
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.3,Weight:8})
-	err := ts.Build(params,flap.FlapParams{},table)
+	err := ts.Build(params,flap.FlapParams{},11,table)
 	if (err != nil) {
 		t.Error("Failed build from three bot specs",err)
 	}
@@ -161,11 +161,11 @@ func TestGetBot(t *testing.T) {
 	defer teardownTB(db)
 
 	ts := NewTravellerBots(buildCountryWeights(2))
-	params := ModelParams{TotalTravellers:10}
+	params := ModelParams{}
 	params.BotSpecs = make([]BotSpec,0,10)
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.1,Weight:1})
 	params.BotSpecs = append(params.BotSpecs,BotSpec{FlyProbability:0.2,Weight:9})
-	ts.Build(params,flap.FlapParams{},table)
+	ts.Build(params,flap.FlapParams{},10,table)
 	p,_ := ts.getPassport(botId{0,0})
 	if p != flap.NewPassport("000000000","A")  {
 		t.Error("getPassport returned wrong passport for 0,0 ",p)

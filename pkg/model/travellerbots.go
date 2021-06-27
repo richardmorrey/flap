@@ -226,7 +226,7 @@ func (self *TravellerBots) rotateStats(date flap.EpochTime,rdd flap.Days,t db.Ta
 }
 
 // Build constructs bot configurations for each band from provided model params
-func (self *TravellerBots) Build(modelParams ModelParams,flapParams flap.FlapParams, t db.Table) error {
+func (self *TravellerBots) Build(modelParams ModelParams,flapParams flap.FlapParams,totalTravellers uint64, t db.Table) error {
 
 	// Check arguments
 	if (len(modelParams.BotSpecs) == 0) {
@@ -246,7 +246,7 @@ func (self *TravellerBots) Build(modelParams ModelParams,flapParams flap.FlapPar
 	}
 	for i, botspec := range modelParams.BotSpecs {
 		var bot travellerBot
-		bot.numInstances= botIndex((float64(botspec.Weight)/float64(weightTotal))*float64(modelParams.TotalTravellers))
+		bot.numInstances= botIndex((float64(botspec.Weight)/float64(weightTotal))*float64(totalTravellers))
 		if (bot.numInstances > 0) {
 			bot.countryStep= float64(topWeight)/float64(bot.numInstances)
 		}

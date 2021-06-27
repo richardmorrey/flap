@@ -114,7 +114,8 @@ type Engine struct {
 
 type modelState struct {
 	totalDayOne float64
-	travellersTotal float64
+	travellersForMinGrounded float64
+	totalTravellersCurrent  uint64
 	startDate  flap.EpochTime
 }
 
@@ -130,7 +131,12 @@ func (self *modelState) From(buff *bytes.Buffer) error {
 		return logError(err)
 	}
 
-	err = binary.Read(buff,binary.LittleEndian,&self.travellersTotal)
+	err = binary.Read(buff,binary.LittleEndian,&self.travellersForMinGrounded)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Read(buff,binary.LittleEndian,&self.totalTravellersCurrent)
 	return err
 }
 
@@ -147,7 +153,12 @@ func (self *modelState) To(buff *bytes.Buffer) error {
 		return logError(err)
 	}
 
-	err = binary.Write(buff,binary.LittleEndian,&self.travellersTotal)
+	err = binary.Write(buff,binary.LittleEndian,&self.travellersForMinGrounded)
+	if err != nil {
+		return logError(err)
+	}
+
+	err = binary.Write(buff,binary.LittleEndian,&self.totalTravellersCurrent)
 	return err
 }
 
@@ -328,12 +339,19 @@ func (self* Engine) prepare() (*CountriesAirportsRoutes, *TravellerBots, *flap.E
 		return nil,nil,nil,nil,logError(err)
 	}
 	
+	// load model state
+	var ms modelState
+	err = ms.load(self.table)
+	if err != nil {
+		return nil,nil,nil,nil,logError(err)
+	}
+
 	// Build flight plans for traveller bots
 	travellerBots := NewTravellerBots(cw)
 	if travellerBots == nil {
 		return nil,nil,nil,nil,EFAILEDTOCREATETRAVELLERBOTS
 	}
-	err = travellerBots.Build(self.ModelParams,self.FlapParams,self.table)
+	err = travellerBots.Build(self.ModelParams,self.FlapParams,ms.totalTravellersCurrent,self.table)
 	if (err != nil) {
 		return nil,nil,nil,nil,logError(err)
 	}
@@ -355,7 +373,7 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 	// load flap params
 	flapParams := fe.Administrator.GetParams()
 
-	// load engine state
+	// load model state
 	var ms modelState
 	err := ms.load(self.table)
 	if err != nil {
@@ -402,8 +420,8 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 
 		// Set MinGrounded, used by flap to ensure initial backfill share
 		// is not too large, to average number of travellers per day over the trial period
-		ms.travellersTotal += float64(us.Travellers)
-		flapParams.MinGrounded = uint64(math.Ceil(ms.travellersTotal/float64(i)))
+		ms.travellersForMinGrounded += float64(us.Travellers)
+		flapParams.MinGrounded = uint64(math.Ceil(ms.travellersForMinGrounded/float64(i)))
 	} 
 
 	// If next day is beyond trial period then set daily total and min grounded
@@ -412,7 +430,15 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 		// Adjust Daily Total for the next day
 		flapParams.DailyTotal = flap.Kilometres(float64(flapParams.DailyTotal)*self.ModelParams.DailyTotalFactor)
 		flapParams.DailyTotal += flap.Kilometres(self.ModelParams.DailyTotalDelta*ms.totalDayOne/100.0)
-
+		
+		// Add new travellers if configured to do so
+		if self.ModelParams.TravellersDailyIncrease != 0 {
+			err := self.AdjustDailyTotal(self.ModelParams.TravellersDailyIncrease,fe)
+			if err != nil {
+				return flap.UpdateBackfillStats{},0,logError(err)
+			}
+			ms.totalTravellersCurrent += self.ModelParams.TravellersDailyIncrease
+		}
 	}
 
 	// Save any changes to flap params
@@ -473,9 +499,28 @@ func (self *Engine) Reset(destroy bool) error {
 // Runs the model with configuration as specified in ModelParams, writing results out
 // to multiple CSV files in the specified working folder.
 func (self *Engine) Run(warmOnly bool, startDay flap.EpochTime) error {
+	
+	// Override start day if necessary
+	var finalStartDay = flap.EpochTime(self.ModelParams.StartDay.Unix())
+	if startDay != 0 {
+		finalStartDay = startDay
+	}
+
+	// Initialize model state and stats
+	ms := modelState{startDate:finalStartDay,totalTravellersCurrent:self.ModelParams.TotalTravellers}
+	err := ms.save(self.table)
+	if err != nil {
+		return logError(err)
+	}
+	var ss summaryStats
+	ss.save(self.table)
+	var bs botStats
+	for i,_ := range self.ModelParams.BotSpecs {
+		bs.save(self.table,i)
+	}
 
 	// Reset journey planner
-	err := self.Reset(false)
+	err = self.Reset(false)
 	if err != nil {
 		return logError(err)
 	}
@@ -497,32 +542,13 @@ func (self *Engine) Run(warmOnly bool, startDay flap.EpochTime) error {
 		planDays += self.FlapParams.Promises.MaxDays
 	} 
 
-	// Override start day if necessary
-	var finalStartDay = flap.EpochTime(self.ModelParams.StartDay.Unix())
-	if startDay != 0 {
-		finalStartDay = startDay
-	}
-
-	// Initialize model state and stats
-	ms := modelState{startDate:finalStartDay}
-	err = ms.save(self.table)
-	if err != nil {
-		return logError(err)
-	}
-	var ss summaryStats
-	ss.save(self.table)
-	var bs botStats
-	for i,_ := range self.ModelParams.BotSpecs {
-		bs.save(self.table,i)
-	}
-
 	// Calculate days to run
 	var daysToRun flap.Days
 	if !warmOnly {
 		daysToRun += self.ModelParams.DaysToRun
 	}
 
-	// Model for each of the plan days and the days for the model
+	// Model for each of the warm days and the days for the model
 	// proper
 	currentDay := finalStartDay - flap.EpochTime(uint64(planDays*flap.SecondsInDay))
 	flightPaths := newFlightPaths(currentDay)
@@ -541,15 +567,6 @@ func (self *Engine) Run(warmOnly bool, startDay flap.EpochTime) error {
 			flightPaths= reportFlightPaths(flightPaths,currentDay,self.ModelParams.WorkingFolder) 
 		}
 
-		// Add new travellers if configured to do so
-		if self.ModelParams.TravellersDailyIncrease != 0 {
-			err := self.AdjustDailyTotal(self.ModelParams.TravellersDailyIncrease,fe)
-			if err != nil {
-				return logError(err)
-			}
-			self.ModelParams.TotalTravellers += self.ModelParams.TravellersDailyIncrease
-		}
-		
 		// Next day
 		currentDay += flap.SecondsInDay
 	}
@@ -630,12 +647,19 @@ func (self *Engine) bandToPassport(band uint64,bot uint64) (flap.Passport,error)
 		return p,logError(err)
 	}
 
+	// load model state
+	var ms modelState
+	err = ms.load(self.table)
+	if err != nil {
+		return p,logError(err)
+	}
+
 	// Create travellerbots struct
 	travellerBots := NewTravellerBots(cw)
 	if travellerBots == nil {
 		return p,logError(EFAILEDTOCREATETRAVELLERBOTS)
 	}
-	err = travellerBots.Build(self.ModelParams,self.FlapParams,self.table)
+	err = travellerBots.Build(self.ModelParams,self.FlapParams,ms.totalTravellersCurrent,self.table)
 	if (err != nil) {
 		return p,logError(err)
 	}
