@@ -44,6 +44,8 @@ modelparams:
   daystorun: 2000
   # Total number of travellers to simulate
   totaltravellers: 1000
+  # Number to each increase total simulated travellers by each day
+  travellersdailyincrease: 0
   # Definition of one or more "bands" of travellers, with
   # different travel probabilities. Each band has values as follows
   #    flyprobability  - Probability of traveller starting a trip each day
@@ -77,6 +79,8 @@ modelparams:
   # is chosen at random from the list. To make a length more frequent
   # add it multiple times.
   triplengths: [2,3,5,7,7,7,7,14,14,14,14,28]
+  # Factory to multiple the bot fly probabilities by each day. Set to zero to disable.
+  botfreqfactor: 0
   # The date of the first day in the run. Must be start of a day,in  RFC3339 format
   startday: "2021-01-01T00:00:00Z"
   # Factor to multiply the Daily Total by each day. Does not apply

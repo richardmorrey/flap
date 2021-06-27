@@ -8,9 +8,9 @@ import (
 )
 
 type pcState struct {
-	bacSmoothed 		smoothYs
+	bacSmoothed 		SmoothYs
 	balanceAtClearance	Kilometres
-	cdSmoothed		smoothYs
+	cdSmoothed		SmoothYs
 	clearedDistance		Kilometres
 	bacPerKm		Kilometres
 
@@ -89,15 +89,15 @@ func (self *promisesCorrection) cycle(smoothWindow Days) Kilometres {
 	
 	// Update smoothing window with total balance at clearance since last cycle
 	if self.state.bacSmoothed.windowSize == 0 {
-		self.state.bacSmoothed = smoothYs{windowSize:int(math.Max(1,float64(smoothWindow))),maxYs:1}
+		self.state.bacSmoothed = SmoothYs{windowSize:int(math.Max(1,float64(smoothWindow))),maxYs:1}
 	}
-	self.state.bacSmoothed.addY(float64(self.state.balanceAtClearance))
+	self.state.bacSmoothed.AddY(float64(self.state.balanceAtClearance))
 
 	// Update smoothing window for total distance in completed trips since last cycle
 	if self.state.cdSmoothed.windowSize == 0 {
-		self.state.cdSmoothed = smoothYs{windowSize:int(math.Max(1,float64(smoothWindow))),maxYs:1}
+		self.state.cdSmoothed = SmoothYs{windowSize:int(math.Max(1,float64(smoothWindow))),maxYs:1}
 	}
-	self.state.cdSmoothed.addY(float64(self.state.clearedDistance))
+	self.state.cdSmoothed.AddY(float64(self.state.clearedDistance))
 
 	// Recalulate balance at clearance per km travelled
 	if self.state.cdSmoothed.ys[0] > 0 {

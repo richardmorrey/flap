@@ -38,5 +38,4 @@ COPY doc ./doc
 COPY webapp/data /data
 
 # Run the web service on container startup.
-ENV APIMODE=user
 CMD /app/server ${APIMODE}

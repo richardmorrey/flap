@@ -132,7 +132,7 @@ func (self *Engine) getCreateTraveller(passport Passport, now EpochTime)  *Trave
 // travel for one or more of the flights the whole submission is rejected
 // and the function returned with EGROUNDED. Ths is in effect an instruciton
 // to the carrier to refuse the check-in.
-// If "debit" is false the distance of all flights is deducted from the travellers
+// If "debit" is true the distance of all flights is deducted from the travellers
 // balance.
 func (self *Engine) SubmitFlights(passport Passport, flights []Flight, now EpochTime,debit bool) error {
 

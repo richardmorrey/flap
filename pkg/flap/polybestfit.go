@@ -14,7 +14,7 @@ import (
 // return to credit using a polynomial linear best fit against a plot
 // of distance share against day.
 type polyBestFit struct {
-	smoothYs
+	SmoothYs
 	pv		predictVersion
 	consts		[]float64
 	degree		int
@@ -23,7 +23,7 @@ type polyBestFit struct {
 // To implemented as part of db/Serialize
 func (self *polyBestFit) To(buff *bytes.Buffer) error {
 
-	err := self.smoothYs.To(buff)
+	err := self.SmoothYs.To(buff)
 	if (err != nil) {
 		return err
 	}
@@ -52,7 +52,7 @@ func (self *polyBestFit) To(buff *bytes.Buffer) error {
 // From implemented as part of db/Serialize
 func (self *polyBestFit) From(buff *bytes.Buffer) error {
 
-	err := self.smoothYs.From(buff)
+	err := self.SmoothYs.From(buff)
 	if (err != nil) {
 		return err
 	}
@@ -95,7 +95,7 @@ func newPolyBestFit(cfg PromisesConfig) (*polyBestFit,error) {
 	bf.consts = make([]float64,0,bf.degree+1)
 	
 	// Initialize smoothing window
-	return bf,bf.setWindows(int(cfg.MaxPoints),int(cfg.SmoothWindow))
+	return bf,bf.SetWindows(int(cfg.MaxPoints),int(cfg.SmoothWindow))
 }
 
 // returns current input of to regression and results of regression as
@@ -112,7 +112,7 @@ func (self* polyBestFit) state() ([]float64,[]float64,error) {
 func (self* polyBestFit) add(today epochDays,y Kilometres) {
 
     // Add new y value
-    self.addY(float64(y))
+    self.AddY(float64(y))
 
     if len(self.ys) > self.degree {
 

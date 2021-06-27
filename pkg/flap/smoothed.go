@@ -9,15 +9,19 @@ import (
 
 var EMAXPOINTSBELOWTWO = errors.New("maxpoints must be two or more")
 
-type smoothYs struct {
+type SmoothYs struct {
 	windowSize int
 	maxYs int
 	ys [] float64
 	window [] float64
 }
 
+func (self* SmoothYs) GetYs() *[] float64 {
+	return &self.ys
+}
+
 // From implements db/Serialize
-func (self *smoothYs) From(buff *bytes.Buffer) error {
+func (self *SmoothYs) From(buff *bytes.Buffer) error {
 
 	var fixedSize int32
 	err := binary.Read(buff, binary.LittleEndian,&fixedSize)
@@ -64,7 +68,7 @@ func (self *smoothYs) From(buff *bytes.Buffer) error {
 }
 
 // To implements db/Serialize
-func (self *smoothYs) To(buff *bytes.Buffer) error {
+func (self *SmoothYs) To(buff *bytes.Buffer) error {
 
 	fixedSize := int32(self.windowSize)
 	err := binary.Write(buff, binary.LittleEndian,&fixedSize)
@@ -106,7 +110,7 @@ func (self *smoothYs) To(buff *bytes.Buffer) error {
 }
 
 // Adds a value to the smoothing window, and calculates and adds the new value
-func (self *smoothYs) addY(v float64) error {
+func (self *SmoothYs) AddY(v float64) error {
 
 	// Add to smoothing window
 	if len(self.window) == self.windowSize {
@@ -123,7 +127,7 @@ func (self *smoothYs) addY(v float64) error {
 }
 
 // Set window sizes
-func (self *smoothYs) setWindows(maxYs int, windowSize int) error {
+func (self *SmoothYs) SetWindows(maxYs int, windowSize int) error {
 
 	// Validate maxpoints
 	if maxYs < 2 {

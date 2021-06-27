@@ -32,7 +32,7 @@ type predictor interface
 // return to credit using a simple linear best fit against a plot
 // of distance share against day.
 type bestFit struct {
-	smoothYs
+	SmoothYs
 	m		float64
 	c		float64
 	pv		predictVersion
@@ -48,7 +48,7 @@ func newBestFit(cfg PromisesConfig) (*bestFit,error) {
 	bf.c = -1 // indicates uninitializated state as line cant have -ve values
 
 	// Initialize smoothing window
-	err := bf.setWindows(int(cfg.MaxPoints),int(cfg.SmoothWindow))
+	err := bf.SetWindows(int(cfg.MaxPoints),int(cfg.SmoothWindow))
 	if err != nil {
 		return nil,logError(err)
 	}
@@ -58,7 +58,7 @@ func newBestFit(cfg PromisesConfig) (*bestFit,error) {
 // To implemented as part of db/Serialize
 func (self *bestFit) To(buff *bytes.Buffer) error {
 
-	err := self.smoothYs.To(buff)
+	err := self.SmoothYs.To(buff)
 	if (err != nil) {
 		return err
 	}
@@ -79,7 +79,7 @@ func (self *bestFit) To(buff *bytes.Buffer) error {
 // From implemented as part of db/Serialize
 func (self *bestFit) From(buff *bytes.Buffer) error {
 
-	err := self.smoothYs.From(buff)
+	err := self.SmoothYs.From(buff)
 	if (err != nil) {
 		return err
 	}
@@ -117,7 +117,7 @@ func (self *bestFit) version() predictVersion {
 // be called each day with the distance share credit to each
 // account for backfilling that day.
 func (self *bestFit) add(x epochDays, y Kilometres) {
-	self.addY(float64(y))
+	self.AddY(float64(y))
 	self.calculateLine(x)
 }
 
