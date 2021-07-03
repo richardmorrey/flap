@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"bytes"
 	"gonum.org/v1/gonum/mat"
-	"gonum.org/v1/gonum/floats"
+	"gonum.org/v1/gonum/floats/scalar"
 	"math"
 	"reflect"
 	//"fmt"
@@ -132,7 +132,7 @@ func (self* polyBestFit) add(today epochDays,y Kilometres) {
 	// Extract results
 	newConsts := make([]float64,0,self.degree+1)
 	for j:=0; j < self.degree+1; j++ {
-		newConsts = append(newConsts,floats.Round(c.At(j,0),10))
+		newConsts = append(newConsts,scalar.Round(c.At(j,0),10))
 	}
 	if !reflect.DeepEqual(newConsts,self.consts) {
 		self.pv++

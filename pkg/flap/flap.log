@@ -6043,3 +6043,166 @@ flap 2021/06/13 17:38:51 triphistory.go:631: processing 100 trips
 flap 2021/06/13 17:38:51 travellers.go:140: balance:-11cleared:1970-01-01 01:00:00 +0100 BST
 flap 2021/06/13 17:38:51 promises.go:167: keeping1970-01-01 01:00:01 +0100 BST 1970-01-01 01:00:02 +0100 BST 1970-03-30 01:00:00 +0100 BST
 flap 2021/06/13 17:38:51 travellers.go:95: Kept promise for             . Clearance set to1970-03-30 01:00:00 +0100 BST
+flap 2021/07/03 10:28:39 administrator.go:47: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:39 administrator.go:148: Running without promises
+flap 2021/07/03 10:28:39 administrator.go:56: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:39 administrator.go:59: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:39 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:39 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:39 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:39 engine.go:208: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:40 administrator.go:47: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:40 administrator.go:148: Running without promises
+flap 2021/07/03 10:28:40 administrator.go:56: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:40 administrator.go:59: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:40 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:40 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:40 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:40 engine.go:208: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:40 administrator.go:47: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:40 administrator.go:148: Running without promises
+flap 2021/07/03 10:28:40 administrator.go:56: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:40 administrator.go:59: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:40 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:41 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:41 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:41 engine.go:208: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:41 administrator.go:47: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:41 administrator.go:148: Running without promises
+flap 2021/07/03 10:28:41 administrator.go:56: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:41 administrator.go:59: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:41 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:41 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:41 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:41 engine.go:208: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:41 administrator.go:47: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:41 administrator.go:148: Running without promises
+flap 2021/07/03 10:28:41 administrator.go:56: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:42 administrator.go:59: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 engine.go:208: rpc error: code = PermissionDenied desc = Missing or insufficient permissions. []
+flap 2021/07/03 10:28:42 administrator.go:47: leveldb: not found []
+flap 2021/07/03 10:28:42 administrator.go:148: Running without promises
+flap 2021/07/03 10:28:42 administrator.go:56: leveldb: not found []
+flap 2021/07/03 10:28:42 administrator.go:59: leveldb: not found []
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 engine.go:217: Backfilling with 1 threads
+flap 2021/07/03 10:28:42 engine.go:274: Backfilling from 0 to 15
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 engine.go:348: Finished backfilling from 0 to 15
+flap 2021/07/03 10:28:42 administrator.go:47: leveldb: not found []
+flap 2021/07/03 10:28:42 administrator.go:148: Running without promises
+flap 2021/07/03 10:28:42 administrator.go:56: leveldb: not found []
+flap 2021/07/03 10:28:42 administrator.go:59: leveldb: not found []
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 engine.go:217: Backfilling with 2 threads
+flap 2021/07/03 10:28:42 engine.go:274: Backfilling from 8 to 15
+flap 2021/07/03 10:28:42 engine.go:274: Backfilling from 0 to 7
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 engine.go:348: Finished backfilling from 8 to 15
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:42 engine.go:348: Finished backfilling from 0 to 7
+flap 2021/07/03 10:28:43 administrator.go:47: leveldb: not found []
+flap 2021/07/03 10:28:43 administrator.go:148: Running without promises
+flap 2021/07/03 10:28:43 administrator.go:56: leveldb: not found []
+flap 2021/07/03 10:28:43 administrator.go:59: leveldb: not found []
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 engine.go:217: Backfilling with 4 threads
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 12 to 15
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 12 to 15
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 0 to 3
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 0 to 3
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 4 to 7
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 4 to 7
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 8 to 11
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 8 to 11
+flap 2021/07/03 10:28:43 administrator.go:47: leveldb: not found []
+flap 2021/07/03 10:28:43 administrator.go:148: Running without promises
+flap 2021/07/03 10:28:43 administrator.go:56: leveldb: not found []
+flap 2021/07/03 10:28:43 administrator.go:59: leveldb: not found []
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 engine.go:217: Backfilling with 8 threads
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 6 to 7
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 6 to 7
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 0 to 1
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 0 to 1
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 2 to 3
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 2 to 3
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 4 to 5
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 4 to 5
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 10 to 11
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 10 to 11
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 8 to 9
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 8 to 9
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 12 to 13
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 12 to 13
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 14 to 15
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 14 to 15
+flap 2021/07/03 10:28:43 administrator.go:47: leveldb: not found []
+flap 2021/07/03 10:28:43 administrator.go:148: Running without promises
+flap 2021/07/03 10:28:43 administrator.go:56: leveldb: not found []
+flap 2021/07/03 10:28:43 administrator.go:59: leveldb: not found []
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 engine.go:217: Backfilling with 16 threads
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 3 to 3
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 5 to 5
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 3 to 3
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 15 to 15
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 6 to 6
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 6 to 6
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 0 to 0
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 7 to 7
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 7 to 7
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 5 to 5
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 2 to 2
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 8 to 8
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 9 to 9
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 11 to 11
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 13 to 13
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 14 to 14
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 12 to 12
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 14 to 14
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 13 to 13
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 8 to 8
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 12 to 12
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 11 to 11
+flap 2021/07/03 10:28:43 triphistory.go:631: processing 2 trips
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 9 to 9
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 2 to 2
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 0 to 0
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 10 to 10
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 10 to 10
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 1 to 1
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 1 to 1
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 15 to 15
+flap 2021/07/03 10:28:43 engine.go:274: Backfilling from 4 to 4
+flap 2021/07/03 10:28:43 engine.go:348: Finished backfilling from 4 to 4
+flap 2021/07/03 10:28:47 triphistory.go:631: processing 0 trips
+flap 2021/07/03 10:28:47 triphistory.go:631: processing 100 trips
+flap 2021/07/03 10:28:47 triphistory.go:631: processing 100 trips
+flap 2021/07/03 10:28:47 travellers.go:140: balance:-11cleared:1970-01-01 01:00:00 +0100 BST
+flap 2021/07/03 10:28:47 promises.go:167: keeping1970-01-01 01:00:01 +0100 BST 1970-01-01 01:00:02 +0100 BST 1970-03-30 01:00:00 +0100 BST
+flap 2021/07/03 10:28:47 travellers.go:95: Kept promise for             . Clearance set to1970-03-30 01:00:00 +0100 BST
