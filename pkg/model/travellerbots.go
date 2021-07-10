@@ -390,10 +390,7 @@ func (self *TravellerBots) reportSummary(mp ModelParams) {
 func reportBandsDistance(compiled []botStatsCompiled, mp ModelParams) {
 
 	// Set axis labels
-	p, err := plot.New()
-	if err != nil {
-		return
-	}
+	p := plot.New()
 	p.X.Label.Text = "Day"
 	p.Y.Label.Text = "Distance (km)"
 
@@ -433,10 +430,7 @@ func reportBandsDistance(compiled []botStatsCompiled, mp ModelParams) {
 func reportBandsCancelled(compiled []botStatsCompiled,mp ModelParams) {
 
 	// Set axis labels
-	p, err := plot.New()
-	if err != nil {
-		return
-	}
+	p := plot.New()
 	p.X.Label.Text = "Day"
 	p.Y.Label.Text = "Trips Cancelled (%)"
 

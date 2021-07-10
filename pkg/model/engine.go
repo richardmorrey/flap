@@ -232,8 +232,6 @@ func NewEngine(configFilePath string) (*Engine,error) {
 		rand.Seed(time.Now().UTC().UnixNano())
 	}
 	
-	// Default config for plotter
-	plot.DefaultFont="Helvetica"
 	return e,nil
 }
 
@@ -852,10 +850,7 @@ func (self* Engine) reportSummary() {
 	travelledPts,allowancePts := ss.compile(self.ModelParams.WorkingFolder,self.ModelParams.ReportDayDelta)
 	
 	// Set axis labels
-	p, err := plot.New()
-	if err != nil {
-		return
-	}
+	p := plot.New()
 	p.X.Label.Text = "Day"
 	p.Y.Label.Text = "Distance (km)"
 
@@ -905,10 +900,7 @@ func (self* Engine) reportRegression(y []float64, consts []float64, foldername s
 	}
 
 	// Set labels and titles
-	p, err := plot.New()
-	if err != nil {
-		return
-	}
+	p := plot.New()
 	p.X.Label.Text = "Days since 1970-01-01"
 	p.Y.Label.Text = "Daily Share (km)"
 	t := currentDay.ToTime()
@@ -1038,23 +1030,21 @@ func (self* Engine) reportDistribution(x []float64, binSize float64, maxBars int
 		}
 
 		// Add to a chart
-		p, err := plot.New()
-		if err == nil {
-			p.Title.Text = fmt.Sprintf("Day %d - Day %d", (day+1) - self.ModelParams.VerboseReportDayDelta,day)
-			p.Y.Label.Text = "Completed Trips"
-			p.X.Label.Text = "Balance At Clearance (km)"
-			p.Add(bars)
-			p.NominalX(labels...)
-			p.X.Tick.Label.Rotation = math.Pi/2 
-			p.X.Tick.Label.YAlign = draw.YCenter
-			p.X.Tick.Label.XAlign = draw.XRight
+		p := plot.New()
+		p.Title.Text = fmt.Sprintf("Day %d - Day %d", (day+1) - self.ModelParams.VerboseReportDayDelta,day)
+		p.Y.Label.Text = "Completed Trips"
+		p.X.Label.Text = "Balance At Clearance (km)"
+		p.Add(bars)
+		p.NominalX(labels...)
+		p.X.Tick.Label.Rotation = math.Pi/2 
+		p.X.Tick.Label.YAlign = draw.YCenter
+		p.X.Tick.Label.XAlign = draw.XRight
 			
-			// Write to a file
-			t := currentDay.ToTime()
-			fn := t.Format("2006-01-02") + ".png"
-			fp := filepath.Join(folder,fn)
-			p.Save(imagewidth, imagewidth/2, fp); 
-		}
+		// Write to a file
+		t := currentDay.ToTime()
+		fn := t.Format("2006-01-02") + ".png"
+		fp := filepath.Join(folder,fn)
+		p.Save(imagewidth, imagewidth/2, fp); 
 	}
 }
 
