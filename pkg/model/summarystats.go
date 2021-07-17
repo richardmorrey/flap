@@ -72,9 +72,6 @@ func (self *summaryStats) load(t db.Table) error {
 	var err error
 	if t !=nil {
 		err =  t.Get(summaryStatsRecordKey,self)
-		if err != nil {
-			return err
-		}
 	}
 	if len(self.Rows) == 0 {
 		self.newRow()

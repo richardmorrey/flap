@@ -121,6 +121,7 @@ type modelState struct {
 
 // From implements db/Serialize
 func (self *modelState) From(buff *bytes.Buffer) error {
+	logInfo("reading model state")
 	err := binary.Read(buff,binary.LittleEndian,&self.totalDayOne)
 	if err != nil {
 		return logError(err)
@@ -137,7 +138,10 @@ func (self *modelState) From(buff *bytes.Buffer) error {
 	}
 
 	err = binary.Read(buff,binary.LittleEndian,&self.totalTravellersCurrent)
-	return err
+	if err != nil {
+		return logError(err)
+	}
+	return nil
 }
 
 // To implemented as part of db/Serialize
@@ -159,7 +163,11 @@ func (self *modelState) To(buff *bytes.Buffer) error {
 	}
 
 	err = binary.Write(buff,binary.LittleEndian,&self.totalTravellersCurrent)
-	return err
+	if err != nil {
+		return logError(err)
+	}
+	logInfo("written model state",buff)
+	return nil
 }
 
 const modelstateRecordKey="modelstate"
@@ -171,6 +179,7 @@ func (self *modelState) load(t db.Table) error {
 
 // save saves engine state to given table
 func (self *modelState)  save(t db.Table) error {
+	logInfo("saving model state")
 	return t.Put(modelstateRecordKey,self)
 }
 
@@ -313,7 +322,7 @@ func (self* Engine) minmaxTripLength() (flap.Days,flap.Days) {
 }
 
 // prepare sets up all data structures needed for a post-build modelling operation
-func (self* Engine) prepare() (*CountriesAirportsRoutes, *TravellerBots, *flap.Engine,*journeyPlanner,error) {
+func (self* Engine) prepare(ms *modelState) (*CountriesAirportsRoutes, *TravellerBots, *flap.Engine,*journeyPlanner,error) {
 	
 	// Validate model params
 	startDay := flap.EpochTime(self.ModelParams.StartDay.Unix())
@@ -337,13 +346,6 @@ func (self* Engine) prepare() (*CountriesAirportsRoutes, *TravellerBots, *flap.E
 		return nil,nil,nil,nil,logError(err)
 	}
 	
-	// load model state
-	var ms modelState
-	err = ms.load(self.table)
-	if err != nil {
-		return nil,nil,nil,nil,logError(err)
-	}
-
 	// Build flight plans for traveller bots
 	travellerBots := NewTravellerBots(cw)
 	if travellerBots == nil {
@@ -366,17 +368,10 @@ func (self* Engine) prepare() (*CountriesAirportsRoutes, *TravellerBots, *flap.E
 }
 
 /// modelDay models a single day - planning flights, submitting flights and performing update and backfill
-func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRoutes, tb *TravellerBots, fe *flap.Engine, jp *journeyPlanner, fp *flightPaths) (flap.UpdateBackfillStats, flap.Kilometres,error) {
+func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRoutes, tb *TravellerBots, fe *flap.Engine, jp *journeyPlanner, fp *flightPaths,ms *modelState) (flap.UpdateBackfillStats, flap.Kilometres,error) {
 
 	// load flap params
 	flapParams := fe.Administrator.GetParams()
-
-	// load model state
-	var ms modelState
-	err := ms.load(self.table)
-	if err != nil {
-		return flap.UpdateBackfillStats{},0,logError(err)
-	}
 
 	// Calculate day of model
 	i := 1 + (flap.Days(currentDay/flap.SecondsInDay) - flap.Days(ms.startDate/flap.SecondsInDay))
@@ -510,6 +505,7 @@ func (self *Engine) Run(warmOnly bool, startDay flap.EpochTime) error {
 	if err != nil {
 		return logError(err)
 	}
+
 	var ss summaryStats
 	ss.save(self.table)
 	var bs botStats
@@ -524,7 +520,7 @@ func (self *Engine) Run(warmOnly bool, startDay flap.EpochTime) error {
 	}
 
 	// Set up data structures
-	cars,tb,fe,jp,err := self.prepare()
+	cars,tb,fe,jp,err := self.prepare(&ms)
 	if err != nil {
 		return logError(err)
 	}
@@ -554,7 +550,7 @@ func (self *Engine) Run(warmOnly bool, startDay flap.EpochTime) error {
 	for i:=flap.Days(-planDays); i < daysToRun; i++ {
 		
 		// Run model for one day
-		us,dt,err := self.modelDay(currentDay,cars,tb,fe,jp,flightPaths)
+		us,dt,err := self.modelDay(currentDay,cars,tb,fe,jp,flightPaths,&ms)
 		if err != nil {
 			return logError(err)
 		}
@@ -598,7 +594,13 @@ func (self *Engine) AdjustDailyTotal(newTravellers uint64, fe *flap.Engine) erro
 // Report generates summary reports
 func (self *Engine) Report() error {
 	
-	_,tb,_,_,err := self.prepare()
+	var ms modelState
+	err := ms.load(self.table)
+	if err != nil {
+		return logError(err)
+	}
+
+	_,tb,_,_,err := self.prepare(&ms)
 	if err != nil {
 		return logError(err)
 	}
@@ -623,13 +625,19 @@ func (self  *Engine) SummaryStats() (string,error) {
 // RunOneDay runs the model for the one specified day
 func (self *Engine) RunOneDay(startOfDay flap.EpochTime) error {
 
-	cars,tb,fe,jp,err := self.prepare()
+	var ms modelState
+	err := ms.load(self.table)
+	if err != nil {
+		return logError(err)
+	}
+
+	cars,tb,fe,jp,err := self.prepare(&ms)
 	if err != nil {
 		return logError(err)
 	}
 	defer fe.Release()
 
-	_,_,err = self.modelDay(startOfDay,cars,tb,fe,jp,nil)
+	_,_,err = self.modelDay(startOfDay,cars,tb,fe,jp,nil,&ms)
 	return err
 }
 
