@@ -426,11 +426,13 @@ func (self Engine) modelDay(currentDay flap.EpochTime,cars *CountriesAirportsRou
 		
 		// Add new travellers if configured to do so
 		if self.ModelParams.TravellersDailyIncrease != 0 {
-			err := self.AdjustDailyTotal(self.ModelParams.TravellersDailyIncrease,fe)
+			err := self.adjustDailyTotal(self.ModelParams.TravellersDailyIncrease,ms.totalTravellersCurrent,currentDay,&flapParams)
 			if err != nil {
 				return flap.UpdateBackfillStats{},0,logError(err)
 			}
 			ms.totalTravellersCurrent += self.ModelParams.TravellersDailyIncrease
+			logInfo("total travellers:", ms.totalTravellersCurrent)
+			logInfo("daily total:", flapParams.DailyTotal)
 		}
 	}
 
@@ -574,23 +576,37 @@ func (self *Engine) Run(warmOnly bool, startDay flap.EpochTime) error {
 
 // AccountForMoreTravellers adjusts daily total upwards to
 // account for new travellers joining FLAP.
-func (self *Engine) AdjustDailyTotal(newTravellers uint64, fe *flap.Engine) error {
+func (self *Engine) AccountForMoreTravellers(newTravellers uint64, totalHumans uint64, now flap.EpochTime, fe *flap.Engine) error {
 	
-	// Retreive amount to adjust by for each new traveller
-	var ss summaryStats
-	ss.load(self.table)
-	distPerTraveller,err := ss.calculateMeanDaily(self.ModelParams.ReportDayDelta)
+	// Retreive state
+	flapParams := fe.Administrator.GetParams()
+
+	// Make adjustments
+	err := self.adjustDailyTotal(newTravellers,self.ModelParams.TotalTravellers+totalHumans,now,&flapParams)
 	if err != nil {
 		return err
 	}
 
-	// Adjust daily total
-	flapParams := fe.Administrator.GetParams()
-	flapParams.DailyTotal += distPerTraveller*flap.Kilometres(newTravellers)
-	err = fe.Administrator.SetParams(flapParams)
-	return err
+	// Save state
+	return fe.Administrator.SetParams(flapParams)
 }
  
+// adjustDailyTotal  adjusts daily total upwards to
+// account for new travellers joining FLAP.
+func (self *Engine) adjustDailyTotal(newTravellers uint64,totalTravellers uint64, now flap.EpochTime,flapParams *flap.FlapParams) error {
+		
+	var ss summaryStats
+	ss.load(self.table)
+
+	distPerDay,err := ss.calculateMeanDaily(&(self.ModelParams),now)
+	if err != nil {
+		return err
+	}
+	logInfo("disterPerDay=",distPerDay)
+	flapParams.DailyTotal += flap.Kilometres((float64(distPerDay)/float64(totalTravellers))*float64(newTravellers))
+	return err
+}
+
 // Report generates summary reports
 func (self *Engine) Report() error {
 	

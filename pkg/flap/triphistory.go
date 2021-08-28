@@ -628,7 +628,6 @@ func (self *TripHistory) To(buff *bytes.Buffer) error {
 	if err != nil {
 		return logError(err)
 	}
-	logDebug("processing ",n," trips")
 	for i:=int32(0); i < n; i++ {
 		err = self.entries[i].To(buff)
 		if (err !=nil) {

@@ -11,9 +11,9 @@ import (
 	"gonum.org/v1/plot/plotter"
 	"bytes"
 	"errors"
+	"time"
 )
 var ESSNODATA 		= errors.New("The first reporting period is not yet completed")
-var ESSNOTENOUGHDATA     = errors.New("There is not enough data to asses traveller over the proceeding calendar year")
 var ESSNOTABLE = errors.New("Table not provided")
 
 type summaryStatsRow 	struct {
@@ -130,49 +130,45 @@ func (self* summaryStats) compile(path string,rdd flap.Days) (plotter.XYs, plott
 	return  travelledPts,allowancePts
 }
 
-func (self * summaryStats) distPerTraveller(i int) float64 {
-	if self.Rows[i].Travellers == 0 {
-		return 0
-	}
-	return float64(self.Rows[i].Travelled)/float64(self.Rows[i].Travellers)
-}
-
-// calculateMeanDaily extrapolates the current  mean distance travelled by each traveller across
+// calculateMeanDaily extrapolates the current  mean daily  distance travelled by all travllers across
 // the course of a year. It does this as follows:
-// (a) Take the current distrance travelled over the last full reporting perioed (reportdaydelta)
-// (b) Calculate the % change between this and the equivlent reporting period a year ago.
-// (c) Take sum of distance times this proportion for all reporting periods in the past year.
-// (d) Divide by the total number of days covered by all the reporting periods taken at step c.
-func (self * summaryStats) calculateMeanDaily(rdd flap.Days) (flap.Kilometres,error) {
+// (a) Take the total distrance travelled over the last full reporting period (reportdaydelta) 
+// (b) If available sdjust for monthly variation using monthly weights associated with first bot spec 
+func (self * summaryStats) calculateMeanDaily(mp *ModelParams, now flap.EpochTime) (flap.Kilometres,error) {
 
 	// (a) Retrieve data for last full row
-	now := len(self.Rows)-1
-	if now >= 0 && self.Rows[now].Entries < int(rdd) {
-		now -= 1
+	rdd := mp.ReportDayDelta
+	var dayOffset int
+	lastFullRow := len(self.Rows)-1
+	if lastFullRow >= 0 && self.Rows[lastFullRow].Entries < int(rdd) {
+		lastFullRow -= 1
+		dayOffset = self.Rows[lastFullRow].Entries
 	}
-	if (now <0) {
+	if (lastFullRow <0) {
 		return 0,ESSNODATA
 	}
-	distNow := self.distPerTraveller(now)
+	distDaily := self.Rows[lastFullRow].Travelled
 
-	// (b) Calc % change from a year ago
-	yearago := now - (365/int(rdd))
-	if yearago < 0 {
-		return 0,ESSNOTENOUGHDATA
-	}
-	distThen := self.distPerTraveller(yearago)
-	if distThen == 0 {
-		return 0,nil
+	// (b) Adjust for monthly variation if monthly weights are available ...
+	if len(mp.BotSpecs) > 0 && mp.BotSpecs[0].MonthWeights != nil {
+		
+		// ... calculate mean weight ...
+		var weightTotal weight
+		for _, w := range mp.BotSpecs[0].MonthWeights {
+			weightTotal += w
+		}
+		meanWeight := float64(weightTotal)/float64(len(mp.BotSpecs[0].MonthWeights))
+
+		// ... establish weight for "now" ...
+		dayToAdjustFor := time.Time(now.ToTime())
+		dayToAdjustFor.AddDate(0,0,-dayOffset)
+		factor := meanWeight/float64(mp.BotSpecs[0].MonthWeights[dayToAdjustFor.Month()-1])
+		logInfo("meanWeight:",meanWeight,"month:",dayToAdjustFor.Month(),"factor:",factor)
+
+		// ... adjust daily distance to reflect mean for the year
+		distDaily = distDaily * factor
 	}
 
-	// (c) Calc full year distance per traveller
-	var yearDistNow float64
-	change := distNow/distThen
-	for i:=yearago; i < now; i++ {
-		yearDistNow += change*self.distPerTraveller(i)
-	}
-
-	// (d) Divide by days covered to give daily mean per traveller
-	return flap.Kilometres(yearDistNow/(float64(now-yearago))),nil
+	return flap.Kilometres(distDaily),nil
 }
 
