@@ -743,3 +743,100 @@ func TestMatchWrongTripEnd(t *testing.T) {
 	}
 }
 
+func TestDeleteEmpty(t *testing.T) {
+	var ps Promises
+	var tp testpredictor
+	err := ps.delete(epochDays(8).toEpochTime(),epochDays(9).toEpochTime(),&tp,3)
+	if err != EPROMISENOTFOUND {
+		t.Error("delete not erroring when there are no promises")
+	} 
+}
+
+func TestDeleteNoMatch(t *testing.T) {
+	var ps Promises
+	var tp testpredictor
+	fillpromises(&ps)
+	err := ps.delete(epochDays(1).toEpochTime(),epochDays(2).toEpochTime(),&tp,3)
+	if err != EPROMISENOTFOUND {
+		t.Error("delete not erroring when there is no match")
+	} 
+}
+
+func TestDeleteNewest(t *testing.T) {
+	var ps Promises
+	var tp testpredictor
+	fillpromises(&ps)
+	err := ps.delete(epochDays(100).toEpochTime(),epochDays(106).toEpochTime(),&tp,3)
+	if err != nil {
+		t.Error("delete failing when there is a match")
+	} 
+	if ps.entries[0].TripStart != epochDays(90).toEpochTime() {
+		t.Error("delete failed to remove first item",ps.entries )
+	}
+	if ps.entries[MaxPromises-1].TripStart != 0 {
+		t.Error("after delete promises are still full",ps.entries )
+	}
+}
+
+func TestDeletePartialMatchNewest(t *testing.T) {
+	var ps Promises
+	var tp testpredictor
+	fillpromises(&ps)
+	err := ps.delete(epochDays(100).toEpochTime(),epochDays(105).toEpochTime(),&tp,3)
+	if err != EPROMISENOTFOUND {
+		t.Error("delete succeeding when there is a partial match")
+	} 
+}
+
+func TestDeleteOldest(t *testing.T) {
+	var ps Promises
+	var tp testpredictor
+	fillpromises(&ps)
+	err := ps.delete(epochDays(10).toEpochTime(),epochDays(16).toEpochTime(),&tp,3)
+	if err != nil {
+		t.Error("delete failing when there is a match")
+	} 
+	if ps.entries[MaxPromises-2].TripStart != epochDays(20).toEpochTime() {
+		t.Error("delete oldest has affected second oldest",ps.entries)
+	}
+	if ps.entries[MaxPromises-1].TripStart != 0 {
+		t.Error("Failed to delete oldest entry",ps.entries )
+	}
+}
+
+func TestDeleteRestack(t  *testing.T) {
+	var ps Promises
+	tp := testpredictor{clearRate:1,backfilledDist:4}
+	ps.entries[4]=Promise{TripStart:epochDays(1).toEpochTime(),
+				      TripEnd:epochDays(5).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(16).toEpochTime()}
+	ps.entries[3]=Promise{TripStart:epochDays(10).toEpochTime(),
+				      TripEnd:epochDays(15).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(26).toEpochTime()}
+	ps.entries[2]=Promise{TripStart:epochDays(20).toEpochTime(),
+				      TripEnd:epochDays(25).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(36).toEpochTime()}
+	ps.entries[1]=Promise{TripStart:epochDays(30).toEpochTime(),
+				      TripEnd:epochDays(36).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(46).toEpochTime()}
+	ps.entries[0]=Promise{TripStart:epochDays(40).toEpochTime(),
+				      TripEnd:epochDays(36).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(56).toEpochTime()}
+	err := ps.delete(epochDays(20).toEpochTime(), epochDays(25).toEpochTime(),&tp,3)
+	if (err != nil) {
+		t.Error("Failed to delete stackable entry",ps.entries)
+	}
+	if ps.entries[2].TripStart != epochDays(10).toEpochTime() {
+		t.Error("Failed to delete stackable entry", ps.entries)
+	}
+	for  i:=3; i > 0; i-- {
+		if ps.entries[4-i].StackIndex != StackIndex(i) {
+			t.Error("Failed to restack entry",i,ps.entries[i])
+		}
+	}
+}

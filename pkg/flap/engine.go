@@ -419,6 +419,29 @@ func (self *Engine) Make(passport Passport, proposal *Proposal, now EpochTime) e
 	return err
 }
 
+// DeletePromises find and deletes promise matching given start and end date. Remaining
+// promises are restacked and have their clearance dates recalculated
+func (self *Engine) DeletePromise(passport Passport,tripStart EpochTime, tripEnd EpochTime) error {
+
+	// Check promises are active
+	if !self.Administrator.validPredictor() {
+		return EPROMISESNOTENABLED
+	}
+
+	// Find traveller
+	t,err := self.Travellers.GetTraveller(passport)
+	if err != nil {
+		return err
+	}
+
+	// Attempt deletion
+	err = t.Promises.delete(tripStart,tripEnd,self.Administrator.predictor,self.Administrator.params.Promises.MaxStackSize)
+	if err == nil  {
+		err = self.Travellers.PutTraveller(t)
+	}
+	return err
+}
+
 // Release saves state and clears up resources when instance is finished with
 func (self *Engine) Release() {
 	self.Administrator.Save()

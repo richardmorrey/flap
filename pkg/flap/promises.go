@@ -246,10 +246,15 @@ func (self* Promises) restack(i int, predictor predictor, maxStackSize StackInde
 	return nil
 }
 
-// Delete deletes a promise with the given trip start and end date. If the promise
-// is stacked then deleteStack can be used to force deletion of entire stack.
-func (self* Promises) delete(tripStart EpochTime, tripEnd EpochTime,deleteStack bool) error {
-	return ENOTIMPLEMENTED
+// Delete deletes a promise with the given trip start and end date
+func (self* Promises) delete(tripStart EpochTime, tripEnd EpochTime,predictor predictor,maxStackSize StackIndex) error {
+	i := sort.Search(MaxPromises,  func(i int) bool {return self.entries[i].TripStart <= tripStart}) 
+	if i  < MaxPromises && self.entries[i].TripStart == tripStart && self.entries[i].TripEnd==tripEnd {
+		copy(self.entries[i:], self.entries[i+1:])
+		self.entries[MaxPromises-1] = Promise{}
+		return self.restack(i,predictor,maxStackSize)
+	}
+	return EPROMISENOTFOUND
 }
 
 type PromisesIterator struct {

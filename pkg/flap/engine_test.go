@@ -301,6 +301,7 @@ func TestUpdateTripsAndBackfillOne(t  *testing.T) {
 
 }
 
+/*
 func TestUpdateTripsAndBackfillThreadedDatastore(t *testing.T) {
 	for threads:=1; threads <= 16; threads *=2 {
 		db := db.NewDatastoreDB("flaptest")
@@ -312,6 +313,7 @@ func TestUpdateTripsAndBackfillThreadedDatastore(t *testing.T) {
 		db.Release()
 	}
 }
+*/
 
 func TestUpdateTripsAndBackfillThreaded(t *testing.T) {
 	for threads:=1; threads <= 16; threads *=2 {
@@ -737,3 +739,29 @@ func TestMakeOldProposal(t *testing.T) {
 	}
 }
 
+func TestDeletePromise(t *testing.T) {
+	db:= enginesetup(t)
+	defer engineteardown(db)
+	engine := NewEngine(db,0,"")
+	paramsIn := FlapParams{DailyTotal:100, MinGrounded:1,FlightInterval:1,FlightsInTrip:50,TripLength:365,
+		Promises:PromisesConfig{Algo:paLinearBestFit,MaxPoints:10}}
+	engine.Administrator.SetParams(paramsIn)
+	passport := NewPassport("987654321","uk")
+
+	var p Proposal
+	fillpromises(&(p.Promises))
+	err := engine.Make(passport,&p,SecondsInDay)
+	if err != nil {
+		t.Error("Make returns error when promises are enabled",err)
+	}
+
+	err = engine.DeletePromise(passport,epochDays(100).toEpochTime(),epochDays(106).toEpochTime())
+	if err != nil {
+		t.Error("DeletePromise failing when there is a match")
+	} 
+	
+	traveller,err := engine.Travellers.GetTraveller(passport) 
+	if traveller.Promises.entries[0].TripStart != epochDays(90).toEpochTime() {
+		t.Error("DeletePromise failed to delete promise",traveller.Promises.entries )
+	}
+}
