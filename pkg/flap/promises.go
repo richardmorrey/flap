@@ -16,6 +16,7 @@ var EPROMISEDOESNTMATCH		 = errors.New("Promise trip end or distance travelled d
 var EEXCEEDEDMAXSTACKSIZE	 = errors.New("Exceeded max promise stack size")
 var EPROPOSALEXPIRED		 = errors.New("Proposal has expired")
 
+
 type StackIndex int8
 type Promise struct {
 	TripStart 		EpochTime
@@ -63,11 +64,29 @@ type Proposal struct {
 	version predictVersion
 }
 
+// predict sets clearance date far in the future if flight is too far in future for prediction.
+// Otherwise it uses provided predictor and returns its prediction
+func (self *Promises) predict(distance Kilometres, ts EpochTime, te EpochTime, now EpochTime, predictor predictor, pc PromisesConfig) epochDays {
+	
+/*
+	if ts.toEpochDays(true) - now.toEpochDays(false) > epochDays(pc.MaxDays) {
+		endOfTime := MaxEpochTime
+		return endOfTime.toEpochDays(false)
+	}
+*/
+	clearance,err := predictor.predict(distance,te.toEpochDays(true))
+	if err !=nil {
+		clearance = te.toEpochDays(false)+1
+		logDebug("predict failed: ",err)
+	}
+	return clearance
+}
+
 // Propose returns a proposal for a clearance promise date for a Trip with given
 // start and end dates and schedule. The promise is not made at this point
 // "distance" is the distance to backfill and "travelled" is the distance
 // travelled. This are different if a Taxi Overhead is set.
-func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kilometres,travelled Kilometres, now EpochTime, predictor predictor,maxStackSize StackIndex) (*Proposal,error) {
+func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kilometres,travelled Kilometres, now EpochTime, predictor predictor, pc PromisesConfig) (*Proposal,error) {
 
 	// Check args
 	if predictor == nil {
@@ -98,11 +117,7 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	// Calculate clearance date, defaulting to the next day if predictor
 	// is not ready yet
 	var p Promise
-	clearance,err := predictor.predict(distance,tripEnd.toEpochDays(true))
-	if err !=nil {
-		clearance = tripEnd.toEpochDays(false)+1
-		logDebug("predict failed: ",err)
-	}
+	clearance := self.predict(distance,tripStart,tripEnd,now,predictor,pc)
 	p = Promise{TripStart:tripStart,TripEnd:tripEnd,Distance:distance,Travelled:travelled,Clearance:clearance.toEpochTime()}
 	
 	// Find index to add promise
@@ -125,7 +140,7 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	pp.version = predictor.version()
 
 	// Stack promises to ensure no overlap
-	err = pp.restack(i,predictor,maxStackSize)
+	err := pp.restack(i,now,predictor,pc)
 	if err == nil {
 		return &pp,nil
 	} else {
@@ -174,7 +189,7 @@ func (self* Promises) keep(tripStart EpochTime, tripEnd EpochTime, distance Kilo
 // updateStackEntry updates stack entry i clearance date to allow the trip after to proceed and 
 // updates the clearance date of the trip after to account for the early clearance of stack entry
 // i
-func (self* Promises) updateStackEntry(i int, predictor predictor, maxStackSize StackIndex) error {
+func (self* Promises) updateStackEntry(i int, now EpochTime, predictor predictor, pc PromisesConfig) error {
 	
 	// Validate args
 	if i==0 || i > MaxPromises-1 {
@@ -192,7 +207,7 @@ func (self* Promises) updateStackEntry(i int, predictor predictor, maxStackSize 
 	// promise if there is one
 	var lastIndex StackIndex
 	if i < MaxPromises-1 {
-		if self.entries[i+1].StackIndex >= maxStackSize {
+		if self.entries[i+1].StackIndex >= pc.MaxStackSize {
 			logDebug("exceeded max stack size")
 			return EEXCEEDEDMAXSTACKSIZE
 		}
@@ -208,11 +223,7 @@ func (self* Promises) updateStackEntry(i int, predictor predictor, maxStackSize 
 		logDebug("backfill failed: ",err)
 	}
 	self.entries[i-1].CarriedOver = self.entries[i].tobackfill() - distdone
-	clearance,err := predictor.predict(self.entries[i-1].tobackfill(),self.entries[i-1].TripEnd.toEpochDays(true)+1)
-	if err != nil {
-		clearance = self.entries[i-1].TripEnd.toEpochDays(false)+1
-		logDebug("predict failed: ",err)
-	}
+	clearance := self.predict(self.entries[i-1].tobackfill(),self.entries[i-1].TripStart,self.entries[i-1].TripEnd+SecondsInDay,now,predictor,pc)
 	self.entries[i-1].Clearance=clearance.toEpochTime()
 	return nil
 }
@@ -223,11 +234,11 @@ func (self* Promises) updateStackEntry(i int, predictor predictor, maxStackSize 
 // - No sequence of more than 3 stacked promises
 // If this is not possible then an error is returned. Note this function does not change the TripStart, TripEnd
 // or Distance fields of any entry.
-func (self* Promises) restack(i int, predictor predictor, maxStackSize StackIndex) error {
+func (self* Promises) restack(i int, now EpochTime, predictor predictor, pc PromisesConfig) error {
 	
 	// Check previous promise and extend stack if clearance date overlaps
 	if  i < MaxPromises -1 && self.entries[i+1].Clearance >= self.entries[i].TripStart {
-		err := self.updateStackEntry(i+1,predictor,maxStackSize)
+		err := self.updateStackEntry(i+1,now,predictor,pc)
 		if err != nil {
 			return err
 		}
@@ -238,7 +249,7 @@ func (self* Promises) restack(i int, predictor predictor, maxStackSize StackInde
 	for j:=i; j > 0 && self.entries[j].Clearance >= self.entries[j-1].TripStart; j-- {
 		
 		// Update
-		err := self.updateStackEntry(j,predictor,maxStackSize)
+		err := self.updateStackEntry(j,now,predictor,pc)
 		if err != nil {
 			return err
 		}
@@ -247,12 +258,12 @@ func (self* Promises) restack(i int, predictor predictor, maxStackSize StackInde
 }
 
 // Delete deletes a promise with the given trip start and end date
-func (self* Promises) delete(tripStart EpochTime, tripEnd EpochTime,predictor predictor,maxStackSize StackIndex) error {
+func (self* Promises) delete(tripStart EpochTime, tripEnd EpochTime,now EpochTime, predictor predictor,pc PromisesConfig) error {
 	i := sort.Search(MaxPromises,  func(i int) bool {return self.entries[i].TripStart <= tripStart}) 
 	if i  < MaxPromises && self.entries[i].TripStart == tripStart && self.entries[i].TripEnd==tripEnd {
 		copy(self.entries[i:], self.entries[i+1:])
 		self.entries[MaxPromises-1] = Promise{}
-		return self.restack(i,predictor,maxStackSize)
+		return self.restack(i,now,predictor,pc)
 	}
 	return EPROMISENOTFOUND
 }

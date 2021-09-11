@@ -755,7 +755,7 @@ func TestDeletePromise(t *testing.T) {
 		t.Error("Make returns error when promises are enabled",err)
 	}
 
-	err = engine.DeletePromise(passport,epochDays(100).toEpochTime(),epochDays(106).toEpochTime())
+	err = engine.DeletePromise(passport,epochDays(100).toEpochTime(),epochDays(106).toEpochTime(),SecondsInDay)
 	if err != nil {
 		t.Error("DeletePromise failing when there is a match")
 	} 

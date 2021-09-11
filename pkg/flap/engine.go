@@ -394,7 +394,7 @@ func (self *Engine) Propose(passport Passport,flights [] Flight, tripEnd EpochTi
 
 	// Ask for proposal and return the result
 	return self.getCreateTraveller(passport,now).Promises.propose(ts,te,distance,travelled,now,self.Administrator.predictor,
-								  self.Administrator.params.Promises.MaxStackSize)
+								  self.Administrator.params.Promises)
 }
 
 // Make attempts to apply a proposal for changes to a traveller's set of clearance promises.
@@ -421,7 +421,7 @@ func (self *Engine) Make(passport Passport, proposal *Proposal, now EpochTime) e
 
 // DeletePromises find and deletes promise matching given start and end date. Remaining
 // promises are restacked and have their clearance dates recalculated
-func (self *Engine) DeletePromise(passport Passport,tripStart EpochTime, tripEnd EpochTime) error {
+func (self *Engine) DeletePromise(passport Passport,tripStart EpochTime, tripEnd EpochTime, now EpochTime) error {
 
 	// Check promises are active
 	if !self.Administrator.validPredictor() {
@@ -435,7 +435,7 @@ func (self *Engine) DeletePromise(passport Passport,tripStart EpochTime, tripEnd
 	}
 
 	// Attempt deletion
-	err = t.Promises.delete(tripStart,tripEnd,self.Administrator.predictor,self.Administrator.params.Promises.MaxStackSize)
+	err = t.Promises.delete(tripStart,tripEnd,now,self.Administrator.predictor,self.Administrator.params.Promises)
 	if err == nil  {
 		err = self.Travellers.PutTraveller(t)
 	}
