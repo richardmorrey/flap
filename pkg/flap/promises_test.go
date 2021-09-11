@@ -103,6 +103,35 @@ func TestFirstPromise(t *testing.T) {
 	}
 }
 
+func TestMaxDaysPromise(t *testing.T) {
+	var ps Promises
+	var tp testpredictor
+	tp.clearRate=1
+	tp.pv=999
+	p := Promise{TripStart:epochDays(3).toEpochTime(),TripEnd:epochDays(4).toEpochTime(),Distance:2,Travelled:2,Clearance:epochDays(6).toEpochTime()}
+	proposal,err := ps.propose(p.TripStart,p.TripEnd,p.Distance,p.Travelled,epochDays(1).toEpochTime(),&tp,PromisesConfig{MaxStackSize:3,MaxDays:2})
+	if err != nil {
+		t.Error("Failed to propose a simple promise",err)
+		return
+	}
+
+	if proposal.entries[0] != p {
+		t.Error("Propose didn't deliver expected proposal",proposal.entries[0])
+	}
+
+	proposal,err = ps.propose(p.TripStart,p.TripEnd,p.Distance,p.Travelled,epochDays(1).toEpochTime(),&tp,PromisesConfig{MaxStackSize:3,MaxDays:1})
+	if err != nil {
+		t.Error("Failed to propose a promise for trip starting more than MaxDays in the future",err)
+		return
+	}
+
+	if proposal.entries[0].Clearance != TooFarAheadToPredict {
+		t.Error("Propose didn't deliver clearance far in future",proposal.entries[0])
+	}
+
+}
+
+
 func TestNonOverlappingPromises(t *testing.T) {
 	tp := testpredictor{clearRate:1}
 	var ps,psExpected Promises
@@ -314,6 +343,35 @@ func TestUpdateStackEntrySimple(t* testing.T) {
 	}
 	if ps.entries[0].Clearance != epochDays(43).toEpochTime() {
 		t.Error("updatedStackEntry set wrong clearance date for the following flight",ps.entries[0].Clearance)
+	}
+	if ps.entries[1].StackIndex != 1 {
+		t.Error("updateStackEntry set wrong stack index for the stacked flight",ps.entries[1].StackIndex)
+	}
+	if ps.entries[0].StackIndex != 0 {
+		t.Error("updatedStackEntry set wrong stack index for the following flight",ps.entries[0].StackIndex)
+	}
+}
+
+func TestUpdateStackEntryTooFarAhead(t* testing.T) {
+	var ps Promises
+	tp := testpredictor{clearRate:1,backfilledDist:3}
+	ps.entries[1]=Promise{TripStart:epochDays(10).toEpochTime(),
+				      TripEnd:epochDays(15).toEpochTime(),
+				      Distance:10,
+				      Clearance:TooFarAheadToPredict}
+	ps.entries[0]=Promise{TripStart:epochDays(20).toEpochTime(),
+				      TripEnd:epochDays(25).toEpochTime(),
+				      Distance:10,
+				      Clearance:TooFarAheadToPredict}
+	err := ps.updateStackEntry(1,SecondsInDay,&tp,PromisesConfig{MaxStackSize:3,MaxDays:100})
+	if err != nil {
+		t.Error("updateStackEntry returned error for simple case",err)
+	}
+	if ps.entries[1].Clearance != TooFarAheadToPredict {
+		t.Error("updateStackEntry changed clearance date for flight too far ahead",ps.entries[1].Clearance)
+	}
+	if ps.entries[0].Clearance != TooFarAheadToPredict {
+		t.Error("updatedStackEntry changed clearance date for flight too far ahead",ps.entries[0].Clearance)
 	}
 	if ps.entries[1].StackIndex != 1 {
 		t.Error("updateStackEntry set wrong stack index for the stacked flight",ps.entries[1].StackIndex)

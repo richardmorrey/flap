@@ -16,6 +16,7 @@ var EPROMISEDOESNTMATCH		 = errors.New("Promise trip end or distance travelled d
 var EEXCEEDEDMAXSTACKSIZE	 = errors.New("Exceeded max promise stack size")
 var EPROPOSALEXPIRED		 = errors.New("Proposal has expired")
 
+var TooFarAheadToPredict = EpochTime(18446744073709526400)
 
 type StackIndex int8
 type Promise struct {
@@ -68,12 +69,12 @@ type Proposal struct {
 // Otherwise it uses provided predictor and returns its prediction
 func (self *Promises) predict(distance Kilometres, ts EpochTime, te EpochTime, now EpochTime, predictor predictor, pc PromisesConfig) epochDays {
 	
-/*
+
 	if ts.toEpochDays(true) - now.toEpochDays(false) > epochDays(pc.MaxDays) {
-		endOfTime := MaxEpochTime
+		endOfTime := TooFarAheadToPredict
 		return endOfTime.toEpochDays(false)
 	}
-*/
+
 	clearance,err := predictor.predict(distance,te.toEpochDays(true))
 	if err !=nil {
 		clearance = te.toEpochDays(false)+1
@@ -158,6 +159,19 @@ func (self *Promises) make(pp *Proposal, predictor predictor) error {
 	return nil
 }
 
+// makeofNoLongerTooFarAhead checks for the first promise too far head to make prediction for
+// and, if now not too far ahead, updates with a valid clearance date
+func (self* Promises) makeIfNoLongerTooFarAhead(now EpochTime,predictor predictor, pc PromisesConfig) bool {
+	i := sort.Search(MaxPromises,  func(i int) bool {return self.entries[i].Clearance == TooFarAheadToPredict})
+	if i < MaxPromises && self.entries[i].TripStart.toEpochDays(false) < now.toEpochDays(false) + epochDays(pc.MaxDays) {
+		clearance := self.predict(self.entries[i].Distance,self.entries[i].TripStart,self.entries[i].TripEnd,now,predictor,pc)
+		self.entries[i].Clearance = clearance.toEpochTime()
+		err := self.restack(i,now,predictor,pc)
+		return err == nil
+	}
+	return false
+}
+
 // keep asks for a promise applying to completed trip with given details to be kept. If a matching
 // valid promise is found its clearance date is returned for use by the Traveller. Otherwise
 // an error is returned
@@ -199,9 +213,11 @@ func (self* Promises) updateStackEntry(i int, now EpochTime, predictor predictor
 		return logError(EINVALIDARGUMENT)
 	}
 
-	// Set clearance date to start of day of next trip
-	cd := self.entries[i-1].TripStart.toEpochDays(false)
-	self.entries[i].Clearance = cd.toEpochTime() 
+	// If not too far in future to predict, set clearance date to start of day of next trip
+	if self.entries[i].Clearance != TooFarAheadToPredict {
+		cd := self.entries[i-1].TripStart.toEpochDays(false)
+		self.entries[i].Clearance = cd.toEpochTime() 
+	}
 
 	// Set stack index to one more than that of previous
 	// promise if there is one
@@ -215,16 +231,18 @@ func (self* Promises) updateStackEntry(i int, now EpochTime, predictor predictor
 	}
 	self.entries[i].StackIndex = lastIndex+1
 
-	// Calculate clearance date for next promise, taking account of distance
-	// not cleared from promise i
-	distdone,err := predictor.backfilled(self.entries[i].TripEnd.toEpochDays(true)+1,self.entries[i].Clearance.toEpochDays(false))
-	if err != nil {
-		distdone = 0
-		logDebug("backfill failed: ",err)
+	// If not too far in future to predict calculate clearance date for next promise,
+	// taking account of distance not cleared from promise i
+	if self.entries[i-1].Clearance != TooFarAheadToPredict {
+		distdone,err := predictor.backfilled(self.entries[i].TripEnd.toEpochDays(true)+1,self.entries[i].Clearance.toEpochDays(false))
+		if err != nil {
+			distdone = 0
+			logDebug("backfill failed: ",err)
+		}
+		self.entries[i-1].CarriedOver = self.entries[i].tobackfill() - distdone
+		clearance := self.predict(self.entries[i-1].tobackfill(),self.entries[i-1].TripStart,self.entries[i-1].TripEnd+SecondsInDay,now,predictor,pc)
+		self.entries[i-1].Clearance=clearance.toEpochTime()
 	}
-	self.entries[i-1].CarriedOver = self.entries[i].tobackfill() - distdone
-	clearance := self.predict(self.entries[i-1].tobackfill(),self.entries[i-1].TripStart,self.entries[i-1].TripEnd+SecondsInDay,now,predictor,pc)
-	self.entries[i-1].Clearance=clearance.toEpochTime()
 	return nil
 }
 
