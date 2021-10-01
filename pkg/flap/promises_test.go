@@ -897,3 +897,57 @@ func TestDeleteRestack(t  *testing.T) {
 		}
 	}
 }
+
+func TestMakeIfSimple(t *testing.T) {
+        var ps Promises
+        tp := testpredictor{clearRate:1,backfilledDist:4}
+        ps.entries[0]=Promise{TripStart:epochDays(5).toEpochTime(),
+				      TripEnd:epochDays(6).toEpochTime(),
+				      Distance:10,
+				      Clearance:TooFarAheadToPredict}
+        made := ps.makeIfNoLongerTooFarAhead(epochDays(1).toEpochTime(),&tp,PromisesConfig{MaxStackSize:3,MaxDays:3})
+        if made {
+	       t.Error("Made promise that was still too far head")
+	}
+        if ps.entries[0].Clearance != TooFarAheadToPredict {
+	       t.Error("Set clearance for promise that is too far ahead to predict")
+	}
+
+	made = ps.makeIfNoLongerTooFarAhead(epochDays(4).toEpochTime(),&tp,PromisesConfig{MaxStackSize:3,MaxDays:3})
+	if !made {
+		 t. Error("Failed to make promise that was no longer too far ahead")
+	}
+
+	if ps.entries[0].Clearance != epochDays(16).toEpochTime() {
+		t.Error("makeIf failed to set correct Clearance", ps.entries[0].Clearance.toEpochDays(false))
+	}
+}
+
+func TestMakeIfEmpty(t *testing.T) {
+        var ps Promises
+        tp := testpredictor{clearRate:1,backfilledDist:4}
+        made := ps.makeIfNoLongerTooFarAhead(epochDays(1).toEpochTime(),&tp,PromisesConfig{MaxStackSize:3,MaxDays:3})
+        if made {
+	       t.Error("Made promise for when there were no promises to make")
+	}
+}
+
+func TestMakeIfFull(t *testing.T) {
+	var psOut Promises
+	fillpromises(&psOut)
+	psIn := psOut
+	psIn.entries[0].Clearance = TooFarAheadToPredict
+        psOut.entries[0].Clearance = psOut.entries[0].TripEnd + 2*SecondsInDay
+        tp := testpredictor{clearRate:1,backfilledDist:4}
+        made := psIn.makeIfNoLongerTooFarAhead(psIn.entries[0].TripStart -SecondsInDay*2,&tp,PromisesConfig{MaxStackSize:3,MaxDays:1})
+        if made {
+	       t.Error("Made promise that is too far ahead")
+	}
+        made = psIn.makeIfNoLongerTooFarAhead(psIn.entries[0].TripStart - SecondsInDay,&tp,PromisesConfig{MaxStackSize:3,MaxDays:1})
+        if !made {
+	       t.Error("Failed to make promise that wasn't too far ahead")
+	}
+	if !reflect.DeepEqual(psIn,psOut) {
+	       t.Error("Failed to set Clearance for made promise")
+	}
+}

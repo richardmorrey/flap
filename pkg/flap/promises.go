@@ -5,6 +5,7 @@ import (
 	"sort"
 	"encoding/binary"
 	"bytes"
+	//"fmt"
 )
 
 var EINTERNAL			 = errors.New("Reached internal state that shouldn't be possible")
@@ -162,8 +163,8 @@ func (self *Promises) make(pp *Proposal, predictor predictor) error {
 // makeofNoLongerTooFarAhead checks for the first promise too far head to make prediction for
 // and, if now not too far ahead, updates with a valid clearance date
 func (self* Promises) makeIfNoLongerTooFarAhead(now EpochTime,predictor predictor, pc PromisesConfig) bool {
-	i := sort.Search(MaxPromises,  func(i int) bool {return self.entries[i].Clearance == TooFarAheadToPredict})
-	if i < MaxPromises && self.entries[i].TripStart.toEpochDays(false) < now.toEpochDays(false) + epochDays(pc.MaxDays) {
+	i := sort.Search(MaxPromises,  func(i int) bool {return self.entries[i].Clearance != TooFarAheadToPredict})-1
+	if i >= 0 && self.entries[i].TripStart.toEpochDays(false) <= now.toEpochDays(false) + epochDays(pc.MaxDays) {
 		clearance := self.predict(self.entries[i].Distance,self.entries[i].TripStart,self.entries[i].TripEnd,now,predictor,pc)
 		self.entries[i].Clearance = clearance.toEpochTime()
 		err := self.restack(i,now,predictor,pc)
