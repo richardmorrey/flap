@@ -363,12 +363,12 @@ func TestUpdateStackEntryTooFarAhead(t* testing.T) {
 				      TripEnd:epochDays(25).toEpochTime(),
 				      Distance:10,
 				      Clearance:TooFarAheadToPredict}
-	err := ps.updateStackEntry(1,SecondsInDay,&tp,PromisesConfig{MaxStackSize:3,MaxDays:100})
+	err := ps.updateStackEntry(1,SecondsInDay,&tp,PromisesConfig{MaxStackSize:3,MaxDays:18})
 	if err != nil {
 		t.Error("updateStackEntry returned error for simple case",err)
 	}
-	if ps.entries[1].Clearance != TooFarAheadToPredict {
-		t.Error("updateStackEntry changed clearance date for flight too far ahead",ps.entries[1].Clearance)
+	if ps.entries[1].Clearance != epochDays(20).toEpochTime() {
+		t.Error("updateStackEntry faliedl to stack flight too far ahead",ps.entries[1].Clearance)
 	}
 	if ps.entries[0].Clearance != TooFarAheadToPredict {
 		t.Error("updatedStackEntry changed clearance date for flight too far ahead",ps.entries[0].Clearance)
@@ -466,7 +466,8 @@ func TestRestack(t *testing.T) {
 	var ps Promises
 	tp := testpredictor{clearRate:1,backfilledDist:4}
 	ps.entries[3]=Promise{TripStart:epochDays(1).toEpochTime(),
-				      TripEnd:epochDays(5).toEpochTime(),
+
+	TripEnd:epochDays(5).toEpochTime(),
 				      Distance:10,
 				      Clearance:epochDays(16).toEpochTime()}
 	ps.entries[2]=Promise{TripStart:epochDays(10).toEpochTime(),
@@ -498,6 +499,70 @@ func TestRestack(t *testing.T) {
 	}
 	if ps.entries[0].Clearance != epochDays(65).toEpochTime() {
 		t.Error("restack inal clearance data doesnt account for total carry over from previous stacked flights", ps.entries[0].Clearance)
+	}
+}
+
+func TestRestackTooFarAhead(t *testing.T) {
+	var ps Promises
+	tp := testpredictor{clearRate:1,backfilledDist:4}
+	ps.entries[3]=Promise{TripStart:epochDays(1).toEpochTime(),
+				      TripEnd:epochDays(5).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(16).toEpochTime()}
+	ps.entries[2]=Promise{TripStart:epochDays(10).toEpochTime(),
+				      TripEnd:epochDays(15).toEpochTime(),
+				      Distance:10,
+				      Clearance:TooFarAheadToPredict}
+	ps.entries[1]=Promise{TripStart:epochDays(20).toEpochTime(),
+				      TripEnd:epochDays(25).toEpochTime(),
+				      Distance:10,
+				      Clearance:TooFarAheadToPredict}
+	ps.entries[0]=Promise{TripStart:epochDays(30).toEpochTime(),
+				      TripEnd:epochDays(36).toEpochTime(),
+				      Distance:10,
+				      Clearance:TooFarAheadToPredict}
+	err := ps.restack(2,SecondsInDay,&tp,PromisesConfig{MaxStackSize:3,MaxDays:5})
+	if (err != nil) {
+		t.Error("failed to restack valid promises",err)
+	}
+	for i := 3; i >= 1; i-- {
+		if ps.entries[i].StackIndex != StackIndex(4-i) {
+			t.Error("restack set incorrect stack index for entry",i,ps.entries[i].StackIndex)
+		}
+		if ps.entries[i].Clearance != ps.entries[i-1].TripStart {
+			t.Error("restack set clearance date that doesnt match start date of next trip", i, ps.entries[i].Clearance,ps.entries[i-1].TripStart)
+		}
+	}
+	if ps.entries[0].StackIndex !=0 {
+		t.Error("restack set incorrect stack index for latest entry",ps.entries[0])
+	}
+	if ps.entries[0].Clearance != TooFarAheadToPredict {
+		t.Error("restack final cleareance set when flight is too far ahead", ps.entries[0].Clearance)
+	}
+}
+
+func TestRestackTooFarAheadInvalid(t *testing.T) {
+	var ps Promises
+	tp := testpredictor{clearRate:1,backfilledDist:4}
+	ps.entries[3]=Promise{TripStart:epochDays(1).toEpochTime(),
+				      TripEnd:epochDays(5).toEpochTime(),
+				      Distance:10,
+				      Clearance:epochDays(16).toEpochTime()}
+	ps.entries[2]=Promise{TripStart:epochDays(10).toEpochTime(),
+				      TripEnd:epochDays(15).toEpochTime(),
+				      Distance:10,
+				      Clearance:TooFarAheadToPredict}
+	ps.entries[1]=Promise{TripStart:epochDays(20).toEpochTime(),
+				      TripEnd:epochDays(25).toEpochTime(),
+				      Distance:10,
+				      Clearance:TooFarAheadToPredict}
+	ps.entries[0]=Promise{TripStart:epochDays(30).toEpochTime(),
+				      TripEnd:epochDays(36).toEpochTime(),
+				      Distance:10,
+				      Clearance:TooFarAheadToPredict}
+	err := ps.restack(2,SecondsInDay,&tp,PromisesConfig{MaxStackSize:2,MaxDays:5})
+	if (err == nil) {
+		t.Error("successfully stacked set of promises exceeding stack size and too far ahead",err)
 	}
 }
 
@@ -884,7 +949,7 @@ func TestDeleteRestack(t  *testing.T) {
 				      TripEnd:epochDays(36).toEpochTime(),
 				      Distance:10,
 				      Clearance:epochDays(56).toEpochTime()}
-	err := ps.delete(epochDays(20).toEpochTime(), epochDays(25).toEpochTime(),SecondsInDay,&tp,PromisesConfig{MaxStackSize:3})
+	err := ps.delete(epochDays(20).toEpochTime(), epochDays(25).toEpochTime(),SecondsInDay,&tp,PromisesConfig{MaxStackSize:3,MaxDays:50})
 	if (err != nil) {
 		t.Error("Failed to delete stackable entry",ps.entries)
 	}
@@ -949,5 +1014,75 @@ func TestMakeIfFull(t *testing.T) {
 	}
 	if !reflect.DeepEqual(psIn,psOut) {
 	       t.Error("Failed to set Clearance for made promise")
+	}
+}
+
+func TestMakeIfTwo(t  *testing.T) {
+	var ps Promises
+	ps.entries[4]=Promise{TripStart:epochDays(1).toEpochTime(),
+				      TripEnd:epochDays(5).toEpochTime(),
+				      Distance:5,
+				      Clearance:epochDays(10).toEpochTime()}
+	ps.entries[3]=Promise{TripStart:epochDays(10).toEpochTime(),
+				      TripEnd:epochDays(15).toEpochTime(),
+				      Distance:5,
+				      Clearance:epochDays(20).toEpochTime()}
+	ps.entries[2]=Promise{TripStart:epochDays(20).toEpochTime(),
+				      TripEnd:epochDays(25).toEpochTime(),
+				      Distance:5,
+				      Clearance:epochDays(30).toEpochTime()}
+	ps.entries[1]=Promise{TripStart:epochDays(40).toEpochTime(),
+				      TripEnd:epochDays(45).toEpochTime(),
+				      Distance:5,
+				      Clearance:TooFarAheadToPredict}
+	ps.entries[0]=Promise{TripStart:epochDays(60).toEpochTime(),
+				      TripEnd:epochDays(65).toEpochTime(),
+				      Distance:5,
+				      Clearance:TooFarAheadToPredict}
+        tp := testpredictor{clearRate:1,backfilledDist:4}
+        made := ps.makeIfNoLongerTooFarAhead(epochDays(39).toEpochTime(),&tp,PromisesConfig{MaxStackSize:3,MaxDays:20})
+        if !made {
+	       t.Error("Failed to make if when within maxdays")
+	}
+	if ps.entries[1].Clearance != epochDays(50).toEpochTime() {
+	       t.Error("Incorrect clearance set for madeIf promise", ps.entries[1].Clearance)
+	}
+	if ps.entries[0].Clearance != TooFarAheadToPredict {
+	       t.Error("Changed clearance for promise that is still too far ahead to predict", ps.entries[0].Clearance)
+	}
+}
+
+func TestMakeIfTwoToMake(t  *testing.T) {
+	var ps Promises
+	ps.entries[4]=Promise{TripStart:epochDays(1).toEpochTime(),
+				      TripEnd:epochDays(5).toEpochTime(),
+				      Distance:5,
+				      Clearance:epochDays(10).toEpochTime()}
+	ps.entries[3]=Promise{TripStart:epochDays(10).toEpochTime(),
+				      TripEnd:epochDays(15).toEpochTime(),
+				      Distance:5,
+				      Clearance:epochDays(20).toEpochTime()}
+	ps.entries[2]=Promise{TripStart:epochDays(20).toEpochTime(),
+				      TripEnd:epochDays(25).toEpochTime(),
+				      Distance:5,
+				      Clearance:epochDays(30).toEpochTime()}
+	ps.entries[1]=Promise{TripStart:epochDays(40).toEpochTime(),
+				      TripEnd:epochDays(45).toEpochTime(),
+				      Distance:5,
+				      Clearance:TooFarAheadToPredict}
+	ps.entries[0]=Promise{TripStart:epochDays(60).toEpochTime(),
+				      TripEnd:epochDays(65).toEpochTime(),
+				      Distance:5,
+				      Clearance:TooFarAheadToPredict}
+        tp := testpredictor{clearRate:1,backfilledDist:4}
+        made := ps.makeIfNoLongerTooFarAhead(epochDays(39).toEpochTime(),&tp,PromisesConfig{MaxStackSize:3,MaxDays:22})
+        if !made {
+	       t.Error("Failed to make if when within maxdays")
+	}
+	if ps.entries[1].Clearance != epochDays(50).toEpochTime() {
+	       t.Error("Incorrect clearance set for madeIf promise", ps.entries[1].Clearance)
+	}
+	if ps.entries[0].Clearance == TooFarAheadToPredict {
+	       t.Error("Didn't change clearance for promise that is no longer too far ahead to predict", ps.entries[0])
 	}
 }

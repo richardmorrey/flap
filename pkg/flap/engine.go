@@ -331,6 +331,12 @@ func (self *Engine) updateSomeTravellers(prefixStart byte, prefixEnd byte, share
 				changed = true
 			}
 
+			// Make prmoises for trips that are no longer too far ahead
+			made := traveller.Promises.makeIfNoLongerTooFarAhead(now, self.Administrator.predictor,self.Administrator.params.Promises)
+			if made {
+				changed = true
+			}
+
 			// Save changes if necessary
 			if changed {
 				bw.Put(traveller)

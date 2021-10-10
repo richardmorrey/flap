@@ -16,6 +16,7 @@ var EPROMISENOTFOUND		 = errors.New("Promise not found")
 var EPROMISEDOESNTMATCH		 = errors.New("Promise trip end or distance travelled doesnt match")
 var EEXCEEDEDMAXSTACKSIZE	 = errors.New("Exceeded max promise stack size")
 var EPROPOSALEXPIRED		 = errors.New("Proposal has expired")
+var ECANTMAKEFARAHEADPROMISE     = errors.New("Cant make far ahead promise")
 
 var TooFarAheadToPredict = EpochTime(18446744073709526400)
 
@@ -66,22 +67,24 @@ type Proposal struct {
 	version predictVersion
 }
 
-// predict sets clearance date far in the future if flight is too far in future for prediction.
-// Otherwise it uses provided predictor and returns its prediction
-func (self *Promises) predict(distance Kilometres, ts EpochTime, te EpochTime, now EpochTime, predictor predictor, pc PromisesConfig) epochDays {
+// predict sets clearance date 
+func (self *Promises) predict(distance Kilometres, ts EpochTime, te EpochTime, now EpochTime, predictor predictor, pc PromisesConfig) (epochDays,error) {
 	
 
+	// if flight is too far in fture ...
 	if ts.toEpochDays(true) - now.toEpochDays(false) > epochDays(pc.MaxDays) {
+		// ... low promise with clearance at end of time ...
 		endOfTime := TooFarAheadToPredict
-		return endOfTime.toEpochDays(false)
+		return endOfTime.toEpochDays(false),nil
 	}
 
+	// Calculate actual prediction
 	clearance,err := predictor.predict(distance,te.toEpochDays(true))
 	if err !=nil {
 		clearance = te.toEpochDays(false)+1
 		logDebug("predict failed: ",err)
 	}
-	return clearance
+	return clearance,nil
 }
 
 // Propose returns a proposal for a clearance promise date for a Trip with given
@@ -112,6 +115,12 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 		return nil,ENOROOMFORMOREPROMISES
 	}
 
+	// Cant make proposals for trips too far ahead unless the latest promise is  already active.
+	// This is because of risk of restacking subsequently making promises unkeepable
+	if tripStart.toEpochDays(true) - now.toEpochDays(false) > epochDays(pc.MaxDays) && self.entries[0].TripStart >= now  {
+		return nil,ECANTMAKEFARAHEADPROMISE
+	}
+
 	// Create a copy of the current promises to work on
 	var pp Proposal
 	pp.entries = self.entries
@@ -119,7 +128,10 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	// Calculate clearance date, defaulting to the next day if predictor
 	// is not ready yet
 	var p Promise
-	clearance := self.predict(distance,tripStart,tripEnd,now,predictor,pc)
+	clearance,err := self.predict(distance,tripStart,tripEnd,now,predictor,pc)
+	if err != nil {
+		return nil,err
+	}
 	p = Promise{TripStart:tripStart,TripEnd:tripEnd,Distance:distance,Travelled:travelled,Clearance:clearance.toEpochTime()}
 	
 	// Find index to add promise
@@ -142,7 +154,7 @@ func (self *Promises) propose(tripStart EpochTime,tripEnd EpochTime,distance Kil
 	pp.version = predictor.version()
 
 	// Stack promises to ensure no overlap
-	err := pp.restack(i,now,predictor,pc)
+	err = pp.restack(i,now,predictor,pc)
 	if err == nil {
 		return &pp,nil
 	} else {
@@ -163,14 +175,25 @@ func (self *Promises) make(pp *Proposal, predictor predictor) error {
 // makeofNoLongerTooFarAhead checks for the first promise too far head to make prediction for
 // and, if now not too far ahead, updates with a valid clearance date
 func (self* Promises) makeIfNoLongerTooFarAhead(now EpochTime,predictor predictor, pc PromisesConfig) bool {
-	i := sort.Search(MaxPromises,  func(i int) bool {return self.entries[i].Clearance != TooFarAheadToPredict})-1
-	if i >= 0 && self.entries[i].TripStart.toEpochDays(false) <= now.toEpochDays(false) + epochDays(pc.MaxDays) {
-		clearance := self.predict(self.entries[i].Distance,self.entries[i].TripStart,self.entries[i].TripEnd,now,predictor,pc)
-		self.entries[i].Clearance = clearance.toEpochTime()
-		err := self.restack(i,now,predictor,pc)
-		return err == nil
+	made := false
+	for {
+		i := sort.Search(MaxPromises,  func(i int) bool {return self.entries[i].Clearance != TooFarAheadToPredict})-1
+		if i >= 0 && self.entries[i].TripStart.toEpochDays(false) <= now.toEpochDays(false) + epochDays(pc.MaxDays) {
+			clearance,err := self.predict(self.entries[i].tobackfill(),self.entries[i].TripStart,self.entries[i].TripEnd,now,predictor,pc)
+			if err != nil {
+				return false
+			}
+			self.entries[i].Clearance = clearance.toEpochTime()
+			err = self.restack(i,now,predictor,pc)
+			if err != nil {
+				return false
+			}
+			made = true
+		} else {
+			return made
+		}
+
 	}
-	return false
 }
 
 // keep asks for a promise applying to completed trip with given details to be kept. If a matching
@@ -214,11 +237,9 @@ func (self* Promises) updateStackEntry(i int, now EpochTime, predictor predictor
 		return logError(EINVALIDARGUMENT)
 	}
 
-	// If not too far in future to predict, set clearance date to start of day of next trip
-	if self.entries[i].Clearance != TooFarAheadToPredict {
-		cd := self.entries[i-1].TripStart.toEpochDays(false)
-		self.entries[i].Clearance = cd.toEpochTime() 
-	}
+	// Set clearance date to start of day of next trip
+	cd := self.entries[i-1].TripStart.toEpochDays(false)
+	self.entries[i].Clearance = cd.toEpochTime() 
 
 	// Set stack index to one more than that of previous
 	// promise if there is one
@@ -234,16 +255,14 @@ func (self* Promises) updateStackEntry(i int, now EpochTime, predictor predictor
 
 	// If not too far in future to predict calculate clearance date for next promise,
 	// taking account of distance not cleared from promise i
-	if self.entries[i-1].Clearance != TooFarAheadToPredict {
-		distdone,err := predictor.backfilled(self.entries[i].TripEnd.toEpochDays(true)+1,self.entries[i].Clearance.toEpochDays(false))
-		if err != nil {
-			distdone = 0
-			logDebug("backfill failed: ",err)
-		}
-		self.entries[i-1].CarriedOver = self.entries[i].tobackfill() - distdone
-		clearance := self.predict(self.entries[i-1].tobackfill(),self.entries[i-1].TripStart,self.entries[i-1].TripEnd+SecondsInDay,now,predictor,pc)
-		self.entries[i-1].Clearance=clearance.toEpochTime()
+	distdone,err := predictor.backfilled(self.entries[i].TripEnd.toEpochDays(true)+1,self.entries[i].Clearance.toEpochDays(false))
+	if err != nil {
+		distdone = 0
+		logDebug("backfill failed: ",err)
 	}
+	self.entries[i-1].CarriedOver = self.entries[i].tobackfill() - distdone
+	clearance,_ := self.predict(self.entries[i-1].tobackfill(),self.entries[i-1].TripStart,self.entries[i-1].TripEnd+SecondsInDay,now,predictor,pc)
+	self.entries[i-1].Clearance=clearance.toEpochTime()
 	return nil
 }
 
